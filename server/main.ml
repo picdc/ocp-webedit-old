@@ -6,7 +6,9 @@ exception Fail_shell_call
 
 
 (* let ppath = "/home/dmaison/ace-ocaml/data" *)
-let ppath = Format.sprintf "%s/ace-ocaml/data" (Sys.getenv "HOME")
+(* let ppath = Format.sprintf "%s/ocp-webedit/data" (Sys.getenv "HOME") *)
+
+let ppath = "../data"
 
 let get_argument (cgi: Netcgi.cgi_activation) name =
   if cgi#argument_exists name then begin
