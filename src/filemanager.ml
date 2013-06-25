@@ -13,7 +13,8 @@ type file = {
 
 exception Bad_project_name of string
 exception Bad_file_name of string * string
-exception File_not_found of string * string
+exception File_not_found of int
+exception File_not_found2 of string * string
 exception Project_not_found of string
 exception Project_closed of string
 exception Workspace_already_open
@@ -27,7 +28,8 @@ let existing_files = H.create 19
 
 (* Pour retrouver la correspondance entre id <-> fichier *)
 let get_file id =
-  H.find existing_files id
+  try H.find existing_files id
+  with Not_found -> raise (File_not_found id)
 
 let get_file2 ~project ~filename =
   let f = H.fold (fun k v acc ->
@@ -35,7 +37,7 @@ let get_file2 ~project ~filename =
     else acc) existing_files None
   in
   match f with
-  | None -> raise (File_not_found (project,filename))
+  | None -> raise (File_not_found2 (project,filename))
   | Some f -> f
 
 let get_id ~project ~filename =
@@ -54,7 +56,7 @@ let file_exists ~project ~filename =
 
 let is_file_opened ~project ~filename =
   H.fold (fun k v acc ->
-    if v.project = project && v.filename = filename then true
+    if v.project = project && v.filename = filename then v.is_open
     else acc) existing_files false
 
 let is_project_opened project =
@@ -111,13 +113,19 @@ let open_project callback project =
    Request.get_list_of_files ~callback project
        
 
-let open_file ~callback ~project ~filename =
-  let callback =
-    let file = get_file2 ~project ~filename in
-    file.is_open <- true;
-    callback file.id
-  in
-  Request.get_content_of_file ~callback ~project ~filename
+let open_file callback (project, filename) =
+  let file = get_file2 ~project ~filename in
+  if not file.is_open then
+    let callback str =
+      file.is_open <- true;
+      callback (file, str)
+    in
+    Request.get_content_of_file ~callback ~project ~filename
+
+let close_file callback id =
+  let file = get_file id in
+  file.is_open <- false;
+  callback file
 
 
 let create_project callback project =
@@ -193,6 +201,12 @@ let delete_file callback id =
   let file = get_file id in
   let callback () =
     H.remove existing_files id;
+    let project = H.find existing_projects file.project in
+    let new_files = List.fold_left (fun acc el ->
+      if el = file.filename then acc
+      else el::acc
+    ) [] project.files in
+    project.files <- new_files;
     callback file
   in
   Request.delete_file ~callback ~project:file.project ~filename:file.filename
