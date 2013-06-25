@@ -249,7 +249,7 @@ let rec add_tab id title content =
   span_close##innerHTML <- Js.string "x";
   span_close##className <- Js.string "tabclose";
   span_close##onclick <- handler ( fun _ ->
-    close_tab id;
+    Event_manager.close_file#trigger id;
     Js._true);
 
   Dom.appendChild new_tab span_title;
@@ -316,6 +316,7 @@ and close_tab id =
 	    change_tab next_id
 	  with 
 	    No_other_tabs ->
+	      curr_tab := None;
 	      Ace_utils.disable_editor ();
 	      enable_navigation_buttons false
 	end;
@@ -476,7 +477,15 @@ let main () =
       Js._true);
 
 
-
+  let callback_open_file (file, content) =
+    let filename = file.Filemanager.filename in
+    let id = file.Filemanager.id in
+    add_tab id filename content;
+    change_tab id
+  in
+  let callback_close_file file =
+    close_tab file.Filemanager.id
+  in
   let callback_rename_file file =
     let id, project, filename =
       file.Filemanager.id,
@@ -492,8 +501,22 @@ let main () =
     add_tab id filename "";
     change_tab id
   in
+  let callback_delete_file file =
+    let id = file.Filemanager.id in
+    if exist_tab id then
+      close_tab id
+  in
+  let callback_delete_project _ =
+    H.iter (fun k _ ->
+      try let _ = Filemanager.get_file k in ()
+      with Not_found -> close_tab k) htbl
+  in
+  Event_manager.open_file#add_event callback_open_file;
+  Event_manager.close_file#add_event callback_close_file;
   Event_manager.create_file#add_event callback_create_file;
   Event_manager.rename_file#add_event callback_rename_file;
+  Event_manager.delete_file#add_event callback_delete_file;
+  Event_manager.delete_project#add_event callback_delete_project;
 
   enable_navigation_buttons false
 

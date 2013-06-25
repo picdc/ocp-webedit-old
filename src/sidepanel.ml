@@ -27,35 +27,22 @@ let right_clic_dialog_file =
   Dialog.Right_clic_dialog.create lstr lhandler
 
 let add_file container file =
-  let id, project, filename =
+  let id, filename =
     file.Filemanager.id,
-    file.Filemanager.project,
     file.Filemanager.filename
   in
   let li = createLi document in
-  let is_open = ref false in
 
   li##className <- Js.string "side_class_file_name";
   li##id <- Js.string (Format.sprintf "side_file_%d" id);
   li##innerHTML <- Js.string filename;
   li##onclick <- handler (fun _ -> 
-    if not !is_open then 
-      (let callback _ content =
-	 Tabs.add_tab id filename content;
-	 Tabs.change_tab id
-       in
-       Filemanager.open_file ~callback ~project ~filename;
-       is_open := true)
-    else
-      begin
-	if Tabs.exist_tab id then Tabs.change_tab id
-	else 
-	  let callback _ content =
-	    Tabs.add_tab id filename content;
-	    Tabs.change_tab id
-	  in
-	  Filemanager.open_file ~callback ~project ~filename
-      end;
+    let project, filename, is_open =
+      file.Filemanager.project,		(* Obligé de refresh ici *)
+      file.Filemanager.filename,	(* au cas où il y a eu du chgmt *)
+      file.Filemanager.is_open in
+    if is_open then Tabs.change_tab id
+    else Event_manager.open_file#trigger (project, filename);
     Js._true);
   let hand = handler (fun ev ->
     let ev = Js.Opt.get (Dom_html.CoerceTo.mouseEvent ev) (fun () ->
@@ -81,7 +68,7 @@ let focused_project = ref None
 let create_file project filename =
   Event_manager.create_file#trigger (project, filename)
 
-let handler_rename_project () = handler ( fun _ ->
+let handler_rename_project () = handler (fun _ ->
   match !focused_project with
   | None -> assert false
   | Some project ->
@@ -90,8 +77,15 @@ let handler_rename_project () = handler ( fun _ ->
     Dialog.Prompt_dialog.prompt "Choose new project name :" project f;
     Js._true)
 
+let handler_delete_project () = handler (fun _ ->
+  match !focused_project with
+  | None -> assert false
+  | Some project ->
+    Event_manager.delete_project#trigger project;
+    Js._true)
+
 let right_clic_dialog_opened_project =
-  let lstr = [ "Create new file" ; "Rename project" ] in
+  let lstr = [ "Create new file" ; "Rename project" ; "Delete project" ] in
   let handler_new_file = handler (fun _ ->
     match !focused_project with
     | None -> assert false
@@ -100,11 +94,12 @@ let right_clic_dialog_opened_project =
 	(create_file project);
       Js._true)
   in		 
-  let lhandler = [ handler_new_file ; handler_rename_project () ] in
+  let lhandler = [ handler_new_file ; handler_rename_project () ;
+		   handler_delete_project () ] in
   Dialog.Right_clic_dialog.create lstr lhandler
 
 let right_clic_dialog_closed_project =
-  let lstr = [ "Open project" ; "Rename project" ] in
+  let lstr = [ "Open project" ; "Rename project" ; "Delete project" ] in
   let handler_open_project = handler (fun _ ->
     match !focused_project with
     | None -> assert false
@@ -112,7 +107,8 @@ let right_clic_dialog_closed_project =
       Event_manager.open_project#trigger project;
       Js._true)
   in		 
-  let lhandler = [ handler_open_project ; handler_rename_project () ] in
+  let lhandler = [ handler_open_project ; handler_rename_project ();
+		   handler_delete_project () ] in
   Dialog.Right_clic_dialog.create lstr lhandler
 
 let add_project container title =
@@ -121,6 +117,7 @@ let add_project container title =
   let span = createSpan document in
   let is_shown = ref false in
 
+  li##id <- Js.string ("side_container_project_"^title);
   li##className <- Js.string "side_class_project_item";
   ul##className <- Js.string "side_class_file_list";
   ul##id <- Js.string ("side_project_"^title);
@@ -227,12 +224,19 @@ let make_sidepanel () =
     c_title##innerHTML <- Js.string new_name
   in
 
+  let callback_delete_project project =
+    let id_c_project = "side_container_project_"^project in
+    let c_project = Ace_utils.get_element_by_id id_c_project in
+    Dom.removeChild sideprojects c_project
+  in
+
   Event_manager.create_file#add_event callback_create_file;
   Event_manager.create_project#add_event callback_create_project;
   Event_manager.rename_file#add_event callback_rename_file;
   Event_manager.open_project#add_event callback_open_project;
   Event_manager.delete_file#add_event callback_delete_file;
   Event_manager.rename_project#add_event callback_rename_project;
+  Event_manager.delete_project#add_event callback_delete_project;
 
   Dom.appendChild div button_create_project;
   Dom.appendChild div sideprojects;

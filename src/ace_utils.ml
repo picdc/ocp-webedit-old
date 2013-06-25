@@ -247,7 +247,11 @@ let enable_editor () =
   Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setReadOnly")
     [| Js.Unsafe.inject Js._false |]
 
-let disable_editor () = 
+let disable_editor () =
+  Js.Unsafe.fun_call (Js.Unsafe.variable "editor.selectAll")
+    [| Js.Unsafe.inject () |];
+  Js.Unsafe.fun_call (Js.Unsafe.variable "editor.removeLines")
+    [| Js.Unsafe.inject () |];
   Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setReadOnly")
     [| Js.Unsafe.inject Js._true |]
 
