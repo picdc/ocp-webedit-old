@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Éditeur d'Ocaml en ligne</title>
+ 
+  </head>
+  <body>
+    <div id="main_content"></div>
+
+    <script src="./main.js" type="text/javascript"
+	    charset="utf-8"></script>
+    <script src="./ace/ace.js" type="text/javascript"
+    	    charset="utf-8"></script>
+    <script>
+      var Range = ace.require("./range").Range; <!-- C'EST MOCHE OMG -->
+      var container = document.getElementById("main_content");
+      makeEditor(container);
+    </script>
+  </body>
+</html>

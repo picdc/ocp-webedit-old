@@ -1,0 +1,22 @@
+
+#sidepanel #side_projects {
+   list-style: none; 
+   padding: 0px;
+}
+
+
+.side_class_project_item {
+    margin-bottom: 5px;
+}
+
+.side_class_project_name {
+    font-size: 15px;
+}
+
+.side_class_file_list {
+    padding-left: 15px;
+}
+
+.side_class_file_name {
+    font-size: 12px;
+}

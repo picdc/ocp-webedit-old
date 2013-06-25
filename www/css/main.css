@@ -1,0 +1,72 @@
+
+#divmain {
+    display: inline-block;
+    width: 75%;
+    min-width: 600px;
+    z-index: 5;
+}
+
+#sidepanel {
+    display: inline-block;
+    width: 149px;
+    height: 640px;
+    vertical-align: top;
+    overflow: hidden;
+    border: 1px solid #aaaaaa;
+    border-right: none;
+}
+
+#bottabs {
+    width: 100%;
+    height: 260px;
+}
+
+.bottabs_content {
+    width: inherit;
+    padding-left: 10px;
+    border: 1px solid #aaaaaa;
+}
+
+#bottabs_titles {
+    width: inherit;
+    border-left: 1px solid #aaaaaa;
+    border-right: 1px solid #aaaaaa;
+    padding-left: 10px;
+    padding-top: 10px;
+    font-size: 12px;
+}
+
+.bottabs_tab {
+    display: inline;
+    border: 1px solid #aaaaaa;
+    width: 100px;
+    height: 20px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.bottabs_tab_active {
+    border-bottom: 1px solid white;
+}
+
+.bottabs_tab_noactive { }
+
+
+.dialog_right_clic_dialog {
+    border: 2px solid black;
+    background-color: #ffffff;
+    z-index: 10;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.dialog_right_clic_item {
+    display: block;
+    margin-left: 10px;
+    margin-right: 10px;
+    background-color: inherit;
+}
+
+.dialog_right_clic_item:hover {
+    background-color: #aaaaaa;
+}

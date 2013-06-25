@@ -1,0 +1,48 @@
+
+#toplevel {
+    font-size: 12px;
+    height: 235px;
+}
+
+#toplvl_area {
+    height: 200px;
+    overflow: auto;
+    overflow-x: hidden;
+    padding-left: 10px;
+}
+
+#toplvl_area_output {
+    margin: 0px;
+}
+
+#toplvl_area_input_textarea {
+    width: 90%;
+    font-size: 12px;
+    resize: none;
+    overflow: auto;
+    border: none;
+}
+
+#toplvl_buttons {}
+
+.toplvl_prompt {
+    display: inline-block;
+    vertical-align: top;
+    color: green;
+    padding-right: 5px;
+}
+
+.toplvl_input_text {
+    display: inline-block;
+}
+
+.toplvl_output_text {
+    font-style: italic;
+    color: #444444;
+}
+
+#output {
+    margin: 0px;
+    height: 235px;
+    overflow: auto;
+}

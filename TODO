@@ -1,0 +1,75 @@
+
+!!!!!!!!!!!!!
+
+- quand on delete un file -> le retirer des tabs
+- quand on ferme le dernier tabs -> vider le content de l'éditeur
+- ajout u.ml puis delete u.ml, rajouter u.ml -> bug
+  puis rajout d'un autre tab -> failure avec l'id
+- ajout u.ml = ouvre un tab, cliquer sur le tab via sidepanel = ouvre un autre tab
+  --> peut etre à l'origine de l'assert failure ci dessus
+
+!!!!!!!!!!!!!
+
+* Serveur Web
+  - discuter pour savoir comment le faire
+     -> script CGI en ocaml ?
+
+* Les onglets
+  ! Voir si on peut pas mettre le code dans le DOM a la place du Htbl 
+    -> Difficile avec nos editSession de stockée
+  - Mieux gérer l'onglet de départ (ie on a une edit session perdue dans
+    le vide)
+
+* Coloration synthaxique
+  - Coloration des fonctions
+  - Coloration de tous les Modules (pas seulement ceux connus)
+  - Faire notre propre thème ace
+
+* Analyse synthaxique
+  - à discuter mais oui
+  - "identifiant non déclaré"
+
+* Toplevel
+  - on_scroll : mettre un "vertical align bottom"
+  - activer le bouton Eval select, que quand il y a une sélection
+  - mettre un raccourci
+  - plusieurs onglets pour "Toplevel" et "Output"
+  - un bouton clear
+  - indentation dans le textarea
+  - F7 ????
+  - eval all the file
+  - quand y'a une erreur indiquer le Fichier
+  - Warning à mettre dans le Toplevel
+  - Enter afet ";;" -> eval
+  - Historique avec les flèches directionnelles
+
+* Auto-complétion
+  - ocp-index (courage Pierrick !)
+  - Remplacer RE par PCRE
+  - Revoir plus tard en utilisant la pile d'OCP-INDENT
+
+* Indentation
+  - Adapter la méthode par block pour les modules
+  - Bug avec les if et/ou autre chance
+  - Quand on appuye sur Tab, placer cursor juste apres l'indentation
+  - Configurer l'indentation
+
+* Code folding
+  - A faire
+
+* Main.ml
+  - Ajouter un constructeur pour la structure globale de l'éditeur
+     -> si possible paramétrable (ex: ne pas vouloir les tabs)
+
+* Architecture du projet à revoir
+  -> pour être plus propre, notamment les modes ace inutile
+
+* Affichage
+  - Placer le toplevel soit en dessous soit à coté, selon la taille
+    de la fenêtre ? à discuter
+
+* Makefile :
+  - faire quelque chose de propre avec ocamlfind pour les libs par exemple
+
+* eldoc emacs :
+  - ce dont nous a parler Luca
