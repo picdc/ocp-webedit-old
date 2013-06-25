@@ -1,3 +1,8 @@
+(**
+   Some utils functions : 
+   - Functions
+   - Some Js bindings to Ace API
+**)
 
 type editSession
 type range

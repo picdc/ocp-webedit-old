@@ -7,8 +7,8 @@ open Completion_data
 
 (** (* Creation functions *) **)
 
-let reset_env () =
-  actual_env := empty_env ()
+(* let reset_env () = *)
+(*   actual_env := empty_env () *)
 
 let add_word = new_word
 
