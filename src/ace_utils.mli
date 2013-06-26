@@ -1,7 +1,7 @@
 
-   (* Some utils functions :  *)
-   (* - Functions *)
-   (* - Some Js bindings to Ace API *)
+(**
+   Some utils functions and Js bindings to Ace API
+**)
 
 (* type editSession *)
 (* type range *)
