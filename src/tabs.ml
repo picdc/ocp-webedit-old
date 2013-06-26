@@ -2,16 +2,27 @@
 open Dom_html
 open Ace_utils
 
-let id = ref 0
 module H = Hashtbl
 
 let htbl = H.create 19
 
-let curr_tab = ref None
-let nb_untitled = ref 0
 let is_list_shown = ref false
 let offset = ref 0
 let len = ref 4
+
+let get_class_filename file =
+  let id, is_unsaved = file.Filemanager.id, file.Filemanager.is_unsaved in
+  let l = "tab" in
+  let l = match Filemanager.get_current_file () with
+    | None -> l
+    | Some i ->
+      if i = id then l^" active"
+      else l in
+  let l =
+    if is_unsaved then l^" unsaved"
+    else l
+  in
+  Js.string l
 
 let exist_tab id =
   H.mem htbl id
@@ -19,9 +30,15 @@ let exist_tab id =
 let get_content_tab id =
   try 
     let es = H.find htbl id in
-    Some (Ace_utils.get_editsession_content es)
+    let doc = Ace.EditSession.getDocument es in
+    Some (Ace.Document.getValue doc)
   with Not_found -> None
 
+let save_tab id =
+  let content = get_content_tab id in
+  match content with
+  | None -> ()
+  | Some content -> Event_manager.save_file#trigger (id, content)
 
 let get_line_width () =
   let container = get_element_by_id "tabline" in
@@ -136,7 +153,7 @@ let refresh_tabs () =
   	      begin
 	        is_empty := false;
 		begin
-		  match !curr_tab with
+		  match Filemanager.get_current_file () with
 		  | None -> li##className <- Js.string ""
 		  | Some id ->
   	            if i = id then li##className <- Js.string "listactive"
@@ -181,29 +198,11 @@ let refresh_tabs () =
 
 
 
-let change_tab id =
-  (* Changement du tab *)
-  let es = H.find htbl id in
-  change_edit_session es;
-
-  (* Changement du focus du tab *)
-  begin
-    match !curr_tab with
-    | None -> ()
-    | Some id ->
-      (let old_tab = get_element_by_id (Format.sprintf "tabnum%d" id) in
-       old_tab##className <- Js.string "tab")
-  end;
-  let new_tab = get_element_by_id (Format.sprintf "tabnum%d" id) in
-  new_tab##className <- Js.string "tab active";
-  curr_tab := Some id
-
-
 exception No_other_tabs
 
 let rec add_tab id title content =
   (* Choix de l'id *)
-  let es = create_edit_session content in
+  let es = Ace.createEditSession content "ace/mode/ocaml" in
   H.add htbl id es;
 
   (* Création du tab *)
@@ -222,12 +221,8 @@ let rec add_tab id title content =
   span_title##readOnly <- Js._true;
   span_title##className <- Js.string "tabtitle";
   span_title##onclick <- handler ( fun _ ->
-    match !curr_tab with
-    | None -> assert false
-    | Some i -> 
-      if i <> id then
-	change_tab id;
-      Js._true);
+    Event_manager.switch_file#trigger id;
+    Js._true);
   span_title##ondblclick <- handler ( fun _ ->
     span_title##readOnly <- Js._false;
     Js._true);
@@ -265,7 +260,7 @@ let rec add_tab id title content =
   li_tab##innerHTML <- Js.string title;
   li_tab##style##display <- Js.string "none";
   li_tab##onclick <- handler ( fun _ ->
-    change_tab id;
+    Event_manager.switch_file#trigger id;
     is_list_shown := false;
     let listtabs = get_element_by_id "listtabs" in
     listtabs##style##display <- Js.string "none";
@@ -290,7 +285,7 @@ and close_tab id =
   let tabli = get_element_by_id (Format.sprintf "listulnum%d" id) in
 
   begin
-    match !curr_tab with
+    match Filemanager.get_current_file () with
     | None -> assert false
     | Some i ->
       if i = id then
@@ -313,10 +308,9 @@ and close_tab id =
 	      | None -> raise No_other_tabs
 	    in
 	    let next_id = get_tab_id_from_html next_tab in
-	    change_tab next_id
+	    Event_manager.switch_file#trigger next_id
 	  with 
 	    No_other_tabs ->
-	      curr_tab := None;
 	      Ace_utils.disable_editor ();
 	      enable_navigation_buttons false
 	end;
@@ -423,6 +417,26 @@ let init_listtabs () =
   
 
 
+(* Permet de signaler que le tab courant a été changé *)
+(* Peut être appelé en javascript, fait le lien avec le event_manager *)
+let event_change_current_tab () =
+  match Filemanager.get_current_file () with
+  | None -> assert false
+  | Some id -> Event_manager.unsaved_file#trigger id
+
+(* Permet de signaler que le tab courant veut être sauvegardé *)
+(* Peut être appelé en javascript, fait le lien avec le event_manager *)
+let event_save_current_tab () =
+  match Filemanager.get_current_file () with
+  | None -> assert false
+  | Some id -> save_tab id
+
+let _ =
+  (Js.Unsafe.coerce Dom_html.window)##saveCurrentTab <- Js.wrap_callback
+    event_save_current_tab;
+  (Js.Unsafe.coerce Dom_html.window)##currentTabChanged <- Js.wrap_callback
+    event_change_current_tab
+
 let main () =
   (* Création du bouton d'importation des fichiers *)
   let container = get_element_by_id "input" in
@@ -481,7 +495,7 @@ let main () =
     let filename = file.Filemanager.filename in
     let id = file.Filemanager.id in
     add_tab id filename content;
-    change_tab id
+    Event_manager.switch_file#trigger id
   in
   let callback_close_file file =
     close_tab file.Filemanager.id
@@ -499,7 +513,7 @@ let main () =
       file.Filemanager.id,
       file.Filemanager.filename in
     add_tab id filename "";
-    change_tab id
+    Event_manager.switch_file#trigger id
   in
   let callback_delete_file file =
     let id = file.Filemanager.id in
@@ -511,10 +525,36 @@ let main () =
       try let _ = Filemanager.get_file k in ()
       with Not_found -> close_tab k) htbl
   in
+  let callback_save_and_unsaved_file file =
+    let id_c_file = Format.sprintf "tabnum%d" file.Filemanager.id in
+    let c_file = Ace_utils.get_element_by_id id_c_file in
+    c_file##className <- get_class_filename file
+  in
+
+  let callback_switch_file (old_id, new_id) =
+    let file = Filemanager.get_file new_id in
+    (* Actualisation de l'editSession *)
+    let es = H.find htbl new_id in
+    Ace.Editor.setSession (Ace_utils.editor ()) es;
+    (* Changement du focus du tab *)
+    begin match old_id with
+      | None -> ()
+      | Some id ->
+	(let old_file = Filemanager.get_file id in
+	 let old_tab = get_element_by_id (Format.sprintf "tabnum%d" id) in
+	 old_tab##className <- get_class_filename old_file) end;
+    let new_tab = get_element_by_id (Format.sprintf "tabnum%d" new_id) in
+    new_tab##className <- get_class_filename file
+  in
+
+
   Event_manager.open_file#add_event callback_open_file;
   Event_manager.close_file#add_event callback_close_file;
   Event_manager.create_file#add_event callback_create_file;
   Event_manager.rename_file#add_event callback_rename_file;
+  Event_manager.save_file#add_event callback_save_and_unsaved_file;
+  Event_manager.unsaved_file#add_event callback_save_and_unsaved_file;
+  Event_manager.switch_file#add_event callback_switch_file;
   Event_manager.delete_file#add_event callback_delete_file;
   Event_manager.delete_project#add_event callback_delete_project;
 

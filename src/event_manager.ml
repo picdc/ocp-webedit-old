@@ -10,6 +10,7 @@ class ['a, 'b] event act = object
 end
 
 
+
 let create_file = new event Filemanager.create_file
 let create_project = new event Filemanager.create_project
 let rename_file = new event Filemanager.rename_file
@@ -18,5 +19,7 @@ let open_project = new event Filemanager.open_project
 let open_file = new event Filemanager.open_file
 let close_file = new event Filemanager.close_file 
 let save_file = new event Filemanager.save_file
+let unsaved_file = new event Filemanager.unsaved_file
+let switch_file = new event Filemanager.switch_file
 let delete_project = new event Filemanager.delete_project
 let delete_file = new event Filemanager.delete_file

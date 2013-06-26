@@ -100,8 +100,10 @@ let evaluate_input () =
     (Format.sprintf "%dpx" textarea_line_size)
 
 let evaluate_selection () =
-  let range = Ace_utils.get_selection_range () in
-  let text = Ace_utils.get_text_range range in
+  let doc = Ace.EditSession.getDocument
+    (Ace.Editor.getSession (Ace_utils.editor ())) in
+  let range = Ace.Editor.getSelectionRange (Ace_utils.editor ()) in
+  let text = Ace.Document.getTextRange doc range in
   print_input text;
   execute text
 

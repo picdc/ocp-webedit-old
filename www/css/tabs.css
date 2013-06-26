@@ -49,11 +49,16 @@ input:disabled {
     background-color: rgb(232, 242, 254);
 }
 
+.unsaved {
+    font-weight: bold;
+}
+
 .tabtitle {
     display: inline-block;
     overflow: hidden;
     width: 76px;
     border: none;
+    font-weight: inherit; 
     background-color: inherit;
 }
 

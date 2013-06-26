@@ -8,7 +8,8 @@ type file = {
   id : int;
   mutable project: string;
   mutable filename: string;
-  mutable is_open: bool
+  mutable is_open: bool;
+  mutable is_unsaved: bool
 }
 
 exception Bad_project_name of string
@@ -22,9 +23,13 @@ exception Workspace_already_open
 module H = Hashtbl
 
 let id = ref 0
+let current_file = ref None
 let existing_projects = H.create 19
 let existing_files = H.create 19
 
+
+let get_current_file () =
+  !current_file
 
 (* Pour retrouver la correspondance entre id <-> fichier *)
 let get_file id =
@@ -103,7 +108,8 @@ let open_project callback project =
      p.files <- lstr;
      let files = List.fold_left (fun acc f ->
        let i = !id in
-       let file = { id = i ; project ; filename = f ; is_open = false } in
+       let file = { id = i ; project ; filename = f ;
+		    is_open = false ; is_unsaved = false } in
        add_file file;
        incr id;
        file::acc
@@ -125,7 +131,10 @@ let open_file callback (project, filename) =
 let close_file callback id =
   let file = get_file id in
   file.is_open <- false;
-  callback file
+  callback file;
+  match !current_file with
+  | Some i when id = i -> current_file := None
+  | _ -> ()
 
 
 let create_project callback project =
@@ -143,7 +152,8 @@ let create_file callback (project, filename) =
     if not (file_exists ~project ~filename) then
       let callback () =
 	let i = !id in
-	let file = { id = i ; project ; filename ; is_open = true } in
+	let file = { id = i ; project ; filename ;
+		     is_open = true ; is_unsaved = false } in
 	add_file file;
 	incr id;
 	add_file_to_project project filename;
@@ -193,8 +203,29 @@ let rename_file callback (id, new_name) =
 
 let save_file callback (id, content) =
   let file = get_file id in
+  let callback () =
+    file.is_unsaved <- false;
+    callback file in
   Request.save_file ~callback ~project:file.project ~filename:file.filename
     ~content
+
+let unsaved_file callback id =
+  let file = get_file id in
+  if not file.is_unsaved then
+    (file.is_unsaved <- true;
+     callback file)
+
+
+let switch_file callback new_id =
+  let old_file = !current_file in
+  let do_it () =
+    current_file := Some new_id;
+    callback (old_file, new_id)
+  in 
+  match old_file with
+  | None -> do_it ()
+  | Some id when id <> new_id -> do_it ()
+  | _ -> ()
 
 
 let delete_file callback id =

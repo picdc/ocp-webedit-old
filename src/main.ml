@@ -58,6 +58,8 @@ let make_bottom_widget () =
 
 
 let make_editor (container: Dom_html.element Js.t) : unit =
+  Ace.require "Range";
+
   let doc = Dom_html.document in
   let div_main = Dom_html.createDiv doc in
   let div_input = Dom_html.createDiv doc in
@@ -113,6 +115,7 @@ let make_editor (container: Dom_html.element Js.t) : unit =
     Dialog.Right_clic_dialog.hide_all ();
     Js._true);
 
+  Ace_utils.init_editor "editor";
   Tabs.main ();
   disable_editor ()
 

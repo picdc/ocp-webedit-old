@@ -146,9 +146,8 @@ editor.commands.addCommand({
     bindKey: {win: 'Tab', mac: 'Tab'},
     exec: function(editor) {
 	var r = editor.getSelectionRange();
-	console.time("indent_via_tab");
 	indentRegion(r.start.row, r.end.row);
-	console.timeEnd("indent_via_tab");
+	currentTabChanged();
     },
     readOnly: false
 });
@@ -162,16 +161,14 @@ editor.commands.addCommand({
     readOnly: false
 });
 
-/* FOR TEST */
 editor.commands.addCommand({
-    name: 'test',
-    bindKey: {win: 'Ctrl-A', mac: 'Control-A'},
+    name: 'save-current-tab',
+    bindKey: {win: 'Ctrl-S', mac: 'Control-S'},
     exec: function(editor) {
-	indentTest();
+	saveCurrentTab();
     },
     readOnly: false
 });
-
 
 editor.commands.addCommand({
     name: 'complete-word',
@@ -253,6 +250,10 @@ var outdenter_list = /(in|let|end|done)/;
     };
 
     this.checkOutdent = function(state, line, input) {
+	/* On signale que le fichier actuel est maintenant unsaved */
+	currentTabChanged();
+
+	/* Traitement de l'indentation */
 	var curpos = editor.getCursorPosition();
 	var session = editor.getSession();
 	var token = session.getTokenAt(curpos.row, curpos.column);

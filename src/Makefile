@@ -2,10 +2,10 @@
 include Makefile.config
 include Makefile.rules
 
-SOURCES= ace_utils.ml request.ml filemanager.ml event_manager.ml \
-	dialog.ml tabs.ml sidepanel.ml
-SOURCESI= ace_utils.mli request.mli filemanager.mli event_manager.mli \
-	dialog.mli tabs.mli
+SOURCES=  ace.ml ace_utils.ml request.ml filemanager.ml event_manager.ml \
+	dialog.ml tabs.ml sidepanel.ml 
+SOURCESI= ace.mli ace_utils.mli request.mli filemanager.mli \
+	event_manager.mli dialog.mli tabs.mli
 
 OCPDIR= ocp-indent-src
 OCPLIB= -I $(OCPDIR) ocp_indent.cma
@@ -54,7 +54,7 @@ main.js: main.byte
 	js_of_ocaml $(INCLUDEJS) $<
 
 
-main.byte: ace_utils.cmo completion_js.cmo $(OBJS) indent.cmo mytoplevel.cmo
+main.byte: ace.cmo ace_utils.cmo completion_js.cmo $(OBJS) indent.cmo mytoplevel.cmo
 	$(CAMLJS) $(LIBS) -o $@ $^ $*.ml
 
 

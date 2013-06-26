@@ -5,18 +5,26 @@ module H = Hashtbl
 
 let focused_file = ref None
 
+let get_class_filename file is_active =
+  let l = "side_class_file_name" in
+  let l =
+    if file.Filemanager.is_unsaved then l^" side_class_file_unsaved"
+    else l
+  in
+  let l =
+    if is_active then l^" side_class_file_active"
+    else l
+  in
+  Js.string l
+
 let right_clic_dialog_file =
   let lstr = [ "Save file" ; "Delete file" ] in
   let handler_save_file = handler (fun _ ->
     match !focused_file with
     | None -> assert false
     | Some file_id ->
-      let content = Tabs.get_content_tab file_id in
-      match content with
-      | None -> Js._true
-      | Some content -> 
-	Event_manager.save_file#trigger (file_id, content);
-	Js._true) in
+      Tabs.save_tab file_id;
+      Js._true) in
   let handler_delete_file = handler (fun _ ->
     match !focused_file with
     | None -> assert false
@@ -33,7 +41,7 @@ let add_file container file =
   in
   let li = createLi document in
 
-  li##className <- Js.string "side_class_file_name";
+  li##className <- get_class_filename file false;
   li##id <- Js.string (Format.sprintf "side_file_%d" id);
   li##innerHTML <- Js.string filename;
   li##onclick <- handler (fun _ -> 
@@ -41,7 +49,7 @@ let add_file container file =
       file.Filemanager.project,		(* Obligé de refresh ici *)
       file.Filemanager.filename,	(* au cas où il y a eu du chgmt *)
       file.Filemanager.is_open in
-    if is_open then Tabs.change_tab id
+    if is_open then Event_manager.switch_file#trigger id
     else Event_manager.open_file#trigger (project, filename);
     Js._true);
   let hand = handler (fun ev ->
@@ -192,6 +200,15 @@ let make_sidepanel () =
     add_project sideprojects project
   in
 
+  let callback_close_file file =
+    match Filemanager.get_current_file () with
+    | Some id when id = file.Filemanager.id ->
+      let id_c_file = Format.sprintf "side_file_%d" id in
+      let c_file = Ace_utils.get_element_by_id id_c_file in
+      c_file##className <- get_class_filename file false
+    | _ -> ()
+  in
+
   let callback_create_file file =
     let project = file.Filemanager.project in
     let id_container = "side_project_"^project in
@@ -230,11 +247,40 @@ let make_sidepanel () =
     Dom.removeChild sideprojects c_project
   in
 
+  let callback_save_and_unsaved_file file =
+    let file_id = file.Filemanager.id in
+    let b = match Filemanager.get_current_file () with
+      | Some id when id = file_id -> true
+      | _ -> false
+    in
+    let id_c_file = Format.sprintf "side_file_%d" file_id in
+    let c_file = Ace_utils.get_element_by_id id_c_file in
+    c_file##className <- get_class_filename file b
+  in
+  
+  let callback_switch_file (old_id, new_id) =
+    let newfile = Filemanager.get_file new_id in
+    let id_c_newfile = Format.sprintf "side_file_%d" new_id in
+    let c_newfile = Ace_utils.get_element_by_id id_c_newfile in
+    c_newfile##className <- get_class_filename newfile true;
+    match old_id with
+    | Some old_id ->
+      let oldfile = Filemanager.get_file old_id in
+      let id_c_oldfile = Format.sprintf "side_file_%d" old_id in
+      let c_oldfile = Ace_utils.get_element_by_id id_c_oldfile in
+      c_oldfile##className <- get_class_filename oldfile false
+    | None -> ()
+  in
+
   Event_manager.create_file#add_event callback_create_file;
   Event_manager.create_project#add_event callback_create_project;
   Event_manager.rename_file#add_event callback_rename_file;
   Event_manager.open_project#add_event callback_open_project;
+  Event_manager.close_file#add_event callback_close_file;
   Event_manager.delete_file#add_event callback_delete_file;
+  Event_manager.save_file#add_event callback_save_and_unsaved_file;
+  Event_manager.unsaved_file#add_event callback_save_and_unsaved_file;
+  Event_manager.switch_file#add_event callback_switch_file;
   Event_manager.rename_project#add_event callback_rename_project;
   Event_manager.delete_project#add_event callback_delete_project;
 

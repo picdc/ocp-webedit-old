@@ -4,6 +4,11 @@ open Dom_html
 type handler = (Dom_html.element Js.t, Dom_html.event Js.t)
            Dom_html.event_listener
 
+let _editor = ref (Obj.magic 5) (* O_O WHAT???? *)
+
+let init_editor el = _editor := (Ace.edit el)
+let editor () = !_editor
+
 (* class tabs_widget = object (self) *)
 (*   inherit Dom_html.element *)
 
@@ -237,108 +242,104 @@ let tabs_widget title_list element_list init_num_tab
 
 (* Bindings des fonctions Ace *)
 
-let load_range = ref false
-
-type editSession
-type range
-type acetoken
+(* type editSession *)
+(* type range *)
+(* type acetoken *)
 
 let enable_editor () =
-  Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setReadOnly")
-    [| Js.Unsafe.inject Js._false |]
+  Ace.Editor.setReadOnly !_editor false
+  (* Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setReadOnly") *)
+  (*   [| Js.Unsafe.inject Js._false |] *)
 
 let disable_editor () =
-  Js.Unsafe.fun_call (Js.Unsafe.variable "editor.selectAll")
-    [| Js.Unsafe.inject () |];
-  Js.Unsafe.fun_call (Js.Unsafe.variable "editor.removeLines")
-    [| Js.Unsafe.inject () |];
-  Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setReadOnly")
-    [| Js.Unsafe.inject Js._true |]
+  Ace.Editor.selectAll !_editor;
+  Ace.Editor.removeLines !_editor;
+  Ace.Editor.setReadOnly !_editor true
+  (* ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "editor.selectAll") *)
+  (*   [| Js.Unsafe.inject () |]); *)
+  (* ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "editor.removeLines") *)
+  (*   [| Js.Unsafe.inject () |]); *)
+  (* Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setReadOnly") *)
+  (*   [| Js.Unsafe.inject Js._true |] *)
 
-let create_edit_session (content: string) : editSession =
-  let text = Js.Unsafe.inject (Js.string content) in
-  let mode = Js.Unsafe.inject (Js.string "ace/mode/ocaml") in
-  Js.Unsafe.fun_call (Js.Unsafe.variable "ace.createEditSession")
-    [| text;mode |]
+(* let create_edit_session (content: string) : editSession = *)
+(*   let text = Js.Unsafe.inject (Js.string content) in *)
+(*   let mode = Js.Unsafe.inject (Js.string "ace/mode/ocaml") in *)
+(*   Js.Unsafe.fun_call (Js.Unsafe.variable "ace.createEditSession") *)
+(*     [| text;mode |] *)
 
-let change_edit_session (es : editSession) =
-  ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setSession")
-	    [| Js.Unsafe.inject es |])
+(* let change_edit_session (es : editSession) = *)
+(*   ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setSession") *)
+(* 	    [| Js.Unsafe.inject es |]) *)
 
-let get_editor_value () =
-  let res = Js.Unsafe.fun_call
-    (Js.Unsafe.variable
-       "editor.getSession().getDocument().getValue")
-    [| Js.Unsafe.inject () |] in 
-  Js.to_string res
+(* let get_editor_value () = *)
+(*   let res = Js.Unsafe.fun_call *)
+(*     (Js.Unsafe.variable *)
+(*        "editor.getSession().getDocument().getValue") *)
+(*     [| Js.Unsafe.inject () |] in  *)
+(*   Js.to_string res *)
 
-let set_editor_value str =
-  ignore (Js.Unsafe.fun_call
-	    (Js.Unsafe.variable
-	       "editor.getSession().getDocument().setValue")
-	    [| Js.Unsafe.inject str |])
+(* let set_editor_value str = *)
+(*   ignore (Js.Unsafe.fun_call *)
+(* 	    (Js.Unsafe.variable *)
+(* 	       "editor.getSession().getDocument().setValue") *)
+(* 	    [| Js.Unsafe.inject str |]) *)
 
-let get_editsession_content es =
-  Js.to_string (Js.Unsafe.meth_call es "getDocument().getValue"
-  		  [| Js.Unsafe.inject () |])
+(* let get_editsession_content es = *)
+(*   Js.to_string (Js.Unsafe.meth_call es "getDocument().getValue" *)
+(*   		  [| Js.Unsafe.inject () |]) *)
 
-let get_line (row: int) : string =
-  Js.to_string (Js.Unsafe.fun_call
-		  (Js.Unsafe.variable
-		     "editor.getSession().getDocument().getLine")
-		  [| Js.Unsafe.inject row |])
+(* let get_line (row: int) : string = *)
+(*   Js.to_string (Js.Unsafe.fun_call *)
+(* 		  (Js.Unsafe.variable *)
+(* 		     "editor.getSession().getDocument().getLine") *)
+(* 		  [| Js.Unsafe.inject row |]) *)
 
-let get_lines row_start row_end : string =
-  let res = Js.to_array (Js.Unsafe.fun_call
-			   (Js.Unsafe.variable
-			      "editor.getSession().getDocument().getLines")
-			   [| Js.Unsafe.inject row_start;
-			      Js.Unsafe.inject row_end |]) in
-  let res = List.fold_right (fun str acc ->
-    let str = Js.to_string str in
-    str::acc
-  ) (Array.to_list res) [] in
+let get_lines doc row_start row_end =
+  let res = Ace.Document.getLines doc row_start row_end in
+  let res = List.fold_right (fun str acc -> str::acc)
+    (Array.to_list res) [] in
   String.concat "\n" res
 
-let get_tab_size () =
-  Js.Unsafe.fun_call
-    (Js.Unsafe.variable "editor.getSession().getTabSize") [||]
+(* let get_tab_size () = *)
+(*   Js.Unsafe.fun_call *)
+(*     (Js.Unsafe.variable "editor.getSession().getTabSize") [||] *)
 
-let make_range startRow startColumn endRow endColumn : range =
-  Js.Unsafe.fun_call
-    (Js.Unsafe.variable "new Range")
-    [| Js.Unsafe.inject startRow ;
-       Js.Unsafe.inject startColumn ;
-       Js.Unsafe.inject endRow ;
-       Js.Unsafe.inject endColumn |]
-
-
-let replace (range: range) (text: string) : unit =
-  ignore (Js.Unsafe.fun_call
-	    (Js.Unsafe.variable 
-	       "editor.getSession().getDocument().replace")
-	    [| Js.Unsafe.inject range ;
-	       Js.Unsafe.inject (Js.string text) |])
+(* let make_range startRow startColumn endRow endColumn : range = *)
+(*   Js.Unsafe.fun_call *)
+(*     (Js.Unsafe.variable "new Range") *)
+(*     [| Js.Unsafe.inject startRow ; *)
+(*        Js.Unsafe.inject startColumn ; *)
+(*        Js.Unsafe.inject endRow ; *)
+(*        Js.Unsafe.inject endColumn |] *)
 
 
-let get_selection_range () =
-  Js.Unsafe.fun_call
-    (Js.Unsafe.variable "editor.getSelectionRange")
-    [||]
+(* let replace (range: range) (text: string) : unit = *)
+(*   ignore (Js.Unsafe.fun_call *)
+(* 	    (Js.Unsafe.variable  *)
+(* 	       "editor.getSession().getDocument().replace") *)
+(* 	    [| Js.Unsafe.inject range ; *)
+(* 	       Js.Unsafe.inject (Js.string text) |]) *)
 
 
-let get_text_range r =
-  Js.to_string (Js.Unsafe.fun_call
-		  (Js.Unsafe.variable
-		     "editor.getSession().getDocument().getTextRange")
-		     [| Js.Unsafe.inject r |])
+(* let get_selection_range () = *)
+(*   Js.Unsafe.fun_call *)
+(*     (Js.Unsafe.variable "editor.getSelectionRange") *)
+(*     [||] *)
 
 
-let get_tokens row : acetoken array =
-  Js.to_array (Js.Unsafe.fun_call
-		 (Js.Unsafe.variable
-		    "editor.getSession().getTokens")
-		 [| Js.Unsafe.inject row |])
+(* let get_text_range r = *)
+(*   Js.to_string (Js.Unsafe.fun_call *)
+(* 		  (Js.Unsafe.variable *)
+(* 		     "editor.getSession().getDocument().getTextRange") *)
+(* 		     [| Js.Unsafe.inject r |]) *)
+
+
+(* let get_tokens row : acetoken array = *)
+(*   Js.to_array (Js.Unsafe.fun_call *)
+(* 		 (Js.Unsafe.variable *)
+(* 		    "editor.getSession().getTokens") *)
+(* 		 [| Js.Unsafe.inject row |]) *)
 
 let make_event_oncontextmenu el handler =
   ignore (Dom_html.addEventListener el
@@ -351,12 +352,12 @@ let make_event_onblur el handler =
 	    handler Js._true)
 
 
-module AceToken = struct
-  type t = acetoken
+(* module AceToken = struct *)
+(*   type t = acetoken *)
 
-  let get_value (token: t) : string = 
-    Js.to_string (Js.Unsafe.get token "value")
+(*   let get_value (token: t) : string =  *)
+(*     Js.to_string (Js.Unsafe.get token "value") *)
 
-  let get_type (token: t) : string =
-    Js.to_string (Js.Unsafe.get token "type")
-end
+(*   let get_type (token: t) : string = *)
+(*     Js.to_string (Js.Unsafe.get token "type") *)
+(* end *)

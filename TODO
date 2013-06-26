@@ -1,9 +1,6 @@
 
-!!!!!!!!!!!!!
-
-- quand on ferme le dernier tabs -> vider le content de l'éditeur
-
-!!!!!!!!!!!!!
+* Ctrl-S
+  -> pouvoir le faire pas que quand l'éditeur est focused
 
 * Serveur Web
   - discuter pour savoir comment le faire

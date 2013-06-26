@@ -20,3 +20,11 @@
 .side_class_file_name {
     font-size: 12px;
 }
+
+.side_class_file_unsaved:after {
+    content: "*";
+}
+
+.side_class_file_active {
+    font-weight: bold;
+}

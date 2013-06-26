@@ -6,14 +6,15 @@ let get_last_anchor row =
     let rec search row =
       if row = 0 then 0
       else begin
-	let tokens = Ace_utils.get_tokens row in
+	let tokens = Ace.EditSession.getTokens
+	  (Ace.Editor.getSession (Ace_utils.editor ())) row in
 	let is_done = Array.fold_left (fun b t ->
 	  if not b then
 	    begin
-	      match Ace_utils.AceToken.get_type t with
+	      match Ace.Token._type t with
 	      | "keyword" ->
 		begin
-		  match Ace_utils.AceToken.get_value t with
+		  match Ace.Token.value t with
 		  | "in" | "end" | "done" ->
 		    (incr count;
 		     false)
@@ -76,7 +77,8 @@ let call_ocp_indent kind text =
 
 let get_indent_size (line: string) : int =
   let size = String.length line in
-  let tab_size = Ace_utils.get_tab_size () in
+  let tab_size = Ace.EditSession.getTabSize 
+    (Ace.Editor.getSession (Ace_utils.editor ())) in
   let rec aux i =
     if i >= size then i
     else
@@ -89,26 +91,32 @@ let get_indent_size (line: string) : int =
 
 let get_indent_line row : Js.js_string Js.t =
   let last_anchor = get_last_anchor row in
+  let doc = Ace.EditSession.getDocument
+    (Ace.Editor.getSession (Ace_utils.editor ())) in
   let add =
     if last_anchor = 0 then 0
-    else get_indent_size (Ace_utils.get_line last_anchor) in
-  let text = Ace_utils.get_lines last_anchor row in
+    else get_indent_size (Ace.Document.getLine doc last_anchor) in
+  let text = Ace_utils.get_lines doc last_anchor row in
   let res = ref 0 in
   call_ocp_indent (kind_num res) text;
   Js.string (String.make (!res+add) ' ')
 
 let replace_indent row n =
-  let size = get_indent_size (Ace_utils.get_line row) in
-  let range = Ace_utils.make_range row 0 row size in
+  let doc = Ace.EditSession.getDocument
+    (Ace.Editor.getSession (Ace_utils.editor ())) in
+  let size = get_indent_size (Ace.Document.getLine doc row) in
+  let range = Ace.Range.range row 0 row size in
   let new_indent = String.make n ' ' in
-  Ace_utils.replace range new_indent
+  Ace.Document.replace doc range new_indent
 
 let indent_line row =
+  let doc = Ace.EditSession.getDocument
+    (Ace.Editor.getSession (Ace_utils.editor ())) in
   let last_anchor = get_last_anchor row in
   let add =
     if last_anchor = 0 then 0
-    else get_indent_size (Ace_utils.get_line last_anchor) in
-  let text = Ace_utils.get_lines last_anchor row in
+    else get_indent_size (Ace.Document.getLine doc last_anchor) in
+  let text = Ace_utils.get_lines doc last_anchor row in
   let res = ref 0 in
   call_ocp_indent (kind_num res) text;
   replace_indent row (!res+add)
@@ -123,10 +131,12 @@ let indent_region row_start row_end  =
        else anc in
 
      let last_anchor = search_anchor (get_last_anchor row_end) in
+     let doc = Ace.EditSession.getDocument
+       (Ace.Editor.getSession (Ace_utils.editor ())) in
      let add =
        if last_anchor = 0 then 0
-       else get_indent_size (Ace_utils.get_line last_anchor) in
-     let text = Ace_utils.get_lines last_anchor row_end in
+       else get_indent_size (Ace.Document.getLine doc last_anchor) in
+     let text = Ace_utils.get_lines doc last_anchor row_end in
      (* Ace_utils.console_debug (Js.string text); *) (* DEBUG *)
      call_ocp_indent (kind_multinum res) text;
 
@@ -136,18 +146,13 @@ let indent_region row_start row_end  =
        row + 1
      ) last_anchor res))
 
-let test () =
-  ()
-
 let _ =
   (Js.Unsafe.coerce Dom_html.window)##getIndentLine <- Js.wrap_callback
     get_indent_line;
   (Js.Unsafe.coerce Dom_html.window)##indentLine <- Js.wrap_callback
     indent_line;
   (Js.Unsafe.coerce Dom_html.window)##indentRegion <- Js.wrap_callback
-    indent_region;
-  (Js.Unsafe.coerce Dom_html.window)##indentTest <- Js.wrap_callback
-    test
+    indent_region
 
  (** ocamlc -I ocp-indent-src/ ocp_indent.cma -o testingindent.byte indent.ml && ./testingindent.byte **)
   (* let file = open_in "ocp-indent-src/indentBlock.ml" in *)
