@@ -27,19 +27,6 @@ let get_class_filename file =
 let exist_tab id =
   H.mem htbl id
 
-let get_content_tab id =
-  try 
-    let es = H.find htbl id in
-    let doc = Ace.EditSession.getDocument es in
-    Some (Ace.Document.getValue doc)
-  with Not_found -> None
-
-let save_tab id =
-  let content = get_content_tab id in
-  match content with
-  | None -> ()
-  | Some content -> Event_manager.save_file#trigger (id, content)
-
 let get_line_width () =
   let container = get_element_by_id "tabline" in
   container##clientWidth
@@ -429,7 +416,7 @@ let event_change_current_tab () =
 let event_save_current_tab () =
   match Filemanager.get_current_file () with
   | None -> assert false
-  | Some id -> save_tab id
+  | Some id -> Event_manager.save_file#trigger id
 
 let _ =
   (Js.Unsafe.coerce Dom_html.window)##saveCurrentTab <- Js.wrap_callback
@@ -534,8 +521,8 @@ let main () =
   let callback_switch_file (old_id, new_id) =
     let file = Filemanager.get_file new_id in
     (* Actualisation de l'editSession *)
-    let es = H.find htbl new_id in
-    Ace.Editor.setSession (Ace_utils.editor ()) es;
+    (* let es = H.find htbl new_id in *)
+    (* Ace.Editor.setSession (Ace_utils.editor ()) es; *)
     (* Changement du focus du tab *)
     begin match old_id with
       | None -> ()

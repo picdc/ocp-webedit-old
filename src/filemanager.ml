@@ -27,6 +27,8 @@ let current_file = ref None
 let existing_projects = H.create 19
 let existing_files = H.create 19
 
+let file_content = H.create 19
+
 
 let get_current_file () =
   !current_file
@@ -85,6 +87,20 @@ let add_file_to_project project filename =
 
 
 
+let get_content id =
+  try
+    let es = H.find file_content id in
+    let doc = Ace.EditSession.getDocument es in
+    Some (Ace.Document.getValue doc)
+  with Not_found -> None
+
+(* let save_tab id = *)
+(*   let content = get_content_tab id in *)
+(*   match content with *)
+(*   | None -> () *)
+(*   | Some content -> Event_manager.save_file#trigger (id, content) *)
+
+
 
 
 (* Fonctions pour utiliser le filemanager *)
@@ -124,6 +140,8 @@ let open_file callback (project, filename) =
   if not file.is_open then
     let callback str =
       file.is_open <- true;
+      let es = Ace.createEditSession ~text:str ~mode:("ace/mode/ocaml") in
+      H.add file_content file.id es;
       callback (file, str)
     in
     Request.get_content_of_file ~callback ~project ~filename
@@ -201,8 +219,14 @@ let rename_file callback (id, new_name) =
     else raise (Bad_file_name (file.project, new_name))
 
 
-let save_file callback (id, content) =
+let save_file callback id =
   let file = get_file id in
+  let content = get_content id in
+  let content = 
+    match content with
+      | Some s -> s
+      | None -> ""
+  in
   let callback () =
     file.is_unsaved <- false;
     callback file in
@@ -220,6 +244,8 @@ let switch_file callback new_id =
   let old_file = !current_file in
   let do_it () =
     current_file := Some new_id;
+    let es = H.find file_content new_id in
+    Ace.Editor.setSession (Ace_utils.editor ()) es;
     callback (old_file, new_id)
   in 
   match old_file with

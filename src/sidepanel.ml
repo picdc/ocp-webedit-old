@@ -23,7 +23,7 @@ let right_clic_dialog_file =
     match !focused_file with
     | None -> assert false
     | Some file_id ->
-      Tabs.save_tab file_id;
+      Event_manager.save_file#trigger file_id;
       Js._true) in
   let handler_delete_file = handler (fun _ ->
     match !focused_file with

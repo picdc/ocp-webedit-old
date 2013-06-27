@@ -15,7 +15,7 @@ val open_project : (Filemanager.file list, string) event
 val open_file : (Filemanager.file * string, string * string) event
 val close_file : (Filemanager.file, int) event 
 
-val save_file : (Filemanager.file, int * string) event
+val save_file : (Filemanager.file, int) event
 val unsaved_file : (Filemanager.file, int) event
 val switch_file : (int option * int, int) event
 

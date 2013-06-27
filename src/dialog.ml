@@ -51,9 +51,12 @@ module Prompt_dialog = struct
 
   let prompt title default f =
     let res = Dom_html.window##prompt(Js.string title, Js.string default) in
-    try
-      let res = Js.to_string res in
-      f res
-    with _ -> ()
+    match Js.Opt.to_option res with
+      | None -> ()
+      | Some s -> f (Js.to_string s)
+    (* try *)
+    (*   let res = Js.to_string res in *)
+    (*   f res *)
+    (* with _ -> () *)
 
 end

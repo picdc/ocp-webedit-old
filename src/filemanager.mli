@@ -38,7 +38,7 @@ val create_project : (string -> unit) -> string -> unit
 val create_file : (file -> unit) -> (string * string) -> unit
 val rename_file : (file -> unit) -> (int * string) -> unit
 val rename_project : (string * string -> unit) -> string * string -> unit
-val save_file : (file -> unit) -> (int * string) -> unit
+val save_file : (file -> unit) -> int -> unit
 val unsaved_file : (file -> unit) -> int -> unit
 val switch_file : (int option * int -> unit) -> int -> unit 
 val delete_file : (file -> unit) -> int -> unit
