@@ -2,7 +2,7 @@
 include Makefile.config
 include Makefile.rules
 
-SOURCES=  ace.ml ace_utils.ml request.ml filemanager.ml event_manager.ml \
+SOURCES= ace.ml ace_utils.ml request.ml filemanager.ml event_manager.ml \
 	dialog.ml tabs.ml sidepanel.ml 
 SOURCESI= ace.mli ace_utils.mli request.mli filemanager.mli \
 	event_manager.mli dialog.mli tabs.mli

@@ -99,7 +99,7 @@ let createEditSession ~text ~mode =
 let require moduleName =
   let fileName = String.uncapitalize moduleName in
   let str = Format.sprintf "ace.require(\"./%s\").%s;"
-    moduleName fileName moduleName in
+    fileName moduleName in
   Firebug.console##log(Js.string str);
   let r = eval_string str in
   Firebug.console##debug(r)
