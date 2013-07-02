@@ -7,12 +7,28 @@ type document
 type range
 type token
 
+(* type delta_action = InsertText | InsertLines | RemoveText | RemoveLines *)
+(* type delta = { action : delta_action ; range : range ; text : string } *)
+
 module Range = struct
     
   let range startRow startColumn endRow endColumn =
     fun_call (variable "new Range")
       [| inject startRow ; inject startColumn ; 
 	 inject endRow ; inject endColumn |]
+
+  let getStart range =
+    let start = get range "start" in
+    let row = get start "row" in
+    let column = get start "column" in
+    row, column
+
+  let getEnd range =
+    let end_ = get range "end" in
+    let row = get end_ "row" in
+    let column = get end_ "column" in
+    row, column
+
 
 end
 
@@ -55,7 +71,11 @@ module EditSession = struct
 
   let getTokens editSession row =
     Js.to_array (meth_call editSession "getTokens" [| inject row |])
-  
+ 
+  let replace editSession range text =
+    ignore (meth_call editSession "replace "
+	      [| inject range ; inject (Js.string text) |])
+
 end
 
 
@@ -69,6 +89,24 @@ module Editor = struct
 
   let getValue editor =
     Js.to_string (meth_call editor "getValue" [||])
+
+  (* let onChange editor f = *)
+  (*   let f o =  *)
+  (*     let data = get o "data" in *)
+  (*     let action = match Js.to_string (get data "action") with *)
+  (* 	| "insertText" -> InsertText   | "removeText" -> RemoveText *)
+  (* 	| "removeLines" -> RemoveLines | "insertLines" -> InsertLines *)
+  (* 	| s -> failwith  *)
+  (* 	  ("onChange match action : pattern not exhaustive : "^s) in *)
+  (*     let range = get data "range" in *)
+  (*     let text = try Js.to_string (get data "text") with _ -> "" in *)
+  (*     Firebug.console##log(Js.string (text^"--")); *)
+  (*     let delta = { action ; range ; text } in *)
+  (*     f delta *)
+  (*   in *)
+  (*   ignore (meth_call editor "on" *)
+  (* 	      [| inject (Js.string "change");  *)
+  (* 		 inject f |]) *)
 
   let removeLines editor =
     ignore (meth_call editor "removeLines" [||])

@@ -5,8 +5,13 @@ type document
 type range
 type token
 
+(* type delta_action = InsertText | InsertLines | RemoveText | RemoveLines *)
+(* type delta = { action : delta_action ; range : range ; text : string } *)
+
 module Range : sig
   val range : int -> int -> int -> int -> range
+  val getStart : range -> int * int
+  val getEnd : range -> int * int
 end
 
 module Token : sig
@@ -26,13 +31,15 @@ end
 module EditSession : sig
   val getDocument : editSession -> document
   val getTabSize : editSession -> int
-  val getTokens : editSession -> int -> token array  
+  val getTokens : editSession -> int -> token array
+  val replace : editSession -> range -> string -> unit
 end
 
 module Editor : sig
   val getSelectionRange : editor -> range
   val getSession : editor -> editSession
   val getValue : editor -> string
+  (* val onChange : editor -> (delta -> unit) -> unit *)
   val removeLines : editor -> unit
   val selectAll : editor -> unit
   val setReadOnly : editor -> bool -> unit

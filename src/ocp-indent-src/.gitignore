@@ -1,0 +1,5 @@
+*.cm[aiot]
+*.cmti
+*.annot
+approx_lexer.ml
+.depend

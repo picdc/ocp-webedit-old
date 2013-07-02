@@ -48,6 +48,8 @@ module Node = struct
     (* Stores the original token and line offset for alignment of
        comment continuations *)
     | KComment of Nstream.token * int
+    (* ocamldoc verbatim block *)
+    | KVerbatim of Nstream.token * int
     | KUnknown
     | KStruct
     | KSig
@@ -108,6 +110,7 @@ module Node = struct
     | KOpen -> "KOpen"
     | KInclude -> "KInclude"
     | KComment _ -> "KComment"
+    | KVerbatim _ -> "KVerbatim"
     | KUnknown -> "KUnknown"
     | KType -> "Ktype"
     | KException -> "KException"
@@ -327,7 +330,8 @@ let rec is_inside_type path =
   match unwind (function
       | KParen | KBegin | KBracket | KBrace | KBracketBar
       | KVal | KLet | KLetIn | KBody (KVal | KLet | KLetIn)
-      | KBody(KType|KExternal) | KColon -> true
+      | KBody(KType|KExternal) | KColon
+      | KStruct | KSig | KObject -> true
       | _ -> false)
       path
   with
@@ -378,9 +382,9 @@ let reset_line_indent config current_line path =
   in
   aux [] path
 
-let stacktrace t =
+let dump t =
   Printf.eprintf "\027[35m# \027[32m%8s\027[m %s\n%!"
-    (match t.last with tok::_ -> shorten_string 30 tok.substr
+    (match t.last with tok::_ -> shorten_string 30 (Lazy.force tok.substr)
                      | _ -> "")
     (to_string t)
 
@@ -557,12 +561,14 @@ let rec update_path config block stream tok =
     | _ -> path
   in
   let before_append_atom = function
-    | {kind=KWith(KTry|KMatch as m)}::_ as path ->
+    | {kind=KWith(KTry|KMatch as m)}::parent as path ->
         (* Special case: 'match with' and no bar for the 1st case:
            we append a virtual bar for alignment *)
-        let p =
-          append (KBar m) L ~pad:2 path
+        let path = match parent with
+          | {kind = KExpr i} :: _ when i = prio_flatop -> reset_padding path
+          | _ -> path
         in
+        let p = append (KBar m) L ~pad:2 path in
         if not starts_line then
           let column = max 0 (block.toff + tok.offset - 2) in
           Path.maptop (fun h -> {h with column}) p
@@ -646,7 +652,7 @@ let rec update_path config block stream tok =
      shouldn't be taken into account when indenting the next token *)
   let block0 = block in
   let block = match block.path with
-    | {kind=KComment _|KUnknown}::path -> {block with path}
+    | {kind=KComment _|KVerbatim _|KUnknown}::path -> {block with path}
     | _ -> block
   in
   match tok.token with
@@ -804,7 +810,7 @@ let rec update_path config block stream tok =
 
   | TYPE ->
       (match last_token block with
-       | Some (MODULE | CLASS) -> block.path (* module type *)
+       | Some (MODULE | CLASS) -> append KUnknown L block.path (* module type *)
        | Some (WITH|AND)
        | Some COLON (* 'type' inside type decl, for GADTs *)
          -> append KType L block.path
@@ -812,7 +818,7 @@ let rec update_path config block stream tok =
 
   | MODULE ->
       (match last_token block with
-       | Some LET -> block.path (* let module *)
+       | Some LET -> append KUnknown L block.path (* let module *)
        | Some (WITH|AND) -> append KType L block.path
        | _ -> append KModule L (unwind_top block.path))
 
@@ -933,6 +939,8 @@ let rec update_path config block stream tok =
           block.path
       in
       (match path with
+       | {kind=KWith m} :: {kind=KExpr i} :: _ when i = prio_flatop ->
+           append (KBar m) L (reset_padding path)
        | {kind=KWith m} :: _ -> append (KBar m) L path
        | {kind=KArrow (KMatch|KTry as m)} :: ({kind=KBar _} as h:: _ as p) ->
            Path.maptop (fun x -> {x with column = h.column})
@@ -950,7 +958,8 @@ let rec update_path config block stream tok =
             | KParen | KBegin | KBracket | KBrace | KBracketBar
             | KWith(KMatch|KTry) | KBar(KMatch|KTry) | KArrow(KMatch|KTry)
             | KFun
-            | KBody(KType|KExternal) | KColon -> true
+            | KBody(KType|KExternal) | KColon
+            | KStruct | KSig | KObject -> true
             | _ -> false)
             path
         in
@@ -980,7 +989,8 @@ let rec update_path config block stream tok =
                 | KParen | KBegin | KBracket | KBrace | KBracketBar
                 | KWith(KMatch|KTry)
                 | KFun
-                | KBody(KType|KExternal) | KColon -> true
+                | KBody(KType|KExternal) | KColon
+                | KStruct | KSig | KObject -> true
                 | _ -> false)
                 p
             with
@@ -994,6 +1004,7 @@ let rec update_path config block stream tok =
       let unwind_to = function
         | KParen | KBegin | KBrace | KBracket | KBracketBar | KBody _
         | KExternal | KModule | KType | KLet | KLetIn | KException | KVal
+        | KStruct | KSig | KObject
         | KAnd(KModule|KType|KLet|KLetIn) -> true
         | _ -> false
       in
@@ -1094,6 +1105,9 @@ let rec update_path config block stream tok =
 
   | DOT ->
       (match block.path with
+       | {kind=KExpr _} :: {kind=KType} :: {kind=KColon} :: p ->
+           (* let f: type t. t -> t = ... *)
+           p
        | {kind=KExpr i} :: ({kind=KBrace} as h :: p)
          when i = prio_max ->
            (* special case: distributive { Module. field; field } *)
@@ -1198,23 +1212,26 @@ let rec update_path config block stream tok =
   | OCAMLDOC_VERB ->
       (match block0.path with
        | {kind=KComment (tok,toff);indent;pad}::_ ->
-           { kind = KComment (tok,toff);
+           { kind = KVerbatim (tok,toff);
              line = Region.start_line tok.region;
              indent = indent + pad;
              line_indent = indent + pad;
              column = indent + pad;
              pad = 0 }
            :: block0.path
-       | _ -> assert false)
+       | _ -> dump block0; assert false)
 
   | COMMENTCONT ->
-      (match unwind ((=) KCodeInComment) block.path with
-       | _::p -> p
-       | [] -> unwind (function KComment _ -> true | _ -> false)
-                 (parent block0.path))
+      (match
+         unwind
+           (function KCodeInComment | KVerbatim _ -> true | _ -> false)
+           block0.path
+       with
+       | {kind=KCodeInComment|KVerbatim _} :: p -> p
+       | _ -> block.path)
 
   | COMMENT | EOF_IN_COMMENT ->
-      let s = tok.substr in
+      let s = Lazy.force tok.substr in
       let pad =
         let len = String.length s in
         let i = ref 2 in
@@ -1231,6 +1248,7 @@ let rec update_path config block stream tok =
         | {kind=KExpr i}::_ when i = prio_max ->
              (* after a closed expr: look-ahead *)
             (match next_token_full stream with
+             | None
              | Some ((* all block-closing tokens *)
                  {token = COLONCOLON | DONE | ELSE | END
                  | EQUAL | GREATERRBRACE | GREATERRBRACKET | IN | MINUSGREATER
@@ -1241,7 +1259,7 @@ let rec update_path config block stream tok =
                      let p = unwind_top block.path in
                      Path.indent p + Path.pad p
                    else (* indent as above *)
-                     Path.indent block.path
+                     (Path.top block0.path).line_indent
                  in
                  append (KComment (tok, col)) (A col) ~pad block.path
              | next ->
@@ -1305,11 +1323,12 @@ let update config block stream tok =
 let indent t = Path.indent t.path
 
 let original_column t = match t.path with
-  | {kind=KComment (tok,_)}::_ -> Region.start_column tok.region
+  | {kind=KComment (tok,_)|KVerbatim (tok,_)} :: _ ->
+      Region.start_column tok.region
   | _ -> t.orig
 
 let offset t = match t.path with
-  | {kind=KComment (_,toff)}::_ -> toff
+  | {kind=KComment (_,toff)|KVerbatim(_,toff)} :: _ -> toff
   | _ -> t.toff
 
 let padding t = Path.pad t.path
@@ -1336,6 +1355,9 @@ let reverse t =
           | ({kind=KComment (tok,_)} as n)::r ->
               { n with kind=KComment (tok,col); indent = col; column = col }
               :: r
+          | ({kind=KVerbatim (tok,_)} as n)::r ->
+              { n with kind=KVerbatim (tok,col); indent = col; column = col }
+              :: r
           | n1::n2::p ->
               { n1 with indent = col; column = col }
               :: { n2 with pad = n2.pad + diff }
@@ -1347,7 +1369,8 @@ let reverse t =
 
 let guess_indent line t =
   let path =
-    unwind (function KUnknown | KComment _ -> false | _ -> true) t.path
+    unwind (function KUnknown | KComment _ | KVerbatim _ -> false | _ -> true)
+      t.path
   in
   match path, t.last with
   | _, ({token = COMMENT | COMMENTCONT} as tok :: _)
@@ -1373,3 +1396,41 @@ let guess_indent line t =
       in match path with
       | {indent;pad}::_ -> indent + pad
       | [] -> 0
+
+let is_clean t =
+  List.for_all (fun node -> match node.kind with
+      | KCodeInComment -> false
+      | KVerbatim _ -> false
+      | KComment _ -> false
+      (* we need the next token to decide, because that may be "(* *)"
+         but also "(* {[". In the last case, it will be followed by
+         OCAMLDOC_* or COMMENTCONT, and until then the lexer stores a
+         state *)
+      (* **tuareg hack** "*)" (who says we want ocp-indent to handle coloration
+         too ?) *)
+      | _ -> true)
+    t.path
+
+let is_at_top t = match t.path with
+  | [] | [{kind=KModule|KVal|KLet|KExternal|KType|KException}] -> true
+  | _ -> false
+
+let is_declaration t = is_clean t && match t.path with
+  | [] -> true
+  | {kind=KStruct|KSig|KBegin|KObject} :: _ -> true
+  | _ -> false
+
+let is_in_comment t = match t.path with
+  | {kind = KComment _ | KVerbatim _}::_ -> true
+  | p -> List.exists (fun n -> n.kind = KCodeInComment) p
+
+(*
+(* for syntax highlighting: returns kind of construct at point *)
+type construct_kind =
+  | CK_paren (* parens and begin/end *)
+  | CK_block (* struct/end sig/end etc. *)
+  | CK_toplevel
+
+
+let construct_kind t token =
+*)

@@ -244,7 +244,8 @@ let switch_file callback new_id =
   let old_file = !current_file in
   let do_it () =
     current_file := Some new_id;
-    let es = H.find file_content new_id in
+    let es = try H.find file_content new_id
+      with _ -> failwith "pouet" in
     Ace.Editor.setSession (Ace_utils.editor ()) es;
     callback (old_file, new_id)
   in 

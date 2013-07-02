@@ -119,6 +119,22 @@ let make_editor (container: Dom_html.element Js.t) : unit =
   Tabs.main ();
   disable_editor ()
 
+  (* Modif des breakpoints à la saisie du texte pour l'indentation *)
+  (* let f_bkpt_remove delta = *)
+  (*   match delta.Ace.action with *)
+  (*   | Ace.RemoveText | Ace.RemoveLines ->  *)
+  (*     let range = delta.Ace.range in *)
+  (*     let startrow, _ = Ace.Range.getStart range in *)
+  (*     let endrow, _ = Ace.Range.getEnd range in *)
+  (*     for i=startrow to endrow do *)
+  (* 	Indent.remove_breakpoints i *)
+  (*     done *)
+  (*   | Ace.InsertLines | Ace.InsertText -> *)
+  (*     let text = delta.Ace.text in *)
+  (*     Ace_utils.console_log text *)
+  (* in *)
+  (* Ace.Editor.onChange (Ace_utils.editor ()) f_bkpt_remove *)
+
 
 let _ =
   (Js.Unsafe.coerce Dom_html.window)##makeEditor <- Js.wrap_callback

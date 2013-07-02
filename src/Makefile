@@ -61,7 +61,7 @@ main.byte: ace.cmo ace_utils.cmo completion_js.cmo $(OBJS) indent.cmo mytoplevel
 mytoplevel.cmo:
 	$(CAMLJS) -c $(TOPLVLLIB) $*.ml
 
-indent.cmo: 
+indent.cmo: indent.cmi
 	$(MAKE) -C $(OCPDIR)
 	$(CAMLJS) -c $(OCPLIB) $*.ml
 
