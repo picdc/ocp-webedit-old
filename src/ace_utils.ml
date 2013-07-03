@@ -6,7 +6,7 @@ type handler = (Dom_html.element Js.t, Dom_html.event Js.t)
 
 let _editor = ref (Obj.magic 5) (* O_O WHAT???? *)
 
-let init_editor el = _editor := (Ace.edit el)
+let init_editor el = _editor := Ace.edit el
 let editor () = !_editor
 
 (* class tabs_widget = object (self) *)
@@ -247,14 +247,14 @@ let tabs_widget title_list element_list init_num_tab
 (* type acetoken *)
 
 let enable_editor () =
-  Ace.Editor.setReadOnly !_editor false
+  (!_editor)##setReadOnly(Js.bool false)
   (* Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setReadOnly") *)
   (*   [| Js.Unsafe.inject Js._false |] *)
 
 let disable_editor () =
-  Ace.Editor.selectAll !_editor;
-  Ace.Editor.removeLines !_editor;
-  Ace.Editor.setReadOnly !_editor true
+  (!_editor)##selectAll();
+  (!_editor)##removeLines();
+  (!_editor)##setReadOnly(Js.bool true)
   (* ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "editor.selectAll") *)
   (*   [| Js.Unsafe.inject () |]); *)
   (* ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "editor.removeLines") *)
@@ -295,9 +295,11 @@ let disable_editor () =
 (* 		     "editor.getSession().getDocument().getLine") *)
 (* 		  [| Js.Unsafe.inject row |]) *)
 
-let get_lines doc row_start row_end =
-  let res = Ace.Document.getLines doc row_start row_end in
-  let res = List.fold_right (fun str acc -> str::acc)
+let get_lines row_start row_end =
+  let res = Js.to_array (Js.str_array (
+    (!_editor)##getSession()##getDocument()##getLines(row_start, row_end)))
+  in
+  let res = List.fold_right (fun str acc -> (Js.to_string str)::acc)
     (Array.to_list res) [] in
   String.concat "\n" res
 

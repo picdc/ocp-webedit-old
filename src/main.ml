@@ -58,7 +58,9 @@ let make_bottom_widget () =
 
 
 let make_editor (container: Dom_html.element Js.t) : unit =
-  Ace.require "Range";
+  Ace.require("Range");
+  let r = Ace.range 1 2 3 4 in
+  Ace_utils.console_debug r;
 
   let doc = Dom_html.document in
   let div_main = Dom_html.createDiv doc in

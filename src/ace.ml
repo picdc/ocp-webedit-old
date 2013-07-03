@@ -1,144 +1,63 @@
 
-open Js.Unsafe
+type tokenarray
 
-type editor
-type editSession
-type document
-type range
-type token
-
-(* type delta_action = InsertText | InsertLines | RemoveText | RemoveLines *)
-(* type delta = { action : delta_action ; range : range ; text : string } *)
-
-module Range = struct
-    
-  let range startRow startColumn endRow endColumn =
-    fun_call (variable "new Range")
-      [| inject startRow ; inject startColumn ; 
-	 inject endRow ; inject endColumn |]
-
-  let getStart range =
-    let start = get range "start" in
-    let row = get start "row" in
-    let column = get start "column" in
-    row, column
-
-  let getEnd range =
-    let end_ = get range "end" in
-    let row = get end_ "row" in
-    let column = get end_ "column" in
-    row, column
-
-
-end
-
-module Token = struct
-  let value token = Js.to_string (get token "value")
-  let _type token = Js.to_string (get token "type")
-end
-
-module Document = struct
-  let getLine document row =
-    Js.to_string (meth_call document "getLine" [| inject row |])
-
-  let getLines document rowStart rowEnd =
-    let res = Js.to_array (meth_call document "getLines"
-		    [| inject rowStart; inject rowEnd |]) in
-    Array.map (fun s -> Js.to_string s) res
-
-  let getTextRange document range =
-    Js.to_string (meth_call document "getTextRange" [| inject range |])
-
-  let getValue document =
-    Js.to_string (meth_call document "getValue" [||])
-
-  let replace document range text =
-    ignore (meth_call document "replace"
-	      [| inject range ; inject (Js.string text) |])
-
-  let setValue document value =
-    ignore (meth_call document "setValue" [| inject (Js.string value) |])
-
-end
-
-module EditSession = struct
-
-  let getDocument editSession =
-    meth_call editSession "getDocument" [||]
-
-  let getTabSize editSession =
-    meth_call editSession "getTabSize" [||]
-
-  let getTokens editSession row =
-    Js.to_array (meth_call editSession "getTokens" [| inject row |])
- 
-  let replace editSession range text =
-    ignore (meth_call editSession "replace "
-	      [| inject range ; inject (Js.string text) |])
-
+class type position = object
+  method row : int Js.readonly_prop
+  method column : int Js.readonly_prop
 end
 
 
-module Editor = struct
-
-  let getSelectionRange editor =
-    meth_call editor "getSelectionRange" [||]
-
-  let getSession editor =
-    meth_call editor "getSession" [||]
-
-  let getValue editor =
-    Js.to_string (meth_call editor "getValue" [||])
-
-  (* let onChange editor f = *)
-  (*   let f o =  *)
-  (*     let data = get o "data" in *)
-  (*     let action = match Js.to_string (get data "action") with *)
-  (* 	| "insertText" -> InsertText   | "removeText" -> RemoveText *)
-  (* 	| "removeLines" -> RemoveLines | "insertLines" -> InsertLines *)
-  (* 	| s -> failwith  *)
-  (* 	  ("onChange match action : pattern not exhaustive : "^s) in *)
-  (*     let range = get data "range" in *)
-  (*     let text = try Js.to_string (get data "text") with _ -> "" in *)
-  (*     Firebug.console##log(Js.string (text^"--")); *)
-  (*     let delta = { action ; range ; text } in *)
-  (*     f delta *)
-  (*   in *)
-  (*   ignore (meth_call editor "on" *)
-  (* 	      [| inject (Js.string "change");  *)
-  (* 		 inject f |]) *)
-
-  let removeLines editor =
-    ignore (meth_call editor "removeLines" [||])
-    
-  let selectAll editor =
-    ignore (meth_call editor "selectAll" [||])
- 
-  let setReadOnly editor readOnly =
-    ignore (meth_call editor "setReadOnly" [| inject (Js.bool readOnly) |])
-
-  let setSession editor session =
-    ignore (meth_call editor "setSession" [| inject session |])
-
-  let setValue editor value =
-    ignore (meth_call editor "setValue" [| inject (Js.string value) |])
-
+(* TO COMPLETE *) class type range = object
+  method start : position Js.t Js.readonly_prop
+  method _end : position Js.t Js.readonly_prop
 end
 
+(* DISGUSTING ! (but jsnew & constr don't work) *)
+let range sr sc er ec =
+  Js.Unsafe.fun_call (Js.Unsafe.variable "new Range")
+    [| Js.Unsafe.inject sr ; Js.Unsafe.inject sc ;
+       Js.Unsafe.inject er ; Js.Unsafe.inject ec |]
 
-let edit el =
-  fun_call (variable "ace.edit") [| inject (Js.string el) |]
+(* TO COMPLETE *) class type document = object
+  method getLine : int -> Js.js_string Js.t Js.meth
+  method getLines : int -> int -> Js.string_array Js.t Js.meth
+  method getTextRange : range Js.t -> Js.js_string Js.t Js.meth
+  method getValue : Js.js_string Js.t Js.meth
+  method replace : range Js.t -> Js.js_string Js.t -> unit Js.meth
+  method setValue : Js.js_string Js.t -> unit Js.meth
+end
 
-let createEditSession ~text ~mode = 
-  fun_call (variable "ace.createEditSession")
-    [| inject (Js.string text) ; inject (Js.string mode) |]
+(* TO COMPLETE *) class type editSession = object
+  method getDocument : document Js.t Js.meth
+  method getTabSize : int Js.meth
+  (* method getTokens : int -> tokenarray *)
+end
 
-(* UNSAFE (enfin plus que les autres) *)
+(* TO COMPLETE *) class type editor = object
+  method getSelectionRange : range Js.t Js.meth
+  method getSession : editSession Js.t Js.meth
+  method getValue : Js.js_string Js.t Js.meth
+  method removeLines : unit Js.meth
+  method selectAll : unit Js.meth
+  method setReadOnly : bool Js.t -> unit Js.meth 
+  method setSession : editSession Js.t -> unit Js.meth
+  method setValue : Js.js_string Js.t -> unit Js.meth
+end
+
+let edit el = 
+  Js.Unsafe.fun_call
+    (Js.Unsafe.variable "ace.edit") [| Js.Unsafe.inject (Js.string el) |]
+
+let createEditSession text mode =
+  Js.Unsafe.fun_call
+    (Js.Unsafe.variable "ace.createEditSession")
+    [| Js.Unsafe.inject (Js.string text) ;
+       Js.Unsafe.inject (Js.string mode) |]
+
+(* CAN BE IMPROVED ? *)
 let require moduleName =
-  let fileName = String.uncapitalize moduleName in
-  let str = Format.sprintf "ace.require(\"./%s\").%s;"
-    fileName moduleName in
-  Firebug.console##log(Js.string str);
-  let r = eval_string str in
-  Firebug.console##debug(r)
+  let arg = Format.sprintf "ace.require(\"./%s\").%s"
+    (String.uncapitalize moduleName) moduleName in
+  let _module = Js.Unsafe.variable arg in
+  (Js.Unsafe.coerce Dom_html.window)##_Range <- _module
   

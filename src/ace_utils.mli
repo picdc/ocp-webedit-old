@@ -10,7 +10,7 @@
 type handler = (Dom_html.element Js.t, Dom_html.event Js.t)
            Dom_html.event_listener
 
-val editor : unit -> Ace.editor
+val editor : unit -> Ace.editor Js.t
 val init_editor : string -> unit
 
 val optionnal_widget : Dom_html.element Js.t -> bool -> Dom_html.element Js.t
@@ -45,7 +45,7 @@ val disable_editor : unit -> unit
 (* val get_editsession_content : editSession -> string *)
 
 (* val get_line : int -> string *)
-val get_lines : Ace.document -> int -> int -> string
+val get_lines : int -> int -> string
 (* val get_tab_size : unit -> int *)
 (* val make_range : int -> int -> int -> int -> range *)
 (* val replace : range -> string -> unit *)

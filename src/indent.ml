@@ -46,12 +46,11 @@ let kind_ext = IndentPrinter.Extended (fun block elt (line, acc) ->
 (* Renvoie le texte minimum nécessaire à ocp-indent pour indenter
    correctement les lignes [rowstart] à [rowend] grâce aux breakpoints *)
 let get_minimum_text rowstart rowend =
-  let doc = Ace.EditSession.getDocument
-    (Ace.Editor.getSession (Ace_utils.editor ())) in
+  let doc = (Ace_utils.editor())##getSession()##getDocument() in
   let start = get_best_breakpoint rowstart in
-  let col = String.length (Ace.Document.getLine doc rowend) in
-  let range = Ace.Range.range start 0 rowend col in
-  Ace.Document.getTextRange doc range
+  let col = String.length (Js.to_string (doc##getLine(rowend))) in
+  let range =  Ace.range start 0 rowend col in
+  Js.to_string (doc##getTextRange(range))
 
 
 (** OBSOLETE **)
@@ -110,8 +109,7 @@ let call_ocp_indent str offset =
    i.e le nombre d'espace qui compose l'indentation *)
 let get_indent_size line =
   let size = String.length line in
-  let tab_size = Ace.EditSession.getTabSize 
-    (Ace.Editor.getSession (Ace_utils.editor ())) in
+  let tab_size = (Ace_utils.editor())##getSession()##getTabSize() in
   let rec aux i =
     if i >= size then i
     else
@@ -135,12 +133,11 @@ let get_indent_next_line row : Js.js_string Js.t =
 (* Remplace l'indentation de la ligne [row] de l'éditeur actuel
    par [n] espaces *)
 let replace_indent row n =
-  let doc = Ace.EditSession.getDocument
-    (Ace.Editor.getSession (Ace_utils.editor ())) in
-  let size = get_indent_size (Ace.Document.getLine doc row) in
-  let range = Ace.Range.range row 0 row size in
+  let doc = (Ace_utils.editor())##getSession()##getDocument() in
+  let size = get_indent_size (Js.to_string doc##getLine(row)) in
+  let range = Ace.range row 0 row size in
   let new_indent = String.make n ' ' in
-  Ace.Document.replace doc range new_indent
+  doc##replace(range, Js.string new_indent)
 
 
 (* Indente la ligne [row] de l'éditeur actuel *)
