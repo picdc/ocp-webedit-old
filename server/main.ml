@@ -16,14 +16,54 @@ let get_argument (cgi: Netcgi.cgi_activation) name =
     else raise Empty_cgi_argument end
   else raise Bad_cgi_argument
 
+let get_cookie (cgi: Netcgi.cgi_activation) name =
+  let cgi = cgi#environment in
+  cgi#cookie name
 
+let print_cookies (cgi: Netcgi.cgi_activation) =
+  let cgi = cgi#environment in
+  let c = cgi#cookies in
+  Format.printf "Let's print the list of cookies received : @.";
+  List.iter (fun co -> Format.printf "name=%s@." (Netcgi.Cookie.name co)) c
 
 let print_string str (cgi: Netcgi.cgi_activation) =
   (* cgi#set_header ~content_type:"plain/text" (); (\* TELECHARGE Oo? *\) *)
   cgi#out_channel#output_string str;
   cgi#out_channel#commit_work ()
+  
+let send_cookies cookies (cgi: Netcgi.cgi_activation) =
+  cgi#set_header ~set_cookies:cookies ();
+  cgi#out_channel#output_string "Authentified successfully";
+  cgi#out_channel#commit_work ()
+
+exception Request_failed of string
+
+let parse_persona_response r =
+  let open Yojson.Basic in
+      let res = from_string r in
+      let status = Util.member "status" res in
+      if (Util.to_string status) = "okay" then
+        Util.to_string (Util.member "email" res)
+      else
+        let reason = Util.member "reason" res in
+        raise (Request_failed (to_string reason))
+
+let login_function assertion =
+  let open Http_client.Convenience in
+      Format.printf "Verifying assertion@.";
+      let data = [("assertion", assertion); 
+                  ("audience", "http://localhost:4444")] 
+      in
+      let req = http_post_message "https://verifier.login.persona.org/verify" data
+      in
+      while not (req#is_served) do 
+        Format.printf "Waiting@." done;
+      let body = req#response_body in
+      parse_persona_response body#value
 
 
+
+(** Project management functions **)
 
 let project_function () =
   let path = Format.sprintf "%s/common_user" ppath in
@@ -124,12 +164,39 @@ let empty_dyn_service =
     dyn_translator = (fun _ -> "");
     dyn_accept_all_conditionals=false; }
 
+
+let login_service =
+  { empty_dyn_service with
+    Nethttpd_services.dyn_handler =
+      (fun _ cgi -> 
+	try
+          let key = get_argument cgi "assertion" in
+          let user = login_function key in
+          let c = Nethttp.Cookie.make "user" user in
+          send_cookies [c] cgi
+	with
+	  _ -> print_string "Error !" cgi
+      ); }
+
+let logout_service =
+  { empty_dyn_service with
+    Nethttpd_services.dyn_handler =
+      (fun _ cgi -> 
+	try
+          Format.printf "Logged out@.";
+          print_string "Logged_out" cgi
+	with
+	  _ -> print_string "Error !" cgi
+      ); }
+
+
 let project_service =
   { empty_dyn_service with
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
 	  let res = project_function () in
+          print_cookies cgi;
 	  print_string res cgi
 	with
 	  _ -> print_string "Error !" cgi
@@ -253,16 +320,20 @@ let project_delete_service =
 let my_factory =
   Nethttpd_plex.nethttpd_factory
     ~name:"ace-edit_processor"
-    ~handlers: [ "project_service", project_service ;
-		 "project_list_service", project_list_service ;
-		 "project_load_service", project_load_service;
-		 "project_create_service", project_create_service;
-		 "create_service", create_service;
-		 "project_save_service", project_save_service;
-                 "rename_service", rename_service;
-                 "project_rename_service", project_rename_service;
-		 "delete_service", delete_service;
-		 "project_delete_service", project_delete_service ]
+    ~handlers: [
+      "login_service", login_service;
+      "logout_service", logout_service;
+      "project_service", project_service ;
+      "project_list_service", project_list_service ;
+      "project_load_service", project_load_service;
+      "project_create_service", project_create_service;
+      "create_service", create_service;
+      "project_save_service", project_save_service;
+      "rename_service", rename_service;
+      "project_rename_service", project_rename_service;
+      "delete_service", delete_service;
+      "project_delete_service", project_delete_service 
+    ]
 
     ()
 
@@ -288,5 +359,14 @@ let main() =
     cmdline_cfg
 
 let _ =
+  (* Enables SSL for Http_client.Convenience *)
+  Ssl.init();
+  Http_client.Convenience.configure_pipeline
+    (fun p ->
+      let ctx = Ssl.create_context Ssl.TLSv1 Ssl.Client_context in
+      let tct = Https_client.https_transport_channel_type ctx in
+      p # configure_transport Http_client.https_cb_id tct
+    );
+
   Netsys_signal.init ();
   main()
