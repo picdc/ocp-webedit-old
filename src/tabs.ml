@@ -481,8 +481,7 @@ let main () =
   let callback_open_file (file, content) =
     let filename = file.Filemanager.filename in
     let id = file.Filemanager.id in
-    add_tab id filename content;
-    Event_manager.switch_file#trigger id
+    add_tab id filename content
   in
   let callback_close_file file =
     close_tab file.Filemanager.id

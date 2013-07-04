@@ -18,38 +18,54 @@ open Nstream
 open Approx_lexer
 open OcpUtil
 
-(* If [Print f], the whole input is fed as strings through f, with expected
-   lines reindented.
-   If [Numeric f], the indentation values (i.e. total number of leading
-   spaces) for the lines on which [in_lines] is true are passed through the
-   function *)
-type output_kind =
-  | Numeric of (int -> unit)
-  | Print of (string -> unit)
+type output_elt = Newline | Indent of int | Whitespace of string | Text of string
 
-type output = {
+type 'a output_kind =
+  | Numeric of (int -> 'a -> 'a)
+  | Print of (string -> 'a -> 'a)
+  | Extended of (IndentBlock.t -> output_elt -> 'a -> 'a)
+
+type 'a output = {
   debug: bool;
   config: IndentConfig.t;
   (* Returns true on the lines that should be reindented *)
   in_lines: int -> bool;
+  adaptive: bool;
   indent_empty: bool;
-  kind: output_kind;
+  kind: 'a output_kind;
+}
+
+let std_output = {
+  debug = false;
+  config = IndentConfig.default;
+  in_lines = (fun _ -> true);
+  adaptive = true;
+  indent_empty = false;
+  kind = Print (fun s () -> print_endline s);
 }
 
 (* utility functions *)
 
-let endline = "\n" (* On windows, should be \r\n. Some argument ? *)
-
-let pr_string output text =
+let pr_string output block text usr =
   match output.kind with
-  | Numeric _ -> ()
-  | Print f -> f text
+  | Numeric _ -> usr
+  | Print f -> f text usr
+  | Extended f -> f block (Text text) usr
 
-let pr_nl output = pr_string output endline
+let pr_whitespace output block text usr =
+  match output.kind with
+  | Numeric _ -> usr
+  | Print f -> f text usr
+  | Extended f -> f block (Whitespace text) usr
+
+let pr_nl output block usr =
+  match output.kind with
+  | Numeric _ -> usr
+  | Print pr -> pr "\n" usr
+  | Extended pr -> pr block Newline usr
 
 (* indent functions *)
 
-(* must be called exactly once for each line, in order *)
 type indentKind = Normal
                 | Empty (* empty line: depending on options, don't indent
                            or try to guess expected indent. *)
@@ -57,43 +73,49 @@ type indentKind = Normal
                             line as the following ones*)
                 | Fixed of int (* indent to this value, ignoring the block *)
 
+(* must be called exactly once for each line, in order *)
 (* let line_debug_counter = ref 0 *)
-let print_indent output line blank ?(kind=Normal) block =
+let print_indent output line blank ?(kind=Normal) block usr =
   (* assert (incr line_debug_counter; line = !line_debug_counter); *)
   if output.in_lines line then
     let indent =
       match kind with
       | Normal -> IndentBlock.indent block
-      | Empty when output.indent_empty ->
-          IndentBlock.guess_indent line block
-      | Empty -> 0
+      | Empty ->
+          if output.indent_empty then IndentBlock.guess_indent line block
+          else  0
       | Padded ->
           IndentBlock.indent block + IndentBlock.padding block
       | Fixed n -> n
     in
     match output.kind with
-    | Numeric pr -> pr indent
-    | Print pr -> pr (String.make indent ' ')
+    | Numeric pr -> pr indent usr
+    | Print pr -> pr (String.make indent ' ') usr
+    | Extended pr -> pr block (Indent indent) usr
   else
     match output.kind with
-    | Numeric _ -> ()
-    | Print pr -> pr blank
+    | Numeric _ -> usr
+    | Print pr -> pr blank usr
+    | Extended pr -> pr block (Whitespace blank) usr
 
-let print_token output block t =
+let print_token output block tok usr =
   let orig_start_column = IndentBlock.original_column block in
   let start_column = IndentBlock.offset block in
   (* Handle multi-line tokens (strings, comments) *)
-  let rec print_extra_lines line pad last = function
-    | [] -> ()
+  let rec print_extra_lines line pad last lines usr =
+    match lines with
+    | [] -> usr
     | text::next_lines ->
-        pr_nl output;
+        let usr = usr |> pr_nl output block in
         if not (output.in_lines line) then
-          (print_indent output line "" block;
-           pr_string output text;
-           print_extra_lines (line+1) pad text next_lines)
-        else if String.trim text = "" && t.token <> OCAMLDOC_VERB then
-          (print_indent output line "" ~kind:Empty block;
-           print_extra_lines (line+1) pad text next_lines)
+          usr
+          |> print_indent output line "" block
+          |> pr_string output block text
+          |> print_extra_lines (line+1) pad text next_lines
+        else if String.trim text = "" && tok.token <> OCAMLDOC_VERB then
+          usr
+          |> print_indent output line "" ~kind:Empty block
+          |> print_extra_lines (line+1) pad text next_lines
         else
           let orig_line_indent = count_leading_spaces text in
           let orig_offset = orig_line_indent - orig_start_column in
@@ -104,7 +126,7 @@ let print_token output block t =
           let indent_value =
             match pad with
             | None -> orig_line_indent
-            | Some pad -> match t.token with
+            | Some pad -> match tok.token with
                 | STRING _ ->
                     if ends_with_escape last then
                       if is_prefix "\"" text || is_prefix "\\ " text
@@ -125,21 +147,21 @@ let print_token output block t =
                       else max orig_offset pad
                 | _ -> start_column + max orig_offset pad
           in
-          print_indent output line "" ~kind:(Fixed indent_value) block;
-          pr_string output text;
-          print_extra_lines (line+1) pad text next_lines
+          usr
+          |> print_indent output line "" ~kind:(Fixed indent_value) block
+          |> pr_string output block text
+          |> print_extra_lines (line+1) pad text next_lines
   in
-  let line = Region.start_line t.region in
+  let line = Region.start_line tok.region in
   let text, next_lines =
-    if line = Region.end_line t.region then t.substr, []
-    else match string_split '\n' t.substr with
+    if line = Region.end_line tok.region then (Lazy.force tok.substr), []
+    else match string_split '\n' (Lazy.force tok.substr) with
       | [] -> assert false
       | hd::tl -> hd,tl
   in
-  pr_string output text;
   let pad =
     if next_lines = [] then None
-    else match t.token with
+    else match tok.token with
       | STRING _ ->
           (match String.trim text with
            | "\"" | "\"\\" -> None
@@ -158,89 +180,72 @@ let print_token output block t =
           else Some (!i + 1)
       | _ -> Some 2
   in
-  print_extra_lines (line+1) pad text next_lines
-
-type state = Position.t * IndentBlock.t
+  usr
+  |> pr_string output block text
+  |> print_extra_lines (line+1) pad text next_lines
 
 (* [block] is the current indentation block
    [stream] is the token stream *)
-let rec loop output (last_pos,block) stream =
+let rec loop output block stream usr =
   match Nstream.next stream with
-  | None -> (last_pos,block) (* End of file *)
+  | None -> usr (* End of file *)
   | Some (t, stream) ->
-      let is_first_line = last_pos = Position.zero in
       let line = Region.start_line t.region in
-      (* handle leading blanks *)
-      let blank =
-        let blanks = string_split '\n' t.between in
-        let blanks, line =
-          if is_first_line then ""::blanks, line - 1
-          else blanks, line
-        in
+      let is_first_line = block = IndentBlock.empty in
+      (* handle leading blanks (output other lines right now, whitespace in
+         front of the current token, on the same line is handled later) *)
+      let is_first_line, blank, usr =
+        let blanks = string_split '\n' (Lazy.force t.between) in
         match blanks with
         | [] -> assert false
-        | bl::[] -> bl
+        | bl::[] -> is_first_line, bl, usr
         | bl::blanks ->
-            let rec indent_between line block = function
+            let rec indent_between line block blanks usr = match blanks with
               | [] -> assert false
-              | bl::[] -> bl
+              | bl::[] -> false, bl, usr
               | bl::blanks ->
-                  print_indent output line bl ~kind:Empty block;
-                  pr_nl output;
-                  indent_between (line+1) block blanks
+                  usr
+                  |> pr_nl output block
+                  |> print_indent output line bl ~kind:Empty block
+                  |> indent_between (line+1) block blanks
             in
-            pr_string output bl;
-            if not is_first_line then pr_nl output;
-            indent_between (line - t.newlines + 1) block blanks
+            usr
+            |> pr_whitespace output block bl
+            |> indent_between (line - t.newlines + 1) block blanks
       in
       (* Compute block and indent *)
-      let at_line_start = t.newlines > 0 || is_first_line in
       let block = IndentBlock.update output.config block stream t in
       (* Update block according to the indent in the file if before the
          handled region *)
       let block =
-        if output.in_lines line then block
-        else IndentBlock.reverse block
+        if output.adaptive && not (output.in_lines line)
+        then IndentBlock.reverse block
+        else block
       in
-      if output.debug then IndentBlock.stacktrace block;
+      if output.debug then IndentBlock.dump block;
       (* Handle token *)
-      if at_line_start then
-        let kind = match t.token with
-          | COMMENT when is_prefix "(*\n" t.substr ->
-              Fixed (String.length blank)
-          | OCAMLDOC_VERB -> Padded
-          | EOF | EOF_IN_COMMENT | EOF_IN_QUOTATION _ | EOF_IN_STRING _ ->
-              Empty
-          | COMMENTCONT -> Padded
-          | _ -> Normal
-        in
-        print_indent output line blank ~kind block
-      else pr_string output blank;
-      print_token output block t;
-      loop output (Region.snd t.region, block) stream
+      let at_line_start = t.newlines > 0 || is_first_line in
+      let usr =
+        if at_line_start then
+          let kind = match t.token with
+            | COMMENT when is_prefix "(*\n" (Lazy.force t.substr) ->
+                Fixed (String.length blank)
+            | OCAMLDOC_VERB -> Padded
+            | EOF | EOF_IN_COMMENT | EOF_IN_QUOTATION _ | EOF_IN_STRING _ ->
+                Empty
+            | COMMENTCONT -> Padded
+            | _ -> Normal
+          in
+          usr
+          |> (if is_first_line then (fun usr -> usr) else pr_nl output block)
+          |> print_indent output line blank ~kind block
+        else
+          usr
+          |> pr_whitespace output block blank
+      in
+      let usr = usr |> print_token output block t in
+      match t.token with EOF | EOF_IN_COMMENT | EOF_IN_QUOTATION _ | EOF_IN_STRING _ -> usr
+                       | _ -> usr |> loop output block stream
 
-(* State marshalling *)
-
-let initial = Position.zero, IndentBlock.empty
-
-let position (p,_) = p
-
-let save state =
-  let pos = position state in
-  let line, col = pos.Lexing.pos_lnum, Position.column pos in
-  Printf.sprintf "%d,%d,%a" 
-    line col
-    (fun () a -> OcpUtil.string_to_hex (Marshal.to_string a []))
-    (snd state)
-
-let load str =
-  if str = ""
-  then initial
-  else Scanf.sscanf str
-    "%d,%d,%s"
-    (fun pos_lnum pos_cnum str ->
-      { Lexing. pos_fname = ""; pos_bol = 0; pos_lnum; pos_cnum },
-      Marshal.from_string (OcpUtil.string_of_hex str) 0)
-
-let stream output ?(resume=initial) stream =
-  loop output resume stream
+let proceed output stream block usr =
+  usr |> loop output block stream

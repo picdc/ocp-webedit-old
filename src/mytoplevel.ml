@@ -100,10 +100,10 @@ let evaluate_input () =
     (Format.sprintf "%dpx" textarea_line_size)
 
 let evaluate_selection () =
-  let doc = Ace.EditSession.getDocument
-    (Ace.Editor.getSession (Ace_utils.editor ())) in
-  let range = Ace.Editor.getSelectionRange (Ace_utils.editor ()) in
-  let text = Ace.Document.getTextRange doc range in
+  let editor = Ace_utils.editor () in
+  let doc = editor##getSession()##getDocument() in
+  let range = editor##getSelectionRange() in
+  let text = Js.to_string doc##getTextRange(range) in
   print_input text;
   execute text
 

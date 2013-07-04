@@ -54,82 +54,6 @@ oop.inherits(Mode, TextMode);
 /**********************************************************/
 
 
-// function get_indent(line) {
-//     return line.match(/^\s*/)[0];
-// }
-
-// var anchor_inc = /(in|end|done)/;
-// var anchor_dec = /(let|begin|do)/;
-
-// function get_last_anchor(row) {
-//     var count = 0;
-//     for ( var i = row-1 ; i >= 0 ; i-- ) {
-// 	var tokens = editor.getSession().getTokens(i);
-// 	for ( var j = tokens.length-1 ; j >= 0 ; j-- ) {
-// 	    if ( tokens[j].type == "keyword" ) {
-// 		var v = tokens[j].value;
-// 		if ( anchor_inc.test(v) )
-// 		    count++;
-// 		else if ( anchor_dec.test(v) ) {
-// 		    if ( count == 0 )
-// 			return i;
-// 		    else count--;
-// 		} else if ( v == "match" && count == 0 )
-// 		    return i;
-// 	    }
-// 	}
-//     }
-//     return 0;
-// }
-
-// function get_indent_line(row) {
-//     var last_anchor = get_last_anchor(row);
-//     var text = editor.getSession().getLines(last_anchor, row).join('\n');
-//     var add = get_indent(text.split('\n')[0]).length;
-//     console.debug(text);
-//     console.debug(add);
-//     console.debug(row-last_anchor);
-//     return getIndentLine(text, row-last_anchor, add);
-// }
-
-
-// function indent_line(row) {
-//     var last_anchor = get_last_anchor(row);
-//     var text = editor.getSession().getLines(last_anchor, row).join('\n');
-//     var add = get_indent(text.split('\n')[0]).length;
-//     console.debug(text);
-//     console.debug(add);
-//     console.debug(row-last_anchor);
-//     indentLine(text, last_anchor, row-last_anchor, add);
-// }
-
-
-// function indent_region(row_start, row_end) {
-//     if ( row_start == row_end ) {
-// 	indentLine(row_start);
-//     } else {
-// 	var session = editor.getSession();
-// 	var last_anchor = get_last_anchor(row_end);
-	
-// 	// Traitement si la sélection a plusieurs "blocs"
-// 	while ( row_start < last_anchor )
-// 	    last_anchor = get_last_anchor(last_anchor);
-
-// 	var text = editor.getSession().getLines(last_anchor, row_end).join('\n');
-// 	var add = get_indent(text.split('\n')[0]).length;
-
-// 	// On repère la sélection du texte à indenter)
-// 	var start = row_start - last_anchor;
-// 	var end = row_end - last_anchor;
-// 	console.debug(text);
-// 	console.debug(add);
-// 	console.debug(last_anchor);
-// 	console.debug(start);
-// 	console.debug(end);
-// 	indentRegion(text, last_anchor, start, end, add);
-//     }
-// }
- 
 
 /* Config de l'éditeur */
 editor.getSession().setTabSize(2);
@@ -175,7 +99,6 @@ editor.commands.addCommand({
     bindKey: {win: 'Ctrl-Q'// , mac: 'Control-L'
              },
     exec: function(editor) {
-        console.log("Completion");
         var c = editor.getCursorPosition();
         var token = editor.getSession().getTokenAt(c.row, c.column);
 
@@ -190,7 +113,6 @@ editor.commands.addCommand({
                     in_completion_mode = true;
                 }
                 var next = nextCompletion();
-                console.log(next);
                 if (next != undefined)
                     editor.getSession().replace(range, next);
             }
@@ -207,7 +129,6 @@ editor.commands.addCommand({
 //     },
 //     readOnly: false
 // });
-
 
 
 //var indenter = /(?:[({[=:]|[-=]>|\b(?:else|try|with))\s*$/;
@@ -243,9 +164,9 @@ var outdenter_list = /(in|let|end|done)/;
 
  
     this.getNextLineIndent = function(state, line, tab) {
-	console.time("indent_next_line");
+	//console.time("indent_next_line");
 	var t = getIndentLine(editor.getCursorPosition().row);
-	console.timeEnd("indent_next_line");
+	//console.timeEnd("indent_next_line");
 	return t;
     };
 
@@ -257,12 +178,14 @@ var outdenter_list = /(in|let|end|done)/;
 	var curpos = editor.getCursorPosition();
 	var session = editor.getSession();
 	var token = session.getTokenAt(curpos.row, curpos.column);
+	indentNotifyChange(curpos.row);
 
 	if ( token == null )
 	    return false;
         
         if ( input == '\n' || input == ' ' ) {
 	    var next_token = session.getTokenAt(curpos.row, curpos.column+1);
+
 	    /* Traitement d'auto-complétion */
             in_completion_mode = false;
             if ( token.type == "support.function" ||
@@ -287,9 +210,9 @@ var outdenter_list = /(in|let|end|done)/;
     };
 
     this.autoOutdent = function(state, doc, row) {
-	console.time("outdent");
+	//console.time("outdent");
 	indentRegion(row, editor.getCursorPosition().row);
-	console.timeEnd("outdent");
+	//console.timeEnd("outdent");
     };
 
 }).call(Mode.prototype);

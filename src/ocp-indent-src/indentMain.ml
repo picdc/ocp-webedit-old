@@ -26,20 +26,12 @@ let indent_channel ic args config out =
     config = config;
     in_lines = args.Args.in_lines;
     indent_empty = args.Args.indent_empty;
+    adaptive = true;
     kind = args.Args.indent_printer oc;
   }
   in
-  
-  let state = if args.Args.marshal_state
-    then let line = input_line ic in
-         IndentPrinter.load line
-    else IndentPrinter.initial
-  in
-  let pos = IndentPrinter.position state in
-  let stream = Nstream.create ~pos ic in
-  let state = IndentPrinter.stream output ~resume:state stream in
-  if args.Args.marshal_state then
-    output_string oc (IndentPrinter.save state);
+  let stream = Nstream.of_channel ic in
+  IndentPrinter.proceed output stream IndentBlock.empty ();
   flush oc;
   if need_close then close_out oc
 
@@ -48,6 +40,7 @@ let indent_file args = function
       let config, syntaxes = IndentConfig.local_default () in
       Approx_lexer.disable_extensions ();
       List.iter Approx_lexer.enable_extension syntaxes;
+      List.iter Approx_lexer.enable_extension args.Args.syntax_exts;
       let config =
         List.fold_left
           IndentConfig.update_from_string
@@ -61,6 +54,7 @@ let indent_file args = function
       in
       Approx_lexer.disable_extensions ();
       List.iter Approx_lexer.enable_extension syntaxes;
+      List.iter Approx_lexer.enable_extension args.Args.syntax_exts;
       let config =
         List.fold_left
           IndentConfig.update_from_string
@@ -69,7 +63,7 @@ let indent_file args = function
       in
       let out, need_move =
         if args.Args.inplace then
-          let tmp_file = path ^ ".ocp-indent" in
+          let tmp_file = path ^ ".ocp-indent-tmp" in
           Some tmp_file, Some path
         else
           args.Args.file_out, None

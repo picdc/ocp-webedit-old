@@ -1,0 +1,4 @@
+server
+*.o
+*.cm[ix]
+depend

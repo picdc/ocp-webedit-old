@@ -43,7 +43,7 @@ INCLUDEJS=-I . -I $(OCPDIR) -I $(ACDIR) -I $(REDIR) $(JSFLAGS) \
 	-I ~/.opam/4.00.1/lib/js_of_ocaml_compiler-libs \
 	$(TOPLVLDIR)/toplevel_runtime.js
 
-JSFLAGS = -pretty -noinline -linkall -toplevel $(INCLUDEJS_TOPLVL)
+JSFLAGS = -pretty -linkall -toplevel $(INCLUDEJS_TOPLVL)
 
 .PHONY: depend
 
@@ -61,7 +61,7 @@ main.byte: ace.cmo ace_utils.cmo completion_js.cmo $(OBJS) indent.cmo mytoplevel
 mytoplevel.cmo:
 	$(CAMLJS) -c $(TOPLVLLIB) $*.ml
 
-indent.cmo: 
+indent.cmo: indent.cmi
 	$(MAKE) -C $(OCPDIR)
 	$(CAMLJS) -c $(OCPLIB) $*.ml
 

@@ -49,6 +49,7 @@ let add_file container file =
       file.Filemanager.project,		(* Obligé de refresh ici *)
       file.Filemanager.filename,	(* au cas où il y a eu du chgmt *)
       file.Filemanager.is_open in
+    Format.printf "is_open = %b@." is_open;
     if is_open then Event_manager.switch_file#trigger id
     else Event_manager.open_file#trigger (project, filename);
     Js._true);

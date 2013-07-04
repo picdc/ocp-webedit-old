@@ -25,8 +25,7 @@ type t = private {
   inplace : bool;
   indent_empty: bool;
   in_lines: int -> bool;
-  marshal_state: bool;
-  indent_printer: out_channel -> IndentPrinter.output_kind;
+  indent_printer: out_channel -> unit IndentPrinter.output_kind;
   syntax_exts: string list;
 }
 

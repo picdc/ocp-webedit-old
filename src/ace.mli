@@ -1,46 +1,47 @@
 
-type editor
-type editSession
-type document
-type range
-type token
+type tokenarray
 
-module Range : sig
-  val range : int -> int -> int -> int -> range
+class type position = object
+  method row : int Js.readonly_prop
+  method column : int Js.readonly_prop
 end
 
-module Token : sig
-  val value : token -> string
-  val _type : token -> string
+
+(* TO COMPLETE *) class type range = object
+  method start : position Js.t Js.readonly_prop
+  method _end : position Js.t Js.readonly_prop
 end
 
-module Document : sig
-  val getLine : document -> int -> string
-  val getLines : document -> int -> int -> string array
-  val getTextRange : document -> range -> string
-  val getValue : document -> string
-  val replace : document -> range -> string -> unit
-  val setValue : document -> string -> unit
+(* DISGUSTING ! (but jsnew & constr don't work) *)
+val range : int -> int -> int -> int -> range Js.t
+
+(* TO COMPLETE *) class type document = object
+  method getLine : int -> Js.js_string Js.t Js.meth
+  method getLines : int -> int -> Js.string_array Js.t Js.meth
+  method getTextRange : range Js.t -> Js.js_string Js.t Js.meth
+  method getValue : Js.js_string Js.t Js.meth
+  method replace : range Js.t -> Js.js_string Js.t -> unit Js.meth
+  method setValue : Js.js_string Js.t -> unit Js.meth
 end
 
-module EditSession : sig
-  val getDocument : editSession -> document
-  val getTabSize : editSession -> int
-  val getTokens : editSession -> int -> token array  
+(* TO COMPLETE *) class type editSession = object
+  method getDocument : document Js.t Js.meth
+  method getTabSize : int Js.meth
+  (* method getTokens : int -> tokenarray *)
 end
 
-module Editor : sig
-  val getSelectionRange : editor -> range
-  val getSession : editor -> editSession
-  val getValue : editor -> string
-  val removeLines : editor -> unit
-  val selectAll : editor -> unit
-  val setReadOnly : editor -> bool -> unit
-  val setSession : editor -> editSession -> unit
-  val setValue : editor -> string -> unit
+(* TO COMPLETE *) class type editor = object
+  method getSelectionRange : range Js.t Js.meth
+  method getSession : editSession Js.t Js.meth
+  method getValue : Js.js_string Js.t Js.meth
+  method removeLines : unit Js.meth
+  method selectAll : unit Js.meth
+  method setReadOnly : bool Js.t -> unit Js.meth 
+  method setSession : editSession Js.t -> unit Js.meth
+  method setValue : Js.js_string Js.t -> unit Js.meth
 end
 
-val edit : string -> editor
-val createEditSession : text:string -> mode:string -> editSession
-val require : string -> unit
+(* TO COMPLETE *) val edit : string -> editor Js.t
+(* TO COMPLETE *) val createEditSession : string -> string -> editSession Js.t
 
+(* CAN BE IMPROVED ? *) val require : string -> unit

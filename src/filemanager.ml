@@ -90,8 +90,7 @@ let add_file_to_project project filename =
 let get_content id =
   try
     let es = H.find file_content id in
-    let doc = Ace.EditSession.getDocument es in
-    Some (Ace.Document.getValue doc)
+    Some (es##getDocument()##getValue())
   with Not_found -> None
 
 (* let save_tab id = *)
@@ -140,7 +139,7 @@ let open_file callback (project, filename) =
   if not file.is_open then
     let callback str =
       file.is_open <- true;
-      let es = Ace.createEditSession ~text:str ~mode:("ace/mode/ocaml") in
+      let es = Ace.createEditSession str "ace/mode/ocaml" in
       H.add file_content file.id es;
       callback (file, str)
     in
@@ -224,7 +223,7 @@ let save_file callback id =
   let content = get_content id in
   let content = 
     match content with
-      | Some s -> s
+      | Some s -> Js.to_string s
       | None -> ""
   in
   let callback () =
@@ -244,8 +243,9 @@ let switch_file callback new_id =
   let old_file = !current_file in
   let do_it () =
     current_file := Some new_id;
-    let es = H.find file_content new_id in
-    Ace.Editor.setSession (Ace_utils.editor ()) es;
+    let es = try H.find file_content new_id
+      with _ -> failwith "pouet" in
+    (Ace_utils.editor())##setSession(es);
     callback (old_file, new_id)
   in 
   match old_file with

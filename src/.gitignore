@@ -1,0 +1,8 @@
+*.cm[aiot]
+*.cmti
+*.annot
+main.js
+main.byte
+
+# On exclut les sous-dossiers
+!*/*
