@@ -7,13 +7,26 @@
   <body>
     <div id="main_content"></div>
 
+    <!-- <script src="https://login.persona.org/include.js"></script> -->
     <script src="./ace/ace.js" type="text/javascript"
     	    charset="utf-8"></script>
     <script src="./main.js" type="text/javascript"
 	    charset="utf-8"></script>
+
+    <!--
+        Will automatically verify if the user is logged in
+      -->
+
+    <!-- <script> -->
+    <!--   navigator.id.watch({ -->
+    <!--     onlogin : verifyAssertion, -->
+    <!--     onlogout : onlogoutFunction}); -->
+    <!-- </script> -->
+
     <script>
       var container = document.getElementById("main_content");
       makeEditor(container);
     </script>
+
   </body>
 </html>
