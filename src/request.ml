@@ -14,6 +14,7 @@ let pull_request ~callback ~meth ~url ~asyn ~msg =
   req##_open(Js.string meth, Js.string url, Js.bool asyn);
   req##setRequestHeader(Js.string "Content-Type",
 			Js.string "application/x-www-form-urlencoded");
+  req##setRequestHeader(Js.string "withCredentials", Js.string "true");
   let f () = 
     match req##readyState with
     | XmlHttpRequest.DONE -> callback (Js.to_string req##responseText)

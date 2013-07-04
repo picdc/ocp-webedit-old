@@ -18,13 +18,21 @@ let get_argument (cgi: Netcgi.cgi_activation) name =
 
 let get_cookie (cgi: Netcgi.cgi_activation) name =
   let cgi = cgi#environment in
-  cgi#cookie name
+  let c = cgi#cookies in
+  try
+    let res = List.find (fun co -> (Netcgi.Cookie.name co) = name) c in
+    Netcgi.Cookie.value res
+  with
+    | Not_found -> failwith ("Cookie with name " ^ name ^ "doesn't exists")
 
 let print_cookies (cgi: Netcgi.cgi_activation) =
   let cgi = cgi#environment in
   let c = cgi#cookies in
   Format.printf "Let's print the list of cookies received : @.";
-  List.iter (fun co -> Format.printf "name=%s@." (Netcgi.Cookie.name co)) c
+  List.iter (fun co -> 
+    let name, value = (Netcgi.Cookie.name co), (Netcgi.Cookie.value co) in
+    Format.printf "%s=%s@." name value) 
+    c
 
 let print_string str (cgi: Netcgi.cgi_activation) =
   (* cgi#set_header ~content_type:"plain/text" (); (\* TELECHARGE Oo? *\) *)
@@ -196,7 +204,6 @@ let project_service =
       (fun _ cgi -> 
 	try
 	  let res = project_function () in
-          print_cookies cgi;
 	  print_string res cgi
 	with
 	  _ -> print_string "Error !" cgi
@@ -207,6 +214,7 @@ let project_list_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          print_cookies cgi;
 	  let project = get_argument cgi "project" in
 	  let res = project_list_function project in
 	  print_string res cgi
