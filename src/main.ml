@@ -59,11 +59,11 @@ let make_bottom_widget () =
 let main_container = ref None
 let make_editor (container: Dom_html.element Js.t) : unit =
   main_container := Some container;
-  Event_manager.open_workspace#trigger ();
-  Event_manager.close_workspace#trigger ()
+  Event_manager.open_workspace#trigger ()
 
 let _ =
   let launch _ =
+    main_container := (Some (get_element_by_id "main_content"));
     match !main_container with
     | None -> failwith "Launch workspace without main_container"
     | Some container ->
@@ -147,7 +147,7 @@ let _ =
 
   let close () =
     match !main_container with
-    | None -> failwith "close workspace without main_container"
+    | None -> () (* failwith "close workspace without main_container" *)
     | Some container ->
       let rec clear_main_container () =
 	Ace_utils.console_debug (Ace_utils.get_element_by_id "divmain");

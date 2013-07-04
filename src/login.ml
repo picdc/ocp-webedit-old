@@ -29,7 +29,8 @@ let logout () =
 let verify_assertion ~callback assertion =
   let assertion = Js.to_string assertion in
   let callback json =
-    console_debug json;
+    (* Main.make_editor () *)
+    Event_manager.open_workspace#trigger ();
     callback json
   in
   let callback_failure json =
@@ -48,12 +49,12 @@ let verify_assertion ~callback assertion =
     ~msg
 
 let onlogout () =
+  Event_manager.close_workspace#trigger ();
   console_log "Logged out"
 
 let _ =
-  let b = document##body in
 
-  let signin = createSpan b in
+  let signin = createSpan document in
   signin##id <- Js.string "signin";
   signin##innerHTML <- Js.string "Sign Up / Sign In";
   signin##onclick <- handler (fun _ -> 
@@ -64,17 +65,17 @@ let _ =
   );
 
 
-  let signout = createSpan b in
+  let signout = createSpan document in
   signout##id <- Js.string "signout";  
-  signout##innerHTML <- "Sign Out"
-  let signout = get_element_by_id "signout" in
+  signout##innerHTML <- Js.string "Sign Out";
   signout##onclick <- handler (fun _ ->
     logout ();
     Js._true
   );
 
-  append b signin;
-  append b signout;
+  let b = document##body in
+  Dom.appendChild b signin;
+  Dom.appendChild b signout;
 
   (Js.Unsafe.coerce Dom_html.window)##verifyAssertion <- 
     Js.wrap_callback (verify_assertion ~callback:(fun _ -> ()));
