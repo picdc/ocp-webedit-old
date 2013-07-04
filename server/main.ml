@@ -39,17 +39,16 @@ let create_user_directory user =
 let user_exists user =
   let user_dirname = email_to_dirname user in
   let cmd1 = Shell.cmd "ls" [ ppath ] in
-  let cmd2 = Shell.cmd "grep" [ "-c" ; user_dirname ] in
+  let cmd2 = Shell.cmd "grep" [ "-c" ; "-w" ; user_dirname ] in
   let b = Buffer.create 503 in
+
+  (* Revoir la gestion de l'exception *)
   try
     Shell.call ~stdout:(Shell.to_buffer b) [ cmd1 ; cmd2 ];
     let n = int_of_string (Buffer.contents b) in
     n = 1
-  with 
-    Shell.Subprocess_error | Shell_sys.Fatal_error ->
-      raise Fail_shell_call
-  | Failure _ -> false
-  | _ -> failwith "Ne doit jamais arriver"
+  with
+      _ -> false
 
 let get_argument (cgi: Netcgi.cgi_activation) name =
   if cgi#argument_exists name then begin
@@ -59,6 +58,7 @@ let get_argument (cgi: Netcgi.cgi_activation) name =
   else raise Bad_cgi_argument
 
 let get_cookie (cgi: Netcgi.cgi_activation) name =
+  Format.printf "On récupère le cookie";
   let cgi = cgi#environment in
   let c = cgi#cookies in
   try
@@ -111,11 +111,20 @@ let login_function assertion =
   while not (req#is_served) do 
     Format.printf "Waiting@." done;
   let body = req#response_body in
-  parse_persona_response body#value
+  let user = parse_persona_response body#value in
+  
+  (* In case the user doesn't exists *)
+  if not (user_exists user) then
+    begin
+      Format.printf "User doesn't exists@.";
+      create_user_directory user
+    end;
+  user
 
 
-let project_function () =
-  let path = Format.sprintf "%s/common_user" ppath in
+let project_function user =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s" ppath user in
   let res = Shell.cmd "ls" [ path ] in
   let b = Buffer.create 503 in
   try
@@ -124,8 +133,9 @@ let project_function () =
   with _ -> raise Fail_shell_call
 
 
-let project_list_function project =
-  let path = Format.sprintf "%s/common_user/%s"ppath  project in
+let project_list_function user project =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s/%s" ppath user project in
   let res = Shell.cmd "ls" [ path ] in
   let b = Buffer.create 503 in
   try
@@ -134,8 +144,9 @@ let project_list_function project =
   with _ -> raise Fail_shell_call
 
 
-let project_load_function project file =
-  let path = Format.sprintf "%s/common_user/%s/%s" ppath project file in
+let project_load_function user project file =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s/%s/%s" ppath user project file in
   let res = Shell.cmd "cat" [ path ] in
   let b = Buffer.create 503 in
   try
@@ -143,8 +154,9 @@ let project_load_function project file =
     Buffer.contents b
   with _ -> raise Fail_shell_call
 
-let create_function dirname =
-  let path = Format.sprintf "%s/common_user/%s" ppath dirname in
+let create_function user dirname =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s/%s" ppath user dirname in
   let res = Shell.cmd "mkdir" [ path ] in
   let b = Buffer.create 503 in
   try
@@ -153,9 +165,10 @@ let create_function dirname =
   with _ -> raise Fail_shell_call
 
 
-let project_create_function project file =
-  let path = Format.sprintf "%s/common_user/%s/%s"
-    ppath project file in
+let project_create_function user project file =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s/%s/%s"
+    ppath user project file in
   let res = Shell.cmd "touch" [ path ] in
   let b = Buffer.create 503 in
   try
@@ -163,8 +176,9 @@ let project_create_function project file =
     Buffer.contents b
   with _ -> raise Fail_shell_call
 
-let project_save_function project file content =
-  let path = Format.sprintf "%s/common_user/%s/%s" ppath project file in
+let project_save_function user project file content =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s/%s/%s" ppath user project file in
   let res = Shell.cmd "echo" [ content ] in
   let stdout = Shell.to_file ~append:false path in
   try
@@ -172,8 +186,9 @@ let project_save_function project file content =
   with _ -> raise Fail_shell_call
 
 
-let rename_function project new_name =
-  let path = Format.sprintf "%s/common_user/" ppath in
+let rename_function user project new_name =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s/" ppath user in
   let res = Shell.cmd "mv" [ path^project; path^new_name ] in
   let b = Buffer.create 503 in
   try
@@ -181,24 +196,27 @@ let rename_function project new_name =
   with _ -> raise Fail_shell_call
 
 
-let project_rename_function project file new_name =
-  let path = Format.sprintf "%s/common_user/%s/" ppath project in
+let project_rename_function user project file new_name =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s/%s/" ppath user project in
   let res = Shell.cmd "mv" [ path^file; path^new_name ] in
   let b = Buffer.create 503 in
   try
     Shell.call ~stdout:(Shell.to_buffer b) [ res ]
   with _ -> raise Fail_shell_call
 
-let delete_function project =
-  let path = Format.sprintf "%s/common_user/%s" ppath project in
+let delete_function user project =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s/%s" ppath user project in
   let res = Shell.cmd "rm" [ "-r" ; path ] in
   let b = Buffer.create 503 in
   try
     Shell.call ~stdout:(Shell.to_buffer b) [ res ]
   with _ -> raise Fail_shell_call
 
-let project_delete_function project file =
-  let path = Format.sprintf "%s/common_user/%s/%s" ppath project file in
+let project_delete_function user project file =
+  let user = email_to_dirname user in
+  let path = Format.sprintf "%s/%s/%s/%s" ppath user project file in
   let res = Shell.cmd "rm" [ path ] in
   let b = Buffer.create 503 in
   try
@@ -245,7 +263,7 @@ let project_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
-	  let res = project_function () in
+	  let res = project_function user in
 	  print_string res cgi
 	with
 	  _ -> print_string "Error !" cgi
@@ -258,7 +276,7 @@ let project_list_service =
 	try
           let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
-	  let res = project_list_function project in
+	  let res = project_list_function user project in
 	  print_string res cgi
 	with
 	  _ -> print_string "Error !" cgi
@@ -273,7 +291,7 @@ let project_load_service =
           let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
-	  let res = project_load_function project file in
+	  let res = project_load_function user project file in
 	  print_string res cgi
 	with
 	  _ -> print_string "Error !" cgi
@@ -286,7 +304,7 @@ let create_service =
 	try
           let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "name" in
-	  let _ = create_function project in
+	  let _ = create_function user project in
 	  print_string "Project created successfully" cgi
 	with
 	  _ -> print_string "Error !" cgi
@@ -300,7 +318,7 @@ let project_create_service =
           let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "name" in
-	  let _ = project_create_function project file in
+	  let _ = project_create_function user project file in
 	  print_string "File created successfully" cgi
 	with
 	  _ -> print_string "Error !" cgi
@@ -315,7 +333,7 @@ let project_save_service =
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let content = get_argument cgi "content" in
-	  project_save_function project file content;
+	  project_save_function project user file content;
 	  print_string "Saved" cgi
 	with
 	  _ -> print_string "Error !" cgi
@@ -329,7 +347,7 @@ let rename_service =
           let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let new_name = get_argument cgi "newname" in
-	  rename_function project new_name;
+	  rename_function user project new_name;
 	  print_string "Renamed" cgi
 	with _ -> print_string "Error !" cgi
       ); }
@@ -343,7 +361,7 @@ let project_rename_service =
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let new_name = get_argument cgi "newname" in
-	  project_rename_function project file new_name;
+	  project_rename_function user project file new_name;
 	  print_string "Renamed" cgi
 	with
 	  _ -> print_string "Error !" cgi
@@ -356,7 +374,7 @@ let delete_service =
 	try
           let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
-	  delete_function project;
+	  delete_function user project;
 	  print_string "Deleted" cgi
 	with _ -> print_string "Error !" cgi
       ); }
@@ -369,7 +387,7 @@ let project_delete_service =
           let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
-	  project_delete_function project file;
+	  project_delete_function user project file;
 	  print_string "Deleted" cgi
 	with _ -> print_string "Error !" cgi
       ); }
