@@ -10,7 +10,6 @@ class ['a, 'b] event act = object
 end
 
 
-let create_file = new event Filemanager.create_file
 let create_project = new event Filemanager.create_project
 let rename_file = new event Filemanager.rename_file
 let rename_project = new event Filemanager.rename_project
@@ -23,8 +22,16 @@ let open_and_switch_action callback (project, filename) =
     let id = Filemanager.get_id ~project ~filename in
     switch_file#trigger id in
   Filemanager.open_file callback (project, filename)
-  
+
+let create_and_switch_action callback (project, filename) =
+  let callback args =
+    callback args;
+    let id = Filemanager.get_id ~project ~filename in
+    switch_file#trigger id in
+  Filemanager.create_file callback (project, filename)
+
 let open_file = new event open_and_switch_action
+let create_file = new event create_and_switch_action
 let close_file = new event Filemanager.close_file 
 let save_file = new event Filemanager.save_file
 let unsaved_file = new event Filemanager.unsaved_file

@@ -498,8 +498,7 @@ let main () =
     let id, filename =
       file.Filemanager.id,
       file.Filemanager.filename in
-    add_tab id filename "";
-    Event_manager.switch_file#trigger id
+    add_tab id filename ""
   in
   let callback_delete_file file =
     let id = file.Filemanager.id in

@@ -1,8 +1,7 @@
 
 (**
    WARNING
-   Bug quand texte trop gros :
-   Uncaught RangeError: Maximum call stack size exceeded
+   on garde les braekpoints des fichiers remove et close !
 **)
 
 (* Table pour stocker les breakpoints d'indentations en fonction
@@ -131,6 +130,9 @@ let indent_region row_start row_end  =
 
 let _ =
   (* Gestions des evenements *)
+  let callback_create_file file =
+    let id = file.Filemanager.id in
+    Hashtbl.add all_breakpoints id [] in
   let callback_open_file (file, content) =
     let id = file.Filemanager.id in
     Hashtbl.add all_breakpoints id [] in
@@ -148,6 +150,7 @@ let _ =
   in
   Event_manager.switch_file#add_event callback_switch_file;
   Event_manager.open_file#add_event callback_open_file;
+  Event_manager.create_file#add_event callback_create_file;
   Event_manager.close_file#add_event callback_close_file;
 
 
