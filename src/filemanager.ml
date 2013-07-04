@@ -1,4 +1,8 @@
 
+(* WARNING :
+ H.remove file_content WHEN remove_file AND close_file
+    -> Todo ? or not Todo ? can be both ! *)
+
 type project = {
   name : string ;
   mutable opened : bool;
@@ -93,14 +97,6 @@ let get_content id =
     Some (es##getDocument()##getValue())
   with Not_found -> None
 
-(* let save_tab id = *)
-(*   let content = get_content_tab id in *)
-(*   match content with *)
-(*   | None -> () *)
-(*   | Some content -> Event_manager.save_file#trigger (id, content) *)
-
-
-
 
 (* Fonctions pour utiliser le filemanager *)
 let open_workspace =
@@ -148,6 +144,7 @@ let open_file callback (project, filename) =
 let close_file callback id =
   let file = get_file id in
   file.is_open <- false;
+  file.is_unsaved <- false;
   callback file;
   match !current_file with
   | Some i when id = i -> current_file := None
@@ -174,6 +171,9 @@ let create_file callback (project, filename) =
 	add_file file;
 	incr id;
 	add_file_to_project project filename;
+	let es = Ace.createEditSession "" "ace/mode/ocaml" in
+	H.add file_content i es;
+	Ace_utils.console_debug i;
 	callback file
       in
       Request.create_file ~callback ~project ~filename
@@ -244,7 +244,7 @@ let switch_file callback new_id =
   let do_it () =
     current_file := Some new_id;
     let es = try H.find file_content new_id
-      with _ -> failwith "pouet" in
+      with _ -> failwith "Filemanager : file_content Not Found" in
     (Ace_utils.editor())##setSession(es);
     callback (old_file, new_id)
   in 
