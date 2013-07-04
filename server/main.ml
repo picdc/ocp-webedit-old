@@ -8,6 +8,48 @@ exception Fail_shell_call
 (* let ppath = "/home/dmaison/ace-ocaml/data" *)
 let ppath = Format.sprintf "%s/ocp-webedit/data" (Sys.getenv "HOME")
 
+let email_to_dirname str =
+  let pos_at = String.index str '@' in
+  let add_pre_at = String.sub str 0 pos_at in
+  let add_post_at = String.sub str (pos_at+1)
+    (String.length str - pos_at - 1) in
+  add_pre_at^"_at_"^add_post_at
+
+let create_user_directory user =
+  let default_dirname = "hello_project" in
+  let default_filename = "hello_world.ml" in
+  let default_content = "let _ = \n  print_endline \"Hello world !\"" in
+
+  let user_dirname = email_to_dirname user in
+
+  let dirpath = Format.sprintf "%s/%s" ppath user_dirname in
+  let projectpath = Format.sprintf "%s/%s" dirpath default_dirname in
+  let filepath = Format.sprintf "%s/%s" projectpath default_filename in
+
+  let stdout = Shell.to_file ~append:false filepath in
+  let cmd1 = Shell.cmd "mkdir" [ dirpath ] in
+  let cmd2 = Shell.cmd "mkdir" [ projectpath ] in
+  let cmd3 = Shell.cmd "echo" [ default_content ] in
+  try
+    Shell.call [ cmd1 ];
+    Shell.call [ cmd2 ];
+    Shell.call ~stdout [ cmd3 ];
+  with _ -> raise Fail_shell_call
+
+let user_exists user =
+  let user_dirname = email_to_dirname user in
+  let cmd1 = Shell.cmd "ls" [ ppath ] in
+  let cmd2 = Shell.cmd "grep" [ "-c" ; user_dirname ] in
+  let b = Buffer.create 503 in
+  try
+    Shell.call ~stdout:(Shell.to_buffer b) [ cmd1 ; cmd2 ];
+    let n = int_of_string (Buffer.contents b) in
+    n = 1
+  with 
+    Shell.Subprocess_error | Shell_sys.Fatal_error ->
+      raise Fail_shell_call
+  | Failure _ -> false
+  | _ -> failwith "Ne doit jamais arriver"
 
 let get_argument (cgi: Netcgi.cgi_activation) name =
   if cgi#argument_exists name then begin
@@ -56,22 +98,21 @@ let parse_persona_response r =
         let reason = Util.member "reason" res in
         raise (Request_failed (to_string reason))
 
-let login_function assertion =
-  let open Http_client.Convenience in
-      Format.printf "Verifying assertion@.";
-      let data = [("assertion", assertion); 
-                  ("audience", "http://localhost:4444")] 
-      in
-      let req = http_post_message "https://verifier.login.persona.org/verify" data
-      in
-      while not (req#is_served) do 
-        Format.printf "Waiting@." done;
-      let body = req#response_body in
-      parse_persona_response body#value
-
-
 
 (** Project management functions **)
+
+let login_function assertion =
+  let open Http_client.Convenience in
+  Format.printf "Verifying assertion@.";
+  let data = [("assertion", assertion); 
+              ("audience", "http://localhost:4444")]  in
+  let req = http_post_message
+    "https://verifier.login.persona.org/verify" data in
+  while not (req#is_served) do 
+    Format.printf "Waiting@." done;
+  let body = req#response_body in
+  parse_persona_response body#value
+
 
 let project_function () =
   let path = Format.sprintf "%s/common_user" ppath in
