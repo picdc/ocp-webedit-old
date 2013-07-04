@@ -10,6 +10,8 @@ class ['a, 'b] event act = object
 end
 
 
+let open_workspace = new event Filemanager.open_workspace
+let close_workspace = new event Filemanager.close_workspace
 let create_project = new event Filemanager.create_project
 let rename_file = new event Filemanager.rename_file
 let rename_project = new event Filemanager.rename_project

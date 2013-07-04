@@ -22,7 +22,8 @@ exception File_not_found of int
 exception File_not_found2 of string * string
 exception Project_not_found of string
 exception Project_closed of string
-exception Workspace_already_open
+exception Workspace_already_opened
+exception Workspace_closed
 
 module H = Hashtbl
 
@@ -99,16 +100,26 @@ let get_content id =
 
 
 (* Fonctions pour utiliser le filemanager *)
-let open_workspace =
-  let already_open = ref false in
-  fun ~callback ->
-    if not !already_open then
-      (let callback ls =
-	 List.iter (fun el -> add_project el) ls;
-	 callback ls in
-       Request.get_list_of_projects ~callback;
-       already_open := true)
-    else raise Workspace_already_open
+let workspace_opened = ref false
+let open_workspace callback () =
+  if not !workspace_opened then
+    (let callback ls =
+       List.iter (fun el -> add_project el) ls;
+       callback ls in
+     Request.get_list_of_projects ~callback;
+     workspace_opened := true)
+  else raise Workspace_already_opened
+
+let close_workspace callback () =
+  if !workspace_opened then
+    (workspace_opened := false;
+     id := 0;
+     current_file := None;
+     H.reset file_content;
+     H.reset existing_projects;
+     H.reset existing_files;
+     callback ())
+  else raise Workspace_closed
 
 
 let open_project callback project =

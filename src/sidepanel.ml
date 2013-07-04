@@ -178,14 +178,26 @@ let make_sidepanel () =
       "new_project" f;
     Js._true);
 
-  (* Les projets *)
   sideprojects##id <- Js.string "side_projects";
-  let callback ls =
-    List.iter (fun el -> add_project sideprojects el) ls in
-  Filemanager.open_workspace ~callback; 
+
+  Dom.appendChild div button_create_project;
+  Dom.appendChild div sideprojects;
+  div
   
 
 
+
+
+let _ =
+  let callback_open_workspace ls =
+    let sideprojects = Ace_utils.get_element_by_id "side_projects" in
+    List.iter (fun el -> add_project sideprojects el) ls
+  in
+
+  let callback_close_workspace () =
+    focused_file := None;
+    focused_project := None
+  in
 
   let callback_rename_file file =
     let id, project, filename =
@@ -198,6 +210,7 @@ let make_sidepanel () =
   in
 
   let callback_create_project project =
+    let sideprojects = Ace_utils.get_element_by_id "side_projects" in
     add_project sideprojects project
   in
 
@@ -243,6 +256,7 @@ let make_sidepanel () =
   in
 
   let callback_delete_project project =
+    let sideprojects = Ace_utils.get_element_by_id "side_projects" in
     let id_c_project = "side_container_project_"^project in
     let c_project = Ace_utils.get_element_by_id id_c_project in
     Dom.removeChild sideprojects c_project
@@ -273,6 +287,8 @@ let make_sidepanel () =
     | None -> ()
   in
 
+  Event_manager.open_workspace#add_event callback_open_workspace;
+  Event_manager.close_workspace#add_event callback_close_workspace;
   Event_manager.create_file#add_event callback_create_file;
   Event_manager.create_project#add_event callback_create_project;
   Event_manager.rename_file#add_event callback_rename_file;
@@ -283,9 +299,5 @@ let make_sidepanel () =
   Event_manager.unsaved_file#add_event callback_save_and_unsaved_file;
   Event_manager.switch_file#add_event callback_switch_file;
   Event_manager.rename_project#add_event callback_rename_project;
-  Event_manager.delete_project#add_event callback_delete_project;
-
-  Dom.appendChild div button_create_project;
-  Dom.appendChild div sideprojects;
-  div
+  Event_manager.delete_project#add_event callback_delete_project
     

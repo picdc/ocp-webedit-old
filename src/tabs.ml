@@ -424,7 +424,7 @@ let _ =
   (Js.Unsafe.coerce Dom_html.window)##currentTabChanged <- Js.wrap_callback
     event_change_current_tab
 
-let main () =
+let make_tabs () =
   (* Création du bouton d'importation des fichiers *)
   let container = get_element_by_id "input" in
   let button = createInput
@@ -477,7 +477,16 @@ let main () =
       refresh_tabs ();
       Js._true);
 
+  enable_navigation_buttons false
 
+
+let _ =
+  let callback_close_workspace () =
+    H.reset htbl;
+    is_list_shown := false;
+    offset := 0;
+    len := 4
+  in
   let callback_open_file (file, content) =
     let filename = file.Filemanager.filename in
     let id = file.Filemanager.id in
@@ -518,10 +527,6 @@ let main () =
 
   let callback_switch_file (old_id, new_id) =
     let file = Filemanager.get_file new_id in
-    (* Actualisation de l'editSession *)
-    (* let es = H.find htbl new_id in *)
-    (* Ace.Editor.setSession (Ace_utils.editor ()) es; *)
-    (* Changement du focus du tab *)
     begin match old_id with
       | None -> ()
       | Some id ->
@@ -532,7 +537,7 @@ let main () =
     new_tab##className <- get_class_filename file
   in
 
-
+  Event_manager.close_workspace#add_event callback_close_workspace;
   Event_manager.open_file#add_event callback_open_file;
   Event_manager.close_file#add_event callback_close_file;
   Event_manager.create_file#add_event callback_create_file;
@@ -541,9 +546,7 @@ let main () =
   Event_manager.unsaved_file#add_event callback_save_and_unsaved_file;
   Event_manager.switch_file#add_event callback_switch_file;
   Event_manager.delete_file#add_event callback_delete_file;
-  Event_manager.delete_project#add_event callback_delete_project;
-
-  enable_navigation_buttons false
+  Event_manager.delete_project#add_event callback_delete_project
 
 
 

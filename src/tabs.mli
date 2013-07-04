@@ -1,2 +1,2 @@
 
-val main : unit -> unit
+val make_tabs : unit -> unit

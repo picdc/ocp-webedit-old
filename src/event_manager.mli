@@ -5,6 +5,9 @@ class ['a, 'b] event : (('a -> unit) -> 'b -> unit) -> object
 end
 
 
+val open_workspace : (string list, unit) event
+val close_workspace : (unit, unit) event
+
 val create_file : (Filemanager.file , string * string) event
 val create_project : (string, string) event
 

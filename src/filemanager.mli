@@ -18,7 +18,8 @@ exception File_not_found of int
 exception File_not_found2 of string * string
 exception Project_not_found of string
 exception Project_closed of string
-exception Workspace_already_open
+exception Workspace_already_opened
+exception Workspace_closed
 
 val is_project_opened : string -> bool
 val is_file_opened : project:string -> filename:string -> bool
@@ -29,7 +30,8 @@ val get_current_file : unit -> int option
 val get_file : int -> file
 val get_id : project:string -> filename:string -> int
 
-val open_workspace : callback:(string list -> unit) -> unit
+val open_workspace : (string list -> unit) -> unit -> unit
+val close_workspace : (unit -> unit) -> unit -> unit
 val open_project : (file list -> unit) -> string -> unit
 val open_file : (file * string -> unit) -> string * string -> unit
 val close_file : (file -> unit) -> int -> unit
