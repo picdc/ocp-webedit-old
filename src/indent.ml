@@ -53,38 +53,6 @@ let get_minimum_text rowstart rowend =
   Js.to_string (doc##getTextRange(range))
 
 
-(** OBSOLETE **)
-(* Permet de récupérer la liste des breakpoints des endroits "top-level"
-   dans une chaine de caractères, classé par ordre croissant de lecture
-   (de haut en bas et de gauche à droite) *)
-(* let get_breakpoint_list str = *)
-(*   let kind = IndentPrinter.Extended (fun block elt (line, list) -> *)
-(*     let is_at_top = IndentBlock.is_at_top block in  *)
-(*     let line = match elt with *)
-(*       | IndentPrinter.Newline -> line + 1 *)
-(*       | _ -> line in *)
-(*     if is_at_top && not (List.mem line list) then *)
-(*       let list = line::list in *)
-(*       line, list *)
-(*     else line, list) in  *)
-(*   let output =  *)
-(*     { IndentPrinter. *)
-(*       debug = false; *)
-(*       config = IndentConfig.default; *)
-(*       in_lines = (fun _ -> false); *)
-(*       adaptive = false; *)
-(*       indent_empty = false; *)
-(*       kind; } in   *)
-(*   let stream = Nstream.of_string str in *)
-(*   let debug =  *)
-(*     snd (IndentPrinter.proceed output stream IndentBlock.empty (0, [])) in *)
-(*   Ace_utils.console_log "GET_BREAKPOINT_LIST"; *)
-(*   let s = List.fold_left (fun acc i -> acc^" "^(string_of_int i)) "" *)
-(*     debug in *)
-(*   Ace_utils.console_log ("Bkpts: "^s); *)
-(*   Ace_utils.console_log "END"; *)
-(*   debug *)
-
 
 (* Fonction principale d'appel à ocp-indent :
    [str] est une chaine de caractère qui correspond au code à indenter

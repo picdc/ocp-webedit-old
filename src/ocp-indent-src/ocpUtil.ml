@@ -21,7 +21,9 @@ let compose : ('b -> 'c) -> ('a -> 'b) -> 'a -> 'c
 (* fixme: use the faster primitives if ocaml is new enough to have them *)
 let ( @* ) = compose
 
-let ( |> ) : 'a -> ('a -> 'b) -> 'b = fun x f -> f x
+(* let ( |> ) : 'a -> ('a -> 'b) -> 'b = fun x f -> f x *)
+external (|>) : 'a -> ('a -> 'b) -> 'b = "%revapply"
+external (@@) : ('a -> 'b) -> 'a -> 'b = "%apply"
 
 let default d = function Some x -> x | None -> d
 

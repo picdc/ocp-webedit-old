@@ -99,7 +99,6 @@ editor.commands.addCommand({
     bindKey: {win: 'Ctrl-Q'// , mac: 'Control-L'
              },
     exec: function(editor) {
-        console.log("Completion");
         var c = editor.getCursorPosition();
         var token = editor.getSession().getTokenAt(c.row, c.column);
 
@@ -114,7 +113,6 @@ editor.commands.addCommand({
                     in_completion_mode = true;
                 }
                 var next = nextCompletion();
-                console.log(next);
                 if (next != undefined)
                     editor.getSession().replace(range, next);
             }
@@ -166,9 +164,9 @@ var outdenter_list = /(in|let|end|done)/;
 
  
     this.getNextLineIndent = function(state, line, tab) {
-	console.time("indent_next_line");
+	//console.time("indent_next_line");
 	var t = getIndentLine(editor.getCursorPosition().row);
-	console.timeEnd("indent_next_line");
+	//console.timeEnd("indent_next_line");
 	return t;
     };
 
@@ -187,12 +185,6 @@ var outdenter_list = /(in|let|end|done)/;
         
         if ( input == '\n' || input == ' ' ) {
 	    var next_token = session.getTokenAt(curpos.row, curpos.column+1);
-	    console.debug(token);
-	    console.debug(next_token);
-	    if ( token.value == "test" ) {
-		token.type = "keyword";
-	    }
-	    console.debug(token);
 
 	    /* Traitement d'auto-complétion */
             in_completion_mode = false;
@@ -218,9 +210,9 @@ var outdenter_list = /(in|let|end|done)/;
     };
 
     this.autoOutdent = function(state, doc, row) {
-	console.time("outdent");
+	//console.time("outdent");
 	indentRegion(row, editor.getCursorPosition().row);
-	console.timeEnd("outdent");
+	//console.timeEnd("outdent");
     };
 
 }).call(Mode.prototype);

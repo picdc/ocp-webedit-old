@@ -43,7 +43,7 @@ INCLUDEJS=-I . -I $(OCPDIR) -I $(ACDIR) -I $(REDIR) $(JSFLAGS) \
 	-I ~/.opam/4.00.1/lib/js_of_ocaml_compiler-libs \
 	$(TOPLVLDIR)/toplevel_runtime.js
 
-JSFLAGS = -pretty -noinline -linkall -toplevel $(INCLUDEJS_TOPLVL)
+JSFLAGS = -pretty -linkall -toplevel $(INCLUDEJS_TOPLVL)
 
 .PHONY: depend
 
