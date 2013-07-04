@@ -203,6 +203,7 @@ let project_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
 	  let res = project_function () in
 	  print_string res cgi
 	with
@@ -214,7 +215,7 @@ let project_list_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
-          print_cookies cgi;
+          let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let res = project_list_function project in
 	  print_string res cgi
@@ -228,6 +229,7 @@ let project_load_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let res = project_load_function project file in
@@ -241,6 +243,7 @@ let create_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "name" in
 	  let _ = create_function project in
 	  print_string "Project created successfully" cgi
@@ -253,6 +256,7 @@ let project_create_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "name" in
 	  let _ = project_create_function project file in
@@ -266,6 +270,7 @@ let project_save_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let content = get_argument cgi "content" in
@@ -280,6 +285,7 @@ let rename_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let new_name = get_argument cgi "newname" in
 	  rename_function project new_name;
@@ -292,6 +298,7 @@ let project_rename_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let new_name = get_argument cgi "newname" in
@@ -306,6 +313,7 @@ let delete_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  delete_function project;
 	  print_string "Deleted" cgi
@@ -317,6 +325,7 @@ let project_delete_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  project_delete_function project file;
