@@ -70,3 +70,17 @@
 .dialog_right_clic_item:hover {
     background-color: #aaaaaa;
 }
+
+.sign-button {
+    font-weight: bold;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding: 0px 5px;
+    color: black;
+    border: 1px solid black;
+}
+
+.sign-disabled {
+    border: 1px solid #aaaaaa;
+    color: #aaaaaa;
+}

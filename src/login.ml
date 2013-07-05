@@ -21,9 +21,25 @@ let pull_request_with_failure ~callback ~callback_failure ~meth ~url ~asyn ~msg 
   req##send(Js.some (Js.string msg))
 
 
+
 let logout () =
   let open Js.Unsafe in
       ignore (fun_call (variable "navigator.id.logout") [||])
+
+
+let onclick_signin =
+  handler (fun _ -> 
+    ignore 
+      (Js.Unsafe.fun_call (Js.Unsafe.variable "navigator.id.request") [||]);
+    Js._true
+  )
+
+let onclick_signout =
+  handler (fun _ ->
+    
+    logout ();
+    Js._true
+  )
 
 
 let verify_assertion ~callback assertion =
@@ -40,7 +56,13 @@ let verify_assertion ~callback assertion =
   in
   let msg = 
     Format.sprintf "assertion=%s" assertion
-  in 
+  in
+  let signin = get_element_by_id "signin" in
+  let signout = get_element_by_id "signout" in
+  signin##className <- Js.string "sign-button sign-disabled";
+  signin##onclick <- handler (fun _ -> Js._true);
+  signout##className <- Js.string "sign-button";
+  signout##onclick <- onclick_signout;
   pull_request_with_failure ~callback
     ~callback_failure
     ~meth:"POST"
@@ -50,28 +72,27 @@ let verify_assertion ~callback assertion =
 
 let onlogout () =
   Event_manager.close_workspace#trigger ();
+  let signin = get_element_by_id "signin" in
+  let signout = get_element_by_id "signout" in
+  signin##className <- Js.string "sign-button";
+  signin##onclick <- onclick_signin;
+  signout##className <- Js.string "sign-button sign-disabled";
+  signout##onclick <- handler (fun _ -> Js._true);
   console_log "Logged out"
 
 let _ =
-
+  
   let signin = createSpan document in
   signin##id <- Js.string "signin";
   signin##innerHTML <- Js.string "Sign Up / Sign In";
-  signin##onclick <- handler (fun _ -> 
-    console_debug "Trying to log !";
-    ignore 
-      (Js.Unsafe.fun_call (Js.Unsafe.variable "navigator.id.request") [||]);
-    Js._true
-  );
-
+  signin##className <- Js.string "sign-button";
+  signin##onclick <- onclick_signin;
 
   let signout = createSpan document in
   signout##id <- Js.string "signout";  
   signout##innerHTML <- Js.string "Sign Out";
-  signout##onclick <- handler (fun _ ->
-    logout ();
-    Js._true
-  );
+  signout##className <- Js.string "sign-button";
+  signout##onclick <- onclick_signout;
 
   let b = document##body in
   Dom.appendChild b signin;
