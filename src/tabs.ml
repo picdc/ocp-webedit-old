@@ -312,8 +312,7 @@ and close_tab id =
 
 
 
-let init_tabs_drawing () =
-  let container = get_element_by_id "tabs" in
+let init_tabs_drawing container =
   let table = createTable document in
   let line = createTr document in
   let sc_left = createSpan document in
@@ -394,8 +393,7 @@ let init_tabs_drawing () =
   Dom.appendChild container new_tab;
   Dom.appendChild container show_all
 
-let init_listtabs () =
-  let container = get_element_by_id "listtabs" in
+let init_listtabs container =
   let ul = createUl document in
   ul##id <- Js.string "listul";
   container##style##display <- Js.string "none";
@@ -424,16 +422,17 @@ let _ =
   (Js.Unsafe.coerce Dom_html.window)##currentTabChanged <- Js.wrap_callback
     event_change_current_tab
 
+
 let make_tabs () =
   (* Création du bouton d'importation des fichiers *)
-  let container = get_element_by_id "input" in
-  let button = createInput
-    ~name:(Js.string "importFileButton")
-    ~_type:(Js.string "file")
-    document
-  in
-  button##setAttribute(Js.string "multiple", Js.string "multiple");
-  button##disabled <- Js._true;
+  (* let container = get_element_by_id "input" in *)
+  (* let button = createInput *)
+  (*   ~name:(Js.string "importFileButton") *)
+  (*   ~_type:(Js.string "file") *)
+  (*   document *)
+  (* in *)
+  (* button##setAttribute(Js.string "multiple", Js.string "multiple"); *)
+  (* button##disabled <- Js._true; *)
   (* button##onchange <- handler (fun _ -> *)
   (*   begin *)
   (*     match Js.Optdef.to_option button##files with *)
@@ -462,30 +461,42 @@ let make_tabs () =
   (*   end; *)
   (*   Js._true *)
   (* ); *)
-  Dom.appendChild container button;
+  (* Dom.appendChild container button; *)
 
   (* Création des tabs *)
-  init_tabs_drawing ();
-  init_listtabs ();
+  let div_tabs = createDiv document in
+  let div_listtabs = createDiv document in
+  div_tabs##id <- Js.string "tabs";
+  div_listtabs##id <- Js.string "listtabs";
 
+  init_tabs_drawing div_tabs;
+  init_listtabs div_listtabs;
+  Dom.appendChild div_tabs div_listtabs;
 
-  (* Création de l'event pour recalculer le nb de tab affiché
-     à la redimention de la fenêtre *)
-  update_len ();
   Dom_html.window##onresize <- Dom_html.handler
     (fun _ -> update_len ();
       refresh_tabs ();
       Js._true);
 
-  enable_navigation_buttons false
+  div_tabs
 
 
 let _ =
+  let callback_open_workspace _ =
+    update_len ();
+    enable_navigation_buttons false
+  in
   let callback_close_workspace () =
-    H.reset htbl;
     is_list_shown := false;
     offset := 0;
-    len := 4
+    len := 4;
+    H.reset htbl;
+    let listul = query_selector global_conf.container "#listul" in
+    let tabline = query_selector global_conf.container "#tabline" in
+    let cl_listul = Dom.list_of_nodeList listul##childNodes in
+    let cl_tabline = Dom.list_of_nodeList tabline##childNodes in
+    List.iter (fun el -> Dom.removeChild listul el) cl_listul;
+    List.iter (fun el -> Dom.removeChild tabline el) cl_tabline
   in
   let callback_open_file (file, content) =
     let filename = file.Filemanager.filename in
@@ -537,6 +548,7 @@ let _ =
     new_tab##className <- get_class_filename file
   in
 
+  Event_manager.open_workspace#add_event callback_open_workspace;
   Event_manager.close_workspace#add_event callback_close_workspace;
   Event_manager.open_file#add_event callback_open_file;
   Event_manager.close_file#add_event callback_close_file;

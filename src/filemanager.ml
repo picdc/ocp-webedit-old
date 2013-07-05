@@ -1,7 +1,6 @@
 
-(* WARNING :
- H.remove file_content WHEN remove_file AND close_file
-    -> Todo ? or not Todo ? can be both ! *)
+(* WARNING : Quand on est pas logger, attention raise Workspace_closed
+ *)
 
 type project = {
   name : string ;
@@ -157,6 +156,7 @@ let close_file callback id =
   file.is_open <- false;
   file.is_unsaved <- false;
   callback file;
+  H.remove file_content id;
   match !current_file with
   | Some i when id = i -> current_file := None
   | _ -> ()
@@ -269,6 +269,7 @@ let delete_file callback id =
   let file = get_file id in
   let callback () =
     H.remove existing_files id;
+    H.remove file_content id;
     let project = H.find existing_projects file.project in
     let new_files = List.fold_left (fun acc el ->
       if el = file.filename then acc

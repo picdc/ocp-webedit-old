@@ -2,7 +2,7 @@
 open Ace_utils
 open Indent
 
-
+(* Widget contenant le top-level et l'output *)
 let make_bottom_widget () =
   (* Création du widget pour le toplevel *)
   let toplevel = Mytoplevel.make_toplevel () in
@@ -56,120 +56,86 @@ let make_bottom_widget () =
   Dom.appendChild div output;
   div
 
-let main_container = ref None
-let make_editor (container: Dom_html.element Js.t) : unit =
-  main_container := Some container;
-  Event_manager.open_workspace#trigger ()
+
+(* <div> contenant l'éditeur et tous les autres widgets
+   Il est gardé en mémoire ici afin de ne pas créer de doublons dans
+   le DOM si on ferme et ré-ouvre le workspace *)
+let main_content =
+   let doc = Dom_html.document in
+   let div_global = Dom_html.createDiv doc in
+   let div_main = Dom_html.createDiv doc in
+   let div_editor = Dom_html.createDiv doc in
+   div_main##id <- Js.string "divmain";
+   div_editor##id <- Js.string "editor";
+   div_global##style##minWidth <- Js.string "750px";
+   let sidepanel = Sidepanel.make_sidepanel () in
+   let bottabs = make_bottom_widget () in
+   let div_tabs = Tabs.make_tabs () in
+   Dom.appendChild div_global sidepanel;
+   Dom.appendChild div_main div_tabs;
+   Dom.appendChild div_main div_editor;
+   Dom.appendChild div_main bottabs;
+   Dom.appendChild div_global div_main;
+   div_global
+
+
+(* Conteneur principal qui accueillera nos wigdets *)
+let main_container = Dom_html.createDiv Dom_html.document
+let _ = 
+  main_container##id <- Js.string "main_content";
+  console_log "coucou!";
+  global_conf.container <- main_content;
+  Dom.appendChild Dom_html.document##body main_container 
+
+
 
 let _ =
+  Ace.require("Range");
+
+  let doc = Dom_html.document in
+  let css_tabs = Dom_html.createLink doc in
+  let css_toplvl = Dom_html.createLink doc in
+  let css_main = Dom_html.createLink doc in
+  let css_sidepanel = Dom_html.createLink doc in
+  let css_rel = Js.string "stylesheet" in
+  let css_type = Js.string "text/css" in
+  css_tabs##href <- Js.string "./css/tabs.css";
+  css_toplvl##href <- Js.string "./css/mytoplevel.css";
+  css_main##href <- Js.string "./css/main.css";
+  css_sidepanel##href <- Js.string "./css/sidepanel.css";
+  css_tabs##rel <- css_rel;
+  css_tabs##_type <- css_type;
+  css_toplvl##rel <- css_rel;
+  css_toplvl##_type <- css_type;
+  css_main##rel <- css_rel;
+  css_main##_type <- css_type;
+  css_sidepanel##rel <- css_rel;
+  css_sidepanel##_type <- css_type;
+  Dom.appendChild doc##body css_tabs;
+  Dom.appendChild doc##body css_toplvl;
+  Dom.appendChild doc##body css_main;
+  Dom.appendChild doc##body css_sidepanel;
+
+  doc##body##onclick <- Dom_html.handler (fun _ ->
+    Dialog.Right_clic_dialog.hide_all ();
+    Js._true);
+
+  let editor = query_selector global_conf.container "#editor"  in
+  init_editor editor;
+  (Js.Unsafe.coerce Dom_html.window)##editor <- (Ace_utils.editor ());
+
+
+  (* Fonction callback pour le lancement du workspace *)
   let launch _ =
-    main_container := (Some (get_element_by_id "main_content"));
-    match !main_container with
-    | None -> failwith "Launch workspace without main_container"
-    | Some container ->
-      Ace.require("Range");
-
-      let doc = Dom_html.document in
-      let div_main = Dom_html.createDiv doc in
-      let div_input = Dom_html.createDiv doc in
-      let div_tabs = Dom_html.createDiv doc in
-      let div_listtabs = Dom_html.createDiv doc in
-      let div_editor = Dom_html.createDiv doc in
-      let script_ace_init = Dom_html.createScript doc in
-      let css_tabs = Dom_html.createLink doc in
-      let css_toplvl = Dom_html.createLink doc in
-      let css_main = Dom_html.createLink doc in
-      let css_sidepanel = Dom_html.createLink doc in
-
-      div_main##id <- Js.string "divmain";
-      div_input##id <- Js.string "input";
-      div_tabs##id <- Js.string "tabs";
-      div_listtabs##id <- Js.string "listtabs";
-      div_editor##id <- Js.string "editor";
-      script_ace_init##text <- Js.string
-	"var editor = ace.edit(\"editor\");
-         editor.setTheme(\"ace/theme/eclipse\");
-         editor.getSession().setMode(\"ace/mode/ocaml\");";
-      css_tabs##href <- Js.string "./css/tabs.css";
-      css_tabs##rel <- Js.string "stylesheet";
-      css_tabs##_type <- Js.string "text/css";
-      css_toplvl##href <- Js.string "./css/mytoplevel.css";
-      css_toplvl##rel <- Js.string "stylesheet";
-      css_toplvl##_type <- Js.string "text/css";
-      css_main##href <- Js.string "./css/main.css";
-      css_main##rel <- Js.string "stylesheet";
-      css_main##_type <- Js.string "text/css";
-      css_sidepanel##href <- Js.string "./css/sidepanel.css";
-      css_sidepanel##rel <- Js.string "stylesheet";
-      css_sidepanel##_type <- Js.string "text/css";
-      container##style##minWidth <- Js.string "750px";
-      
-      let sidepanel = Sidepanel.make_sidepanel () in
-      let bottabs = make_bottom_widget () in
-      
-      Dom.appendChild container div_input;
-      Dom.appendChild container sidepanel;
-      Dom.appendChild div_main div_tabs; (* A METTRE DANS TABS.init() ?? *)
-      Dom.appendChild div_main div_listtabs;
-      Dom.appendChild div_main div_editor;
-      Dom.appendChild div_main bottabs;
-      Dom.appendChild container div_main;
-      Dom.appendChild doc##body script_ace_init;
-      Dom.appendChild doc##body css_tabs;
-      Dom.appendChild doc##body css_toplvl;
-      Dom.appendChild doc##body css_main;
-      Dom.appendChild doc##body css_sidepanel;
-      
-      doc##body##onclick <- Dom_html.handler (fun _ ->
-	Dialog.Right_clic_dialog.hide_all ();
-	Js._true);
-      
-      Ace_utils.init_editor "editor";
-      Tabs.make_tabs ();
-      disable_editor ()
-	
-  (* Modif des breakpoints à la saisie du texte pour l'indentation *)
-  (* let f_bkpt_remove delta = *)
-  (*   match delta.Ace.action with *)
-  (*   | Ace.RemoveText | Ace.RemoveLines ->  *)
-  (*     let range = delta.Ace.range in *)
-  (*     let startrow, _ = Ace.Range.getStart range in *)
-  (*     let endrow, _ = Ace.Range.getEnd range in *)
-  (*     for i=startrow to endrow do *)
-  (* 	Indent.remove_breakpoints i *)
-  (*     done *)
-  (*   | Ace.InsertLines | Ace.InsertText -> *)
-  (*     let text = delta.Ace.text in *)
-  (*     Ace_utils.console_log text *)
-  (* in *)
-  (* Ace.Editor.onChange (Ace_utils.editor ()) f_bkpt_remove *)
+    Dom.appendChild main_container global_conf.container;
+    disable_editor ()
   in
 
+  (* Fonction callback pour la fermeture du workspace *)
   let close () =
-    match !main_container with
-    | None -> () (* failwith "close workspace without main_container" *)
-    | Some container ->
-      let rec clear_main_container () =
-	Ace_utils.console_debug (Ace_utils.get_element_by_id "divmain");
-	container##innerHTML <- Js.string "pouet";
-	Ace_utils.console_debug (container##id);
-	let cl = Dom.list_of_nodeList container##childNodes in
-	List.iter (fun c -> 
-	  Ace_utils.console_debug c;
-	  Dom.removeChild container c) cl
-	(* match Js.Opt.to_option (container##firstChild) with *)
-	(* | None -> () *)
-	(* | Some child ->  *)
-	(*   ignore (container##removeChild(child)); *)
-	(*   Ace_utils.console_debug "coucou! "; *)
-	(*   clear_main_container () *)
-      in
-      Ace_utils.console_debug "first coucou! ";
-      clear_main_container ()
+    let cl = Dom.list_of_nodeList main_container##childNodes in
+    List.iter (fun c -> Dom.removeChild main_container c) cl
   in
   
   Event_manager.open_workspace#add_event launch;
-  Event_manager.close_workspace#add_event close;
-
-  (Js.Unsafe.coerce Dom_html.window)##makeEditor <- Js.wrap_callback
-     make_editor
+  Event_manager.close_workspace#add_event close

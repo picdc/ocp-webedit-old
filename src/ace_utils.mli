@@ -10,8 +10,13 @@
 type handler = (Dom_html.element Js.t, Dom_html.event Js.t)
            Dom_html.event_listener
 
+type config = { mutable editor : Ace.editor Js.t option ;
+		mutable container : Dom_html.element Js.t }
+
+val global_conf : config
+
 val editor : unit -> Ace.editor Js.t
-val init_editor : string -> unit
+val init_editor : Dom_html.element Js.t -> unit
 
 val optionnal_widget : Dom_html.element Js.t -> bool -> Dom_html.element Js.t
 val tabs_widget : string list -> Dom_html.element Js.t list -> int ->
@@ -25,6 +30,7 @@ val console_log : string -> unit
 val console_debug : 'a -> unit
 
 val get_element_by_id : string -> Dom_html.element Js.t
+val query_selector : Dom_html.element Js.t -> string -> Dom_html.element Js.t
 
 val coerceTo_input : Dom_html.element Js.t -> Dom_html.inputElement Js.t
 val coerceTo_textarea : Dom_html.element Js.t -> Dom_html.textAreaElement Js.t

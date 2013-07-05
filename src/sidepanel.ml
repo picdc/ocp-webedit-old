@@ -1,5 +1,6 @@
 
 open Dom_html
+open Ace_utils
 
 module H = Hashtbl
 
@@ -62,7 +63,7 @@ let add_file container file =
     Dialog.Right_clic_dialog.show right_clic_dialog_file x y;
     Js._false
   ) in
-  Ace_utils.make_event_oncontextmenu li hand;
+  make_event_oncontextmenu li hand;
 
   Dom.appendChild container li
 
@@ -155,7 +156,7 @@ let add_project container title =
     else Dialog.Right_clic_dialog.show right_clic_dialog_closed_project x y;
     Js._false
   ) in
-  Ace_utils.make_event_oncontextmenu span hand;
+  make_event_oncontextmenu span hand;
   
   Dom.appendChild li span;
   Dom.appendChild li ul;
@@ -190,13 +191,19 @@ let make_sidepanel () =
 
 let _ =
   let callback_open_workspace ls =
-    let sideprojects = Ace_utils.get_element_by_id "side_projects" in
+    console_debug global_conf.container;
+    let sideprojects =
+      query_selector global_conf.container "#side_projects" in
     List.iter (fun el -> add_project sideprojects el) ls
   in
 
   let callback_close_workspace () =
     focused_file := None;
-    focused_project := None
+    focused_project := None;
+    let sideprojects =
+      query_selector global_conf.container "#side_projects" in
+    let cl = Dom.list_of_nodeList sideprojects##childNodes in
+    List.iter (fun el -> Dom.removeChild sideprojects el) cl
   in
 
   let callback_rename_file file =
@@ -205,12 +212,12 @@ let _ =
       file.Filemanager.project,
       file.Filemanager.filename in
     let id_container = Format.sprintf "side_file_%d" id in
-    let container = Ace_utils.get_element_by_id id_container in
+    let container = get_element_by_id id_container in
     rename_file container filename
   in
 
   let callback_create_project project =
-    let sideprojects = Ace_utils.get_element_by_id "side_projects" in
+    let sideprojects = get_element_by_id "side_projects" in
     add_project sideprojects project
   in
 
@@ -218,7 +225,7 @@ let _ =
     match Filemanager.get_current_file () with
     | Some id when id = file.Filemanager.id ->
       let id_c_file = Format.sprintf "side_file_%d" id in
-      let c_file = Ace_utils.get_element_by_id id_c_file in
+      let c_file = get_element_by_id id_c_file in
       c_file##className <- get_class_filename file false
     | _ -> ()
   in
@@ -226,39 +233,39 @@ let _ =
   let callback_create_file file =
     let project = file.Filemanager.project in
     let id_container = "side_project_"^project in
-    let container = Ace_utils.get_element_by_id id_container in
+    let container = get_element_by_id id_container in
     add_file container file
   in
 
   let callback_open_project files =
     let project = (List.hd files).Filemanager.project in
     let id_container = "side_project_"^project in
-    let container = Ace_utils.get_element_by_id id_container in
+    let container = get_element_by_id id_container in
     List.iter (fun file ->
       add_file container file) files
   in
 
   let callback_delete_file file =
     let id_c_project = "side_project_"^file.Filemanager.project in
-    let c_project = Ace_utils.get_element_by_id id_c_project in
+    let c_project = get_element_by_id id_c_project in
     let id_c_file = Format.sprintf "side_file_%d" file.Filemanager.id in
-    let c_file = Ace_utils.get_element_by_id id_c_file in
+    let c_file = get_element_by_id id_c_file in
     Dom.removeChild c_project c_file
   in
 
   let callback_rename_project (name, new_name) =
     let id_c_project = "side_project_"^name in
-    let c_project = Ace_utils.get_element_by_id id_c_project in
+    let c_project = get_element_by_id id_c_project in
     c_project##id <- Js.string ("side_project_"^new_name);
     let id_c_title = "side_project_"^name^"_title" in
-    let c_title = Ace_utils.get_element_by_id id_c_title in
+    let c_title = get_element_by_id id_c_title in
     c_title##innerHTML <- Js.string new_name
   in
 
   let callback_delete_project project =
-    let sideprojects = Ace_utils.get_element_by_id "side_projects" in
+    let sideprojects = get_element_by_id "side_projects" in
     let id_c_project = "side_container_project_"^project in
-    let c_project = Ace_utils.get_element_by_id id_c_project in
+    let c_project = get_element_by_id id_c_project in
     Dom.removeChild sideprojects c_project
   in
 
@@ -269,20 +276,20 @@ let _ =
       | _ -> false
     in
     let id_c_file = Format.sprintf "side_file_%d" file_id in
-    let c_file = Ace_utils.get_element_by_id id_c_file in
+    let c_file = get_element_by_id id_c_file in
     c_file##className <- get_class_filename file b
   in
   
   let callback_switch_file (old_id, new_id) =
     let newfile = Filemanager.get_file new_id in
     let id_c_newfile = Format.sprintf "side_file_%d" new_id in
-    let c_newfile = Ace_utils.get_element_by_id id_c_newfile in
+    let c_newfile = get_element_by_id id_c_newfile in
     c_newfile##className <- get_class_filename newfile true;
     match old_id with
     | Some old_id ->
       let oldfile = Filemanager.get_file old_id in
       let id_c_oldfile = Format.sprintf "side_file_%d" old_id in
-      let c_oldfile = Ace_utils.get_element_by_id id_c_oldfile in
+      let c_oldfile = get_element_by_id id_c_oldfile in
       c_oldfile##className <- get_class_filename oldfile false
     | None -> ()
   in

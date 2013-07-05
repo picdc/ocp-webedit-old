@@ -31,6 +31,7 @@ end
 end
 
 (* TO COMPLETE *) class type editor = object
+  method destroy : unit Js.meth
   method getSelectionRange : range Js.t Js.meth
   method getSession : editSession Js.t Js.meth
   method getValue : Js.js_string Js.t Js.meth
@@ -38,10 +39,11 @@ end
   method selectAll : unit Js.meth
   method setReadOnly : bool Js.t -> unit Js.meth 
   method setSession : editSession Js.t -> unit Js.meth
+  method setTheme : Js.js_string Js.t -> unit Js.meth
   method setValue : Js.js_string Js.t -> unit Js.meth
 end
 
-(* TO COMPLETE *) val edit : string -> editor Js.t
+(* TO COMPLETE *) val edit : Dom_html.element Js.t -> editor Js.t
 (* TO COMPLETE *) val createEditSession : string -> string -> editSession Js.t
 
 (* CAN BE IMPROVED ? *) val require : string -> unit

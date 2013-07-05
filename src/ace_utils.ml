@@ -4,10 +4,23 @@ open Dom_html
 type handler = (Dom_html.element Js.t, Dom_html.event Js.t)
            Dom_html.event_listener
 
-let _editor = ref (Obj.magic 5) (* O_O WHAT???? *)
 
-let init_editor el = _editor := Ace.edit el
-let editor () = !_editor
+type config = { mutable editor : Ace.editor Js.t option ;
+		mutable container : Dom_html.element Js.t }
+
+let global_conf = { editor = None ;
+		    container = Dom_html.document##body }
+
+let editor () = match global_conf.editor with
+    None -> failwith "Editor not init"
+  | Some e -> e
+
+let init_editor el =
+  global_conf.editor <- Some (Ace.edit el);
+  (editor())##setTheme(Js.string "ace/theme/eclipse")
+
+let init_container el = global_conf.container <- el
+
 
 (* class tabs_widget = object (self) *)
 (*   inherit Dom_html.element *)
@@ -89,6 +102,10 @@ let console_debug o =
 let get_element_by_id id =
   Js.Opt.get (document##getElementById (Js.string id))
     (fun () -> failwith ("fail get_element_by_id : "^id))
+
+let query_selector el query =
+  Js.Opt.get el##querySelector(Js.string query)
+    (fun () -> failwith ("QuerySelector fail with : "^query))
 
 let coerceTo_input el =
   match Js.Opt.to_option (Dom_html.CoerceTo.input el) with
@@ -247,14 +264,14 @@ let tabs_widget title_list element_list init_num_tab
 (* type acetoken *)
 
 let enable_editor () =
-  (!_editor)##setReadOnly(Js.bool false)
+  (editor())##setReadOnly(Js.bool false)
   (* Js.Unsafe.fun_call (Js.Unsafe.variable "editor.setReadOnly") *)
   (*   [| Js.Unsafe.inject Js._false |] *)
 
 let disable_editor () =
-  (!_editor)##selectAll();
-  (!_editor)##removeLines();
-  (!_editor)##setReadOnly(Js.bool true)
+  (editor())##selectAll();
+  (editor())##removeLines();
+  (editor())##setReadOnly(Js.bool true)
   (* ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "editor.selectAll") *)
   (*   [| Js.Unsafe.inject () |]); *)
   (* ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "editor.removeLines") *)
@@ -297,7 +314,7 @@ let disable_editor () =
 
 let get_lines row_start row_end =
   let res = Js.to_array (Js.str_array (
-    (!_editor)##getSession()##getDocument()##getLines(row_start, row_end)))
+    (editor())##getSession()##getDocument()##getLines(row_start, row_end)))
   in
   let res = List.fold_right (fun str acc -> (Js.to_string str)::acc)
     (Array.to_list res) [] in
