@@ -2,29 +2,54 @@
 #sidepanel #side_projects {
    list-style: none; 
    padding: 0px;
+   overflow-x: hidden;
 }
 
 
-.side_class_project_item {
+.side_project {
     margin-bottom: 5px;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
-.side_class_project_name {
+.side_project_name {
     font-size: 15px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-.side_class_file_list {
-    padding-left: 15px;
+.side_project_name_active {
+    font-weight: bold;
 }
 
-.side_class_file_name {
+.side_project_icons { font-weight: normal; }
+
+
+.side_file_list {
+    list-style: none;   
+    padding-left: 5px;
+    float: none;
+}
+
+.side_file_icons { }
+
+.side_file_name {
     font-size: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-.side_class_file_unsaved:after {
+.side_file_unsaved {
+    text-overflow: ellipsis;
+    overflow-x: hidden;
+}
+
+.side_file_unsaved:after {
     content: "*";
 }
 
-.side_class_file_active {
+.side_file_active {
     font-weight: bold;
 }

@@ -135,7 +135,7 @@ let open_project callback project =
        incr id;
        file::acc
      ) [] lstr in
-     callback files
+     callback (project, files)
    in
    Request.get_list_of_files ~callback project
        

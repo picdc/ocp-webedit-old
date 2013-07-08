@@ -55,6 +55,7 @@ input:disabled {
 
 .tabtitle {
     display: inline-block;
+    text-overflow: ellipsis;
     overflow: hidden;
     width: 76px;
     border: none;

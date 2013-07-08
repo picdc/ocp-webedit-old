@@ -105,7 +105,10 @@ let get_element_by_id id =
 
 let query_selector el query =
   Js.Opt.get el##querySelector(Js.string query)
-    (fun () -> failwith ("QuerySelector fail with : "^query))
+    (fun () -> 
+      console_log "Failure QuerySelector on #Dom.element :";
+      console_debug el;
+      failwith ("QuerySelector fail with : "^query))
 
 let coerceTo_input el =
   match Js.Opt.to_option (Dom_html.CoerceTo.input el) with
@@ -117,6 +120,10 @@ let coerceTo_textarea el =
   | Some s -> s
   | None -> failwith "coerco_textarea failed"
     
+
+let insert_first n c =
+  let p = n##firstChild in
+  Dom.insertBefore n c p
 
 let split str del =
   let str = Js.string str in

@@ -32,7 +32,7 @@ val get_id : project:string -> filename:string -> int
 
 val open_workspace : (string list -> unit) -> unit -> unit
 val close_workspace : (unit -> unit) -> unit -> unit
-val open_project : (file list -> unit) -> string -> unit
+val open_project : (string * file list -> unit) -> string -> unit
 val open_file : (file * string -> unit) -> string * string -> unit
 val close_file : (file -> unit) -> int -> unit
 

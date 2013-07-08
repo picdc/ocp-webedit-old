@@ -34,6 +34,8 @@ val query_selector : Dom_html.element Js.t -> string -> Dom_html.element Js.t
 
 val coerceTo_input : Dom_html.element Js.t -> Dom_html.inputElement Js.t
 val coerceTo_textarea : Dom_html.element Js.t -> Dom_html.textAreaElement Js.t
+val insert_first : #Dom.node Js.t -> #Dom.node Js.t -> unit
+
 val split : string -> string -> string list
 
 val make_event_oncontextmenu : Dom_html.element Js.t -> handler -> unit
