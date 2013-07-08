@@ -32,10 +32,22 @@ let create_and_switch_action callback (project, filename) =
     switch_file#trigger id in
   Filemanager.create_file callback (project, filename)
 
+
 let open_file = new event open_and_switch_action
 let create_file = new event create_and_switch_action
 let close_file = new event Filemanager.close_file 
 let save_file = new event Filemanager.save_file
+
+
+let import_and_switch_action callback (project, filename, content) =
+  let callback args =
+    callback args;
+    open_file#trigger (project, filename)
+  in
+  Filemanager.import_file callback (project, filename, content)
+
+
+let import_file = new event import_and_switch_action
 let unsaved_file = new event Filemanager.unsaved_file
 let delete_project = new event Filemanager.delete_project
 let delete_file = new event Filemanager.delete_file

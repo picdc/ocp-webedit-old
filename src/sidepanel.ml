@@ -74,7 +74,6 @@ let rename_file container filename =
 
 let focused_project = ref None
 
-
 let create_file project filename =
   Event_manager.create_file#trigger (project, filename)
 
@@ -94,8 +93,17 @@ let handler_delete_project () = handler (fun _ ->
     Event_manager.delete_project#trigger project;
     Js._true)
 
+let handler_import_file () =
+  handler (fun _ ->
+    let i = get_element_by_id "input_file_import" in
+    let i = Ace_utils.coerceTo_input i in
+    i##click ();
+    Ace_utils.console_log "pouet";
+    Js._true
+  )
+
 let right_clic_dialog_opened_project =
-  let lstr = [ "Create new file" ; "Rename project" ; "Delete project" ] in
+  let lstr = [ "Create new file" ; "Rename project" ; "Delete project"; "Import file" ] in
   let handler_new_file = handler (fun _ ->
     match !focused_project with
     | None -> assert false
@@ -105,7 +113,7 @@ let right_clic_dialog_opened_project =
       Js._true)
   in		 
   let lhandler = [ handler_new_file ; handler_rename_project () ;
-		   handler_delete_project () ] in
+		   handler_delete_project (); handler_import_file () ] in
   Dialog.Right_clic_dialog.create lstr lhandler
 
 let right_clic_dialog_closed_project =
@@ -190,6 +198,51 @@ let make_sidepanel () =
 
 
 let _ =
+
+  (* Création de l'input caché qui permet l'importation des fichiers *)
+  let button = createInput
+    ~name:(Js.string "importFileButton")
+    ~_type:(Js.string "file")
+    document
+  in
+  (* button##setAttribute(Js.string "multiple", Js.string "multiple"); *)
+  button##style##display <- Js.string "none";
+  button##id <- Js.string "input_file_import";
+  button##onchange <- handler (fun _ ->
+    begin
+      match Js.Optdef.to_option button##files with
+      | None -> ()
+      | Some fl ->
+  	for i=0 to fl##length do
+  	  match Js.Opt.to_option fl##item(i) with
+  	  | None -> ()
+  	  | Some f ->
+  	    begin
+  	      let reader = jsnew File.fileReader () in
+  	      reader##onload <- Dom.handler (fun _ ->
+  		let s =
+  		  match Js.Opt.to_option
+  		    (File.CoerceTo.string (reader##result)) with
+  		    | None -> assert false
+  		    | Some str -> str
+  		in
+                let project = match !focused_project with
+                  | None -> assert false
+                  | Some p -> p
+                in
+                let filename, content = 
+                  (Js.to_string f##name, Js.to_string s) 
+                in
+                Event_manager.import_file#trigger (project, filename, content);
+  		Js._false);
+  	      reader##readAsText (( f :> (File.blob Js.t)));
+  	    end
+  	done
+    end;
+    Js._true
+  );
+  Dom.appendChild document##body button;
+
   let callback_open_workspace ls =
     console_debug global_conf.container;
     let sideprojects =
@@ -294,6 +347,8 @@ let _ =
     | None -> ()
   in
 
+    
+
   Event_manager.open_workspace#add_event callback_open_workspace;
   Event_manager.close_workspace#add_event callback_close_workspace;
   Event_manager.create_file#add_event callback_create_file;
@@ -306,5 +361,8 @@ let _ =
   Event_manager.unsaved_file#add_event callback_save_and_unsaved_file;
   Event_manager.switch_file#add_event callback_switch_file;
   Event_manager.rename_project#add_event callback_rename_project;
-  Event_manager.delete_project#add_event callback_delete_project
+  Event_manager.delete_project#add_event callback_delete_project;
+
+  (* Importer un fichier revient simplement à l'ajouter dans le sidepanel *)
+  Event_manager.import_file#add_event callback_create_file
     

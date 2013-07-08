@@ -19,6 +19,7 @@ val open_file : (Filemanager.file * string, string * string) event
 val close_file : (Filemanager.file, int) event 
 
 val save_file : (Filemanager.file, int) event
+val import_file : (Filemanager.file, string * string * string) event
 val unsaved_file : (Filemanager.file, int) event
 val switch_file : (int option * int, int) event
 

@@ -243,6 +243,34 @@ let save_file callback id =
   Request.save_file ~callback ~project:file.project ~filename:file.filename
     ~content
 
+let import_file callback (project, file, content) =
+  let rec rename file cpt =
+    let f = file ^ (string_of_int cpt) in
+    if file_exists ~project ~filename:f then
+      rename file (cpt+1)
+    else
+      f
+  in
+  let filename =
+    if file_exists ~project ~filename:file then
+      rename file 1
+    else
+      file
+  in
+  let callback () =
+    let i = !id in
+    let file = { id = i ; project ; filename ;
+		 is_open = true ; is_unsaved = false } in
+    add_file file;
+    incr id;
+    add_file_to_project project filename;
+    let es = Ace.createEditSession "" "ace/mode/ocaml" in
+    H.add file_content i es;
+    Ace_utils.console_debug i;
+    callback (file)
+  in
+  Request.import_file ~callback ~project ~filename ~content
+
 let unsaved_file callback id =
   let file = get_file id in
   if not file.is_unsaved then

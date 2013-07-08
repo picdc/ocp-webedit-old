@@ -72,6 +72,11 @@ let save_file ~callback ~project ~filename ~content =
   let callback _ = callback () in
   pull_request ~callback ~meth:"POST" ~url:"project/save" ~asyn:true ~msg
 
+let import_file ~callback ~project ~filename ~content =
+  let msg = Format.sprintf "project=%s&file=%s&content=%s"
+    project filename (Url.urlencode content) in
+  let callback _ = callback () in
+  pull_request ~callback ~meth:"POST" ~url:"project/import" ~asyn:true ~msg
 
 let rename_file ~callback ~project ~filename ~new_name =
   let msg = Format.sprintf "project=%s&file=%s&newname=%s"

@@ -185,6 +185,9 @@ let project_save_function user project file content =
     Shell.call ~stdout [ res ]
   with _ -> raise Fail_shell_call
 
+let project_import_function user project file content =
+  ignore (project_create_function user project file);
+  project_save_function user project file content
 
 let rename_function user project new_name =
   let user = email_to_dirname user in
@@ -339,6 +342,21 @@ let project_save_service =
 	  _ -> print_string "Error !" cgi
       ); }
 
+let project_import_service =
+  { empty_dyn_service with
+    Nethttpd_services.dyn_handler =
+      (fun _ cgi -> 
+	try
+          let user = get_cookie cgi "user" in
+	  let project = get_argument cgi "project" in
+	  let file = get_argument cgi "file" in
+	  let content = get_argument cgi "content" in
+	  project_save_function project user file content;
+	  print_string "Imported" cgi
+	with
+	  _ -> print_string "Error !" cgi
+      ); }
+
 let rename_service = 
   { empty_dyn_service with
     Nethttpd_services.dyn_handler =
@@ -405,6 +423,7 @@ let my_factory =
       "project_create_service", project_create_service;
       "create_service", create_service;
       "project_save_service", project_save_service;
+      "project_import_service", project_import_service;
       "rename_service", rename_service;
       "project_rename_service", project_rename_service;
       "delete_service", delete_service;

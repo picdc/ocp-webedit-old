@@ -18,6 +18,10 @@ val save_file :
   callback:(unit -> unit) -> project:string -> filename:string ->
   content:string -> unit
 
+val import_file :
+  callback:(unit -> unit) -> project:string -> filename:string ->
+  content:string -> unit
+
 val rename_file :
   callback:(unit -> unit) -> project:string -> filename:string -> 
   new_name:string -> unit
