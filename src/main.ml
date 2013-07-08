@@ -1,4 +1,7 @@
 
+(** AMELIORER DISPLAY SIDEPANEL ET TESTER RENOMMAGE
+-> doit changer les id apres un renommage !!! **)
+
 open Ace_utils
 open Indent
 

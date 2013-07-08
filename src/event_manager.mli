@@ -14,7 +14,7 @@ val create_project : (string, string) event
 val rename_file : (Filemanager.file , int * string) event
 val rename_project : (string * string, string * string) event
 
-val open_project : (Filemanager.file list, string) event
+val open_project : (string * Filemanager.file list, string) event
 val open_file : (Filemanager.file * string, string * string) event
 val close_file : (Filemanager.file, int) event 
 
