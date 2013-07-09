@@ -6,6 +6,16 @@
     z-index: 5;
 }
 
+#centerpanel {
+    display: inline-block;
+    width: 75%;
+    height: 640px;
+    min-width: 600px;
+    z-index: 5;
+    border: 1px solid #aaaaaa;
+    padding: 30px 10px;
+}
+
 #sidepanel {
     display: inline-block;
     width: 149px;
