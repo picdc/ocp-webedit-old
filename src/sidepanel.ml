@@ -74,7 +74,6 @@ let add_file container file =
       file.Filemanager.project,		(* Obligé de refresh ici *)
       file.Filemanager.filename,	(* au cas où il y a eu du chgmt *)
       file.Filemanager.is_open in
-    Format.printf "is_open = %b@." is_open;
     if is_open then Event_manager.switch_file#trigger id
     else Event_manager.open_file#trigger (project, filename);
     Js._true);
@@ -132,7 +131,6 @@ let handler_import_file () =
     let i = get_element_by_id "input_file_import" in
     let i = Ace_utils.coerceTo_input i in
     i##click ();
-    Ace_utils.console_log "pouet";
     Js._true
   )
 
@@ -303,7 +301,6 @@ let _ =
   Dom.appendChild document##body button;
 
   let callback_open_workspace ls =
-    console_debug global_conf.container;
     let sideprojects =
       query_selector global_conf.container "#side_projects" in
     List.iter (fun el -> add_project sideprojects el) ls

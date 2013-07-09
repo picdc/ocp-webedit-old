@@ -518,6 +518,7 @@ let _ =
   Event_manager.rename_file#add_event callback_rename_file;
   Event_manager.save_file#add_event callback_save_and_unsaved_file;
   Event_manager.unsaved_file#add_event callback_save_and_unsaved_file;
+  Event_manager.import_file#add_event callback_create_file;
   Event_manager.switch_file#add_event callback_switch_file;
   Event_manager.delete_file#add_event callback_delete_file;
   Event_manager.delete_project#add_event callback_delete_project

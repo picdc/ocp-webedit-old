@@ -184,7 +184,6 @@ let create_file callback (project, filename) =
 	add_file_to_project project filename;
 	let es = Ace.createEditSession "" "ace/mode/ocaml" in
 	H.add file_content i es;
-	Ace_utils.console_debug i;
 	callback file
       in
       Request.create_file ~callback ~project ~filename
@@ -265,8 +264,8 @@ let import_file callback (project, file, content) =
     incr id;
     add_file_to_project project filename;
     let es = Ace.createEditSession "" "ace/mode/ocaml" in
+    es##getDocument()##setValue(Js.string content);
     H.add file_content i es;
-    Ace_utils.console_debug i;
     callback (file)
   in
   Request.import_file ~callback ~project ~filename ~content

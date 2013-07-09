@@ -42,7 +42,8 @@ let save_file = new event Filemanager.save_file
 let import_and_switch_action callback (project, filename, content) =
   let callback args =
     callback args;
-    open_file#trigger (project, filename)
+    let id = Filemanager.get_id ~project ~filename in
+    switch_file#trigger id
   in
   Filemanager.import_file callback (project, filename, content)
 

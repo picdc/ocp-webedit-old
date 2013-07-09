@@ -148,6 +148,7 @@ let _ =
     try breakpoints := Hashtbl.find all_breakpoints id
     with _ -> failwith "Not_found in callback_switch_file in indent.ml"
   in
+  Event_manager.import_file#add_event callback_create_file;
   Event_manager.switch_file#add_event callback_switch_file;
   Event_manager.open_file#add_event callback_open_file;
   Event_manager.create_file#add_event callback_create_file;

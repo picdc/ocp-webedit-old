@@ -58,7 +58,6 @@ let get_argument (cgi: Netcgi.cgi_activation) name =
   else raise Bad_cgi_argument
 
 let get_cookie (cgi: Netcgi.cgi_activation) name =
-  Format.printf "On récupère le cookie";
   let cgi = cgi#environment in
   let c = cgi#cookies in
   try
@@ -351,7 +350,7 @@ let project_import_service =
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let content = get_argument cgi "content" in
-	  project_save_function project user file content;
+	  project_import_function user project file content;
 	  print_string "Imported" cgi
 	with
 	  _ -> print_string "Error !" cgi
