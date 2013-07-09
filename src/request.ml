@@ -2,14 +2,6 @@
 exception Bad_request_url of string
 
 let pull_request ~callback ~meth ~url ~asyn ~msg =
-(* let pull_request ~post_args ~url = *)
-  (* let open XmlHttpRequest in *)
-  (* let urlopt = Url.url_of_string url in *)
-  (* match urlopt with  *)
-  (* | None -> raise (Bad_request_url url) *)
-  (* | Some url -> *)
-  (*   let httpframe = Lwt_main.run (perform ~post_args url) in *)
-  (*   httpframe.content *)
   let req = XmlHttpRequest.create () in
   req##_open(Js.string meth, Js.string url, Js.bool asyn);
   req##setRequestHeader(Js.string "Content-Type",
@@ -102,3 +94,7 @@ let delete_file ~callback ~project ~filename =
   let callback _ = callback () in
   pull_request ~callback ~meth:"POST" ~url:"project/delete" ~asyn:true ~msg
 
+let export_project ~callback ~project =
+  let msg = Format.sprintf "project=%s" project in
+  let callback _ = callback () in
+  pull_request ~callback ~meth:"POST" ~url:"export" ~asyn:true ~msg

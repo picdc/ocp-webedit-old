@@ -54,9 +54,13 @@ let user_exists user =
       _ -> false
 
 exception Wrong_assertion_key
+exception User_not_found
 
 let verify_logged_user user key =
   Format.printf "Verifying cookie@.";
+  if not (H.mem logged_users user) then
+    raise User_not_found
+
   let stored_key = H.find logged_users user in
   if stored_key <> key then
     raise Wrong_assertion_key
@@ -89,6 +93,13 @@ let print_cookies (cgi: Netcgi.cgi_activation) =
 let print_string str (cgi: Netcgi.cgi_activation) =
   (* cgi#set_header ~content_type:"plain/text" (); (\* TELECHARGE Oo? *\) *)
   cgi#out_channel#output_string str;
+  cgi#out_channel#commit_work ()
+
+let send_file absolute_path file (cgi: Netcgi.cgi_activation) =
+  cgi#set_header ~content_type:"application/octet-stream" ~filename:file ();
+  let f = open_in absolute_path in
+  let ic = new Netchannels.input_channel f in
+  cgi#out_channel#output_channel ic;
   cgi#out_channel#commit_work ()
   
 let send_cookies cookies (cgi: Netcgi.cgi_activation) =
@@ -236,6 +247,14 @@ let project_delete_function user project file =
   try
     Shell.call ~stdout:(Shell.to_buffer b) [ res ]
   with _ -> raise Fail_shell_call
+
+let export_function user project =
+  let user = email_to_dirname user in
+  let proj_path = Format.sprintf "%s/%s/%s" ppath user project in
+  let filename = Format.sprintf "%s.tar.gz" proj_path in
+  let res = Shell.cmd "tar" [ "-cf"; filename; proj_path ] in
+  Shell.call [ res ];
+  filename, Format.sprintf "%s.tar.gz" project
 
 let empty_dyn_service = 
   { Nethttpd_services.dyn_handler = (fun _ _ -> ());
@@ -446,6 +465,21 @@ let project_delete_service =
 	with _ -> print_string "Error !" cgi
       ); }
 
+let export_service = 
+  { empty_dyn_service with
+    Nethttpd_services.dyn_handler =
+      (fun _ cgi -> 
+	(* try *)
+          let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
+	  let project = get_argument cgi "project" in
+	  let abs_f, f = export_function user project in
+	  send_file abs_f f cgi
+	(* with _ -> print_string "Error !" cgi *)
+      ); }
+  
+
 
 let my_factory =
   Nethttpd_plex.nethttpd_factory
@@ -463,7 +497,8 @@ let my_factory =
       "rename_service", rename_service;
       "project_rename_service", project_rename_service;
       "delete_service", delete_service;
-      "project_delete_service", project_delete_service 
+      "project_delete_service", project_delete_service;
+      "export_service", export_service 
     ]
 
     ()

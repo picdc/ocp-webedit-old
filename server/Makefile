@@ -3,7 +3,7 @@ CAMLFLAGS= -thread -w @a -unsafe
 CAMLOPTFLAGS= $(CAMLFLAGS) -inline 10000
 CAMLLIBS= unix.cma
 CFLAGS= -I/opt/ocaml/lib/ocaml -arch x86_64 -O3 -Wall -Wextra
-PKGS= -package threads,pcre,netplex,netcgi2,nethttpd,shell,netclient,ssl,equeue-ssl,yojson
+PKGS= -package threads,pcre,netplex,netcgi2,nethttpd,shell,netclient,ssl,equeue-ssl,yojson,netstring
 
 SRC= main.ml
 OBJ= $(SRC:.ml=.cmx)
