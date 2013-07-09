@@ -56,8 +56,6 @@ oop.inherits(Mode, TextMode);
 
 
 /* Config de l'éditeur */
-    console.debug(editor);
-    console.log("ppppp");
 editor.getSession().setTabSize(2);
 
 

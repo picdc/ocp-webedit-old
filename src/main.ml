@@ -86,7 +86,6 @@ let main_content =
 let main_container = Dom_html.createDiv Dom_html.document
 let _ = 
   main_container##id <- Js.string "main_content";
-  console_log "coucou!";
   global_conf.container <- main_content;
   Dom.appendChild Dom_html.document##body main_container 
 

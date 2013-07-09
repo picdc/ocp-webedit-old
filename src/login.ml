@@ -50,7 +50,6 @@ let verify_assertion ~callback assertion =
     callback json
   in
   let callback_failure json =
-    console_debug json;
     logout ();
     console_log "Login failure"
   in
@@ -91,8 +90,8 @@ let _ =
   let signout = createSpan document in
   signout##id <- Js.string "signout";  
   signout##innerHTML <- Js.string "Sign Out";
-  signout##className <- Js.string "sign-button";
-  signout##onclick <- onclick_signout;
+  signout##className <- Js.string "sign-button sign-disabled";
+  (* signout##onclick <- onclick_signout; *)
 
   let b = document##body in
   Dom.appendChild b signin;

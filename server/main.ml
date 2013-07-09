@@ -4,6 +4,9 @@ exception Empty_cgi_argument
 exception Bad_cgi_argument
 exception Fail_shell_call
 
+module H = Hashtbl
+
+let logged_users = H.create 127
 
 (* let ppath = "/home/dmaison/ace-ocaml/data" *)
 let ppath = Format.sprintf "%s/ocp-webedit/data" (Sys.getenv "HOME")
@@ -42,13 +45,21 @@ let user_exists user =
   let cmd2 = Shell.cmd "grep" [ "-c" ; "-w" ; user_dirname ] in
   let b = Buffer.create 503 in
 
-  (* Revoir la gestion de l'exception *)
   try
     Shell.call ~stdout:(Shell.to_buffer b) [ cmd1 ; cmd2 ];
-    let n = int_of_string (Buffer.contents b) in
+    let s = String.trim (Buffer.contents b) in
+    let n = int_of_string s in
     n = 1
   with
       _ -> false
+
+exception Wrong_assertion_key
+
+let verify_logged_user user key =
+  Format.printf "Verifying cookie@.";
+  let stored_key = H.find logged_users user in
+  if stored_key <> key then
+    raise Wrong_assertion_key
 
 let get_argument (cgi: Netcgi.cgi_activation) name =
   if cgi#argument_exists name then begin
@@ -81,7 +92,7 @@ let print_string str (cgi: Netcgi.cgi_activation) =
   cgi#out_channel#commit_work ()
   
 let send_cookies cookies (cgi: Netcgi.cgi_activation) =
-  cgi#set_header ~set_cookies:cookies ();
+  cgi#set_header ~set_cookies:cookies ~cache:`No_cache ();
   cgi#out_channel#output_string "Authentified successfully";
   cgi#out_channel#commit_work ()
 
@@ -112,6 +123,7 @@ let login_function assertion =
   let body = req#response_body in
   let user = parse_persona_response body#value in
   
+  H.replace logged_users user assertion;
   (* In case the user doesn't exists *)
   if not (user_exists user) then
     begin
@@ -241,10 +253,11 @@ let login_service =
 	try
           let key = get_argument cgi "assertion" in
           let user = login_function key in
-          let c = Nethttp.Cookie.make "user" user in
-          send_cookies [c] cgi
+          let u = Nethttp.Cookie.make "user" user in
+          let k = Nethttp.Cookie.make "key" key in
+          send_cookies [u; k] cgi
 	with
-	  _ -> print_string "Error !" cgi
+	  _ -> Format.printf "OUps@."; print_string "Error !" cgi
       ); }
 
 let logout_service =
@@ -252,6 +265,8 @@ let logout_service =
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
 	try
+          let user = get_cookie cgi "user" in
+          H.remove logged_users user;
           Format.printf "Logged out@.";
           print_string "Logged_out" cgi
 	with
@@ -265,6 +280,8 @@ let project_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let res = project_function user in
 	  print_string res cgi
 	with
@@ -277,6 +294,8 @@ let project_list_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "project" in
 	  let res = project_list_function user project in
 	  print_string res cgi
@@ -291,6 +310,8 @@ let project_load_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let res = project_load_function user project file in
@@ -305,6 +326,8 @@ let create_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "name" in
 	  let _ = create_function user project in
 	  print_string "Project created successfully" cgi
@@ -318,6 +341,8 @@ let project_create_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "name" in
 	  let _ = project_create_function user project file in
@@ -332,6 +357,8 @@ let project_save_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let content = get_argument cgi "content" in
@@ -347,6 +374,8 @@ let project_import_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let content = get_argument cgi "content" in
@@ -362,6 +391,8 @@ let rename_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "project" in
 	  let new_name = get_argument cgi "newname" in
 	  rename_function user project new_name;
@@ -375,6 +406,8 @@ let project_rename_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let new_name = get_argument cgi "newname" in
@@ -390,6 +423,8 @@ let delete_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "project" in
 	  delete_function user project;
 	  print_string "Deleted" cgi
@@ -402,6 +437,8 @@ let project_delete_service =
       (fun _ cgi -> 
 	try
           let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  project_delete_function user project file;
