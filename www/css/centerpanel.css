@@ -1,0 +1,26 @@
+
+.center_project {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 200px;
+    border: 1px solid black;
+    padding: 10px;
+    margin: 20px 20px;
+}
+
+#center_project_list h1 { text-align: center; }
+
+.center_project_icons {
+    padding-right: 10px;
+}
+
+.center_file_list {
+    width: 100%;
+    text-align: center;
+}
+
+.center_file {
+    width: 100%;
+}

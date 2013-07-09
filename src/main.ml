@@ -1,5 +1,5 @@
 
-(** AMELIORER DISPLAY SIDEPANEL ET TESTER RENOMMAGE
+(**  TESTER RENOMMAGE
 -> doit changer les id apres un renommage !!! **)
 
 open Ace_utils
@@ -70,14 +70,17 @@ let main_content =
    let div_editor = Dom_html.createDiv doc in
    div_main##id <- Js.string "divmain";
    div_editor##id <- Js.string "editor";
+   div_main##style##display <- Js.string "none";
    div_global##style##minWidth <- Js.string "750px";
    let sidepanel = Sidepanel.make_sidepanel () in
+   let centerpanel = Centerpanel.make_centerpanel () in
    let bottabs = make_bottom_widget () in
    let div_tabs = Tabs.make_tabs () in
    Dom.appendChild div_global sidepanel;
    Dom.appendChild div_main div_tabs;
    Dom.appendChild div_main div_editor;
    Dom.appendChild div_main bottabs;
+   Dom.appendChild div_global centerpanel;
    Dom.appendChild div_global div_main;
    div_global
 
@@ -99,12 +102,14 @@ let _ =
   let css_toplvl = Dom_html.createLink doc in
   let css_main = Dom_html.createLink doc in
   let css_sidepanel = Dom_html.createLink doc in
+  let css_centerpanel = Dom_html.createLink doc in
   let css_rel = Js.string "stylesheet" in
   let css_type = Js.string "text/css" in
   css_tabs##href <- Js.string "./css/tabs.css";
   css_toplvl##href <- Js.string "./css/mytoplevel.css";
   css_main##href <- Js.string "./css/main.css";
   css_sidepanel##href <- Js.string "./css/sidepanel.css";
+  css_centerpanel##href <- Js.string "./css/centerpanel.css";
   css_tabs##rel <- css_rel;
   css_tabs##_type <- css_type;
   css_toplvl##rel <- css_rel;
@@ -113,10 +118,13 @@ let _ =
   css_main##_type <- css_type;
   css_sidepanel##rel <- css_rel;
   css_sidepanel##_type <- css_type;
+  css_centerpanel##rel <- css_rel;
+  css_centerpanel##_type <- css_type;
   Dom.appendChild doc##body css_tabs;
   Dom.appendChild doc##body css_toplvl;
   Dom.appendChild doc##body css_main;
   Dom.appendChild doc##body css_sidepanel;
+  Dom.appendChild doc##body css_centerpanel;
 
   doc##body##onclick <- Dom_html.handler (fun _ ->
     Dialog.Right_clic_dialog.hide_all ();
@@ -138,6 +146,31 @@ let _ =
     let cl = Dom.list_of_nodeList main_container##childNodes in
     List.iter (fun c -> Dom.removeChild main_container c) cl
   in
-  
+
+  (* Fonction callback pour afficher le center panel *)
+  let editor_shown = ref false in
+  let switch_to_centerpanel _ =
+    if Filemanager.get_nb_files_opened () = 0 then
+      (let centerpanel = get_element_by_id "centerpanel" in
+       let divmain = get_element_by_id "divmain" in
+       centerpanel##style##display <- Js.string "";
+       divmain##style##display <- Js.string "none";
+       editor_shown := false)
+  in
+
+  (* Fonction callback pour afficher l'éditeur *)
+  let switch_to_editor _ =
+    if not !editor_shown then
+
+      let centerpanel = get_element_by_id "centerpanel" in
+      let divmain = get_element_by_id "divmain" in
+      centerpanel##style##display <- Js.string "none";
+      divmain##style##display <- Js.string "";
+      editor_shown := true
+  in
+
   Event_manager.open_workspace#add_event launch;
-  Event_manager.close_workspace#add_event close
+  Event_manager.close_workspace#add_event close;
+  Event_manager.open_file#add_event switch_to_editor;
+  Event_manager.close_file#add_event switch_to_centerpanel
+

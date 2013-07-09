@@ -166,8 +166,8 @@ let add_project container title =
   let ul = createUl document in
   let name = createDiv document in
   let icons = createSpan document in
-  let ic_p = createSpan document in
-  let ic_m = createSpan document in
+  let ic_p = createImg document in
+  let ic_m = createImg document in
   let ic_o = createImg document in
   let ic_c = createImg document in
   let is_shown = ref false in
@@ -191,11 +191,13 @@ let add_project container title =
   ul##className <- Js.string "side_file_list";
   ul##id <- Js.string ("side_project_"^title);
   icons##className <- Js.string "side_project_icons";
-  ic_p##innerHTML <- Js.string "+";
-  ic_m##innerHTML <- Js.string "-";
-  ic_o##src <- Js.string "icons/dir_opened.png";
+  ic_p##src <- Js.string "./icons/plus.png";
+  ic_m##src <- Js.string "./icons/minus.png";
+  ic_p##alt <- Js.string "+";
+  ic_m##alt <- Js.string "-";
+  ic_o##src <- Js.string "./icons/dir_opened_little.png";
   ic_o##alt <- Js.string "[O]";
-  ic_c##src <- Js.string "icons/dir_closed.png";
+  ic_c##src <- Js.string "./icons/dir_closed_little.png";
   ic_c##alt <- Js.string "[C]";
   ic_p##className <- Js.string "side_icon_plus";
   ic_m##className <- Js.string "side_icon_minus";
@@ -297,7 +299,7 @@ let _ =
   	done
     end;
     Js._true
-  );
+  ); 
   Dom.appendChild document##body button;
 
   let callback_open_workspace ls =

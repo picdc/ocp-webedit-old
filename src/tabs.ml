@@ -117,14 +117,14 @@ let refresh_tabs () =
     match Js.Opt.to_option tabs_childs##item(i) with
     | None -> ()
     | Some tab_opt ->
-        update_element_from_node tab_opt 
-          (fun tab ->
-	    let cssdecl = tab##style in
-	    if i >= !offset && i < !offset + !len then
-	      cssdecl##display <- Js.string ""	   
-	    else cssdecl##display <- Js.string "none") 
+      update_element_from_node tab_opt 
+        (fun tab ->
+	  let cssdecl = tab##style in
+	  if i >= !offset && i < !offset + !len then
+	    cssdecl##display <- Js.string ""	   
+	  else cssdecl##display <- Js.string "none") 
   done;
-
+  
   (* Refresh de la liste *)
   let is_empty = ref true in
   for i=0 to list_childs##length do
@@ -272,37 +272,29 @@ and close_tab id =
   let tabli = get_element_by_id (Format.sprintf "listulnum%d" id) in
 
   begin
-    match Filemanager.get_current_file () with
-    | None -> assert false
-    | Some i ->
-      if i = id then
-	begin
-      (* Choix du prochain tab à afficher *)
-	  let sibling =
-	    match Js.Opt.to_option tab##previousSibling with
+    try
+      match Filemanager.get_current_file () with
+      | None -> raise No_other_tabs
+      | Some i when i = id ->
+	    (* Choix du prochain tab à afficher *)
+	let sibling =
+	  match Js.Opt.to_option tab##previousSibling with
+	  | Some s -> Dom_html.CoerceTo.element s
+	  | None -> match Js.Opt.to_option tab##nextSibling with
 	    | Some s -> Dom_html.CoerceTo.element s
-	    | None -> 
-	      begin
-		match Js.Opt.to_option tab##nextSibling with
-		| Some s -> Dom_html.CoerceTo.element s
-		| None -> Js.Opt.empty
-	      end
-	  in
-	  try
-	    let next_tab =
-	      match Js.Opt.to_option sibling with
-	      | Some s -> s
-	      | None -> raise No_other_tabs
-	    in
-	    let next_id = get_tab_id_from_html next_tab in
-	    Event_manager.switch_file#trigger next_id
-	  with 
-	    No_other_tabs ->
-	      Ace_utils.disable_editor ();
-	      enable_navigation_buttons false
-	end;
+	    | None -> Js.Opt.empty in
+	let next_tab =
+	  match Js.Opt.to_option sibling with
+	  | Some s -> s
+	  | None -> raise No_other_tabs in
+	let next_id = get_tab_id_from_html next_tab in
+	Event_manager.switch_file#trigger next_id 
+      | _ -> ()
+    with No_other_tabs ->
+      Ace_utils.disable_editor ();
+      enable_navigation_buttons false
   end;
-  
+ 
   H.remove htbl id;
   Dom.removeChild line tab;
   Dom.removeChild list tabli;
@@ -463,6 +455,7 @@ let _ =
   let callback_open_file (file, content) =
     let filename = file.Filemanager.filename in
     let id = file.Filemanager.id in
+    update_len ();
     add_tab id filename content
   in
   let callback_close_file file =

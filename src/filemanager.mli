@@ -27,6 +27,7 @@ val file_exists : project:string -> filename:string -> bool
 val project_exists : string -> bool
 
 val get_current_file : unit -> int option
+val get_nb_files_opened : unit -> int
 val get_file : int -> file
 val get_id : project:string -> filename:string -> int
 

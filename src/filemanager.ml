@@ -30,6 +30,7 @@ let id = ref 0
 let current_file = ref None
 let existing_projects = H.create 19
 let existing_files = H.create 19
+let nb_files_opened = ref 0
 
 let file_content = H.create 19
 
@@ -89,6 +90,7 @@ let add_file_to_project project filename =
   let p = H.find existing_projects project in
   p.files <- filename :: p.files
 
+let get_nb_files_opened () = !nb_files_opened
 
 
 let get_content id =
@@ -145,6 +147,7 @@ let open_file callback (project, filename) =
   if not file.is_open then
     let callback str =
       file.is_open <- true;
+      incr nb_files_opened;
       let es = Ace.createEditSession str "ace/mode/ocaml" in
       H.add file_content file.id es;
       callback (file, str)
@@ -154,6 +157,7 @@ let open_file callback (project, filename) =
 let close_file callback id =
   let file = get_file id in
   file.is_open <- false;
+  decr nb_files_opened;
   file.is_unsaved <- false;
   callback file;
   H.remove file_content id;
@@ -181,6 +185,7 @@ let create_file callback (project, filename) =
 		     is_open = true ; is_unsaved = false } in
 	add_file file;
 	incr id;
+	incr nb_files_opened;
 	add_file_to_project project filename;
 	let es = Ace.createEditSession "" "ace/mode/ocaml" in
 	H.add file_content i es;

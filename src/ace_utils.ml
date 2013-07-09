@@ -110,6 +110,9 @@ let query_selector el query =
       console_debug el;
       failwith ("QuerySelector fail with : "^query))
 
+let query_selector_all el query =
+  Dom.list_of_nodeList el##querySelectorAll(Js.string query)
+
 let coerceTo_input el =
   match Js.Opt.to_option (Dom_html.CoerceTo.input el) with
   | Some s -> s
