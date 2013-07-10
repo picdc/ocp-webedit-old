@@ -130,7 +130,13 @@ let handler_export_project () = handler (fun _ ->
   match !focused_project with
     | None -> assert false
     | Some project ->
-        Request.export_project (fun _ -> ()) project;
+        (* Request.export_project (fun _ -> ()) project; *)
+        let i = get_element_by_id "project-name-form" in
+        let i = coerceTo_input i in
+        i##value <- Js.string project;
+        let s = get_element_by_id "export-submit-form" in
+        let s = coerceTo_input s in
+        s##click();
         Js._true)
 
 let handler_import_file () =
@@ -315,6 +321,30 @@ let _ =
     Js._true
   ); 
   Dom.appendChild document##body button;
+
+  (* Creation du formulaire pour exporter les projets
+     Solution temporaire *)
+
+  let form = createForm document in
+  let i = createInput
+    ~_type:(Js.string "text")
+    ~name:(Js.string "project")
+    document
+  in
+  i##id <- Js.string "project-name-form";
+  let submit = createInput
+    ~_type:(Js.string "submit")
+    ~name:(Js.string "export-submit")
+    document
+  in
+  submit##id <- Js.string "export-submit-form";
+  form##_method <- Js.string "post";
+  form##action <- Js.string "export";
+  form##style##display <- Js.string "none";
+  
+  Dom.appendChild form i;
+  Dom.appendChild form submit;
+  Dom.appendChild document##body form;
 
   let callback_open_workspace ls =
     let sideprojects =
