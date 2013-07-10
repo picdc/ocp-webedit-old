@@ -1,5 +1,6 @@
 
 (* WARNING : Quand on est pas logger, attention raise Workspace_closed
+
  *)
 
 type project = {
@@ -31,6 +32,8 @@ let current_file = ref None
 let existing_projects = H.create 19
 let existing_files = H.create 19
 let nb_files_opened = ref 0
+
+let opened_file_order = ref []
 
 let file_content = H.create 19
 
@@ -92,12 +95,22 @@ let add_file_to_project project filename =
 
 let get_nb_files_opened () = !nb_files_opened
 
+let get_prev_opened_file () = 
+  match !opened_file_order with
+  | [] -> None
+  | i::_ -> Some (get_file i)
 
 let get_content id =
   try
     let es = H.find file_content id in
     Some (es##getDocument()##getValue())
   with Not_found -> None
+
+
+
+
+
+
 
 
 (* Fonctions pour utiliser le filemanager *)
@@ -148,6 +161,7 @@ let open_file callback (project, filename) =
     let callback str =
       file.is_open <- true;
       incr nb_files_opened;
+      opened_file_order := file.id::!opened_file_order;
       let es = Ace.createEditSession str "ace/mode/ocaml" in
       H.add file_content file.id es;
       callback (file, str)
@@ -158,13 +172,15 @@ let close_file callback id =
   let file = get_file id in
   file.is_open <- false;
   decr nb_files_opened;
+  opened_file_order := List.filter (fun el -> el <> id) !opened_file_order;
   file.is_unsaved <- false;
-  callback file;
   H.remove file_content id;
-  match !current_file with
-  | Some i when id = i -> current_file := None
-  | _ -> ()
-
+  begin 
+    match !current_file with
+    | Some i when id = i -> current_file := None
+    | _ -> ()
+  end;
+  callback file
 
 let create_project callback project =
   if not (project_exists project) then
@@ -186,6 +202,7 @@ let create_file callback (project, filename) =
 	add_file file;
 	incr id;
 	incr nb_files_opened;
+	opened_file_order := i::!opened_file_order;
 	add_file_to_project project filename;
 	let es = Ace.createEditSession "" "ace/mode/ocaml" in
 	H.add file_content i es;
@@ -267,6 +284,8 @@ let import_file callback (project, file, content) =
 		 is_open = true ; is_unsaved = false } in
     add_file file;
     incr id;
+    incr nb_files_opened;
+    opened_file_order := i::!opened_file_order;
     add_file_to_project project filename;
     let es = Ace.createEditSession "" "ace/mode/ocaml" in
     es##getDocument()##setValue(Js.string content);
@@ -285,6 +304,8 @@ let unsaved_file callback id =
 let switch_file callback new_id =
   let old_file = !current_file in
   let do_it () =
+    opened_file_order := new_id::(List.filter (fun el -> el <> new_id)
+				    !opened_file_order);
     current_file := Some new_id;
     let es = try H.find file_content new_id
       with _ -> failwith "Filemanager : file_content Not Found" in
@@ -300,6 +321,13 @@ let switch_file callback new_id =
 let delete_file callback id =
   let file = get_file id in
   let callback () =
+    if file.is_open then
+      (decr nb_files_opened;
+       opened_file_order := List.filter (fun el -> el <> id)
+	 !opened_file_order;
+       match !current_file with
+       | Some i when i = id -> current_file := None
+       | _ -> ());
     H.remove existing_files id;
     H.remove file_content id;
     let project = H.find existing_projects file.project in
@@ -318,7 +346,9 @@ let delete_project callback name =
     let callback () =
       H.remove existing_projects name;
       H.iter (fun k v -> 
-	if v.project = name then H.remove existing_files k) existing_files;
+	if v.project = name then
+	  (* ???? #trigger delete_file ???? *)
+	  H.remove existing_files k) existing_files;
       callback name
     in
     Request.delete_project ~callback ~project:name

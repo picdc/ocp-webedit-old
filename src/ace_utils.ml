@@ -128,6 +128,11 @@ let insert_first n c =
   let p = n##firstChild in
   Dom.insertBefore n c p
 
+let remove_node c =
+  let p = c##parentNode in
+  let p = Js.Opt.get p (fun _ -> failwith "Echec remove_node") in
+  Dom.removeChild p c
+
 let split str del =
   let str = Js.string str in
   let astr = Js.str_array (str##split(Js.string del)) in

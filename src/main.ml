@@ -161,7 +161,6 @@ let _ =
   (* Fonction callback pour afficher l'éditeur *)
   let switch_to_editor _ =
     if not !editor_shown then
-
       let centerpanel = get_element_by_id "centerpanel" in
       let divmain = get_element_by_id "divmain" in
       centerpanel##style##display <- Js.string "none";
@@ -172,5 +171,7 @@ let _ =
   Event_manager.open_workspace#add_event launch;
   Event_manager.close_workspace#add_event close;
   Event_manager.open_file#add_event switch_to_editor;
-  Event_manager.close_file#add_event switch_to_centerpanel
+  Event_manager.create_file#add_event switch_to_editor;
+  Event_manager.close_file#add_event switch_to_centerpanel;
+  Event_manager.delete_file#add_event switch_to_centerpanel
 

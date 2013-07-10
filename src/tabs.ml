@@ -270,30 +270,6 @@ and close_tab id =
   let line = get_element_by_id "tabline" in
   let list = get_element_by_id "listul" in
   let tabli = get_element_by_id (Format.sprintf "listulnum%d" id) in
-
-  begin
-    try
-      match Filemanager.get_current_file () with
-      | None -> raise No_other_tabs
-      | Some i when i = id ->
-	    (* Choix du prochain tab à afficher *)
-	let sibling =
-	  match Js.Opt.to_option tab##previousSibling with
-	  | Some s -> Dom_html.CoerceTo.element s
-	  | None -> match Js.Opt.to_option tab##nextSibling with
-	    | Some s -> Dom_html.CoerceTo.element s
-	    | None -> Js.Opt.empty in
-	let next_tab =
-	  match Js.Opt.to_option sibling with
-	  | Some s -> s
-	  | None -> raise No_other_tabs in
-	let next_id = get_tab_id_from_html next_tab in
-	Event_manager.switch_file#trigger next_id 
-      | _ -> ()
-    with No_other_tabs ->
-      Ace_utils.disable_editor ();
-      enable_navigation_buttons false
-  end;
  
   H.remove htbl id;
   Dom.removeChild line tab;
@@ -473,6 +449,7 @@ let _ =
     let id, filename =
       file.Filemanager.id,
       file.Filemanager.filename in
+    update_len ();
     add_tab id filename ""
   in
   let callback_delete_file file =

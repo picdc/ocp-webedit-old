@@ -28,6 +28,7 @@ val project_exists : string -> bool
 
 val get_current_file : unit -> int option
 val get_nb_files_opened : unit -> int
+val get_prev_opened_file : unit -> file option
 val get_file : int -> file
 val get_id : project:string -> filename:string -> int
 
@@ -35,6 +36,8 @@ val open_workspace : (string list -> unit) -> unit -> unit
 val close_workspace : (unit -> unit) -> unit -> unit
 val open_project : (string * file list -> unit) -> string -> unit
 val open_file : (file * string -> unit) -> string * string -> unit
+(* Ferme le fichier puis appel les callback
+   avec le fichier qui vient d'être fermé *)
 val close_file : (file -> unit) -> int -> unit
 
 val create_project : (string -> unit) -> string -> unit
@@ -45,5 +48,7 @@ val save_file : (file -> unit) -> int -> unit
 val import_file : (file-> unit) -> (string * string * string) -> unit
 val unsaved_file : (file -> unit) -> int -> unit
 val switch_file : (int option * int -> unit) -> int -> unit 
+(* Supprime le fichier puis appel les callback
+   avec le fichier qui vient d'être supprimé *)
 val delete_file : (file -> unit) -> int -> unit
 val delete_project : (string -> unit) -> string -> unit

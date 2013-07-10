@@ -36,6 +36,7 @@ val query_selector_all : Dom_html.element Js.t -> string -> Dom_html.element Js.
 val coerceTo_input : Dom_html.element Js.t -> Dom_html.inputElement Js.t
 val coerceTo_textarea : Dom_html.element Js.t -> Dom_html.textAreaElement Js.t
 val insert_first : #Dom.node Js.t -> #Dom.node Js.t -> unit
+val remove_node : #Dom.node Js.t -> unit
 
 val split : string -> string -> string list
 
