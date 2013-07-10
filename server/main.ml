@@ -56,14 +56,15 @@ let user_exists user =
 exception Wrong_assertion_key
 exception User_not_found
 
+
 let verify_logged_user user key =
   Format.printf "Verifying cookie@.";
   if not (H.mem logged_users user) then
-    raise User_not_found
-
-  let stored_key = H.find logged_users user in
-  if stored_key <> key then
-    raise Wrong_assertion_key
+    () (* /!\ temporary *) 
+  else
+    let stored_key = H.find logged_users user in
+    if stored_key <> key then
+      raise Wrong_assertion_key
 
 let get_argument (cgi: Netcgi.cgi_activation) name =
   if cgi#argument_exists name then begin
