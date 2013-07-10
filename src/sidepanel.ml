@@ -140,8 +140,21 @@ let handler_delete_project () = handler (fun _ ->
   match !focused_project with
   | None -> assert false
   | Some project ->
-    Event_manager.delete_project#trigger project;
-    Js._true)
+      Event_manager.delete_project#trigger project;
+      Js._true)
+
+let handler_export_project () = handler (fun _ ->
+  match !focused_project with
+    | None -> assert false
+    | Some project ->
+        (* Request.export_project (fun _ -> ()) project; *)
+        let i = get_element_by_id "project-name-form" in
+        let i = coerceTo_input i in
+        i##value <- Js.string project;
+        let s = get_element_by_id "export-submit-form" in
+        let s = coerceTo_input s in
+        s##click();
+        Js._true)
 
 let handler_import_file () =
   handler (fun _ ->
@@ -151,17 +164,24 @@ let handler_import_file () =
     Js._true)
 
 let right_clic_dialog_opened_project =
-  let lstr = [ "Create new file" ; "Rename project" ; "Delete project"; "Import file" ] in
+  let lstr = [ "Create new file" ; 
+               "Rename project" ; 
+               "Delete project"; 
+               "Export project";
+               "Import file" ] in
   let handler_new_file = handler (fun _ ->
     match !focused_project with
     | None -> assert false
     | Some project ->
-      Dialog.Prompt_dialog.prompt "Choose file name :" "untitled.ml"
-	(create_file project);
-      Js._true)
+        Dialog.Prompt_dialog.prompt "Choose file name :" "untitled.ml"
+	  (create_file project);
+        Js._true)
   in		 
-  let lhandler = [ handler_new_file ; handler_rename_project () ;
-		   handler_delete_project (); handler_import_file () ] in
+  let lhandler = [ handler_new_file ; 
+                   handler_rename_project ();
+		   handler_delete_project ();
+                   handler_export_project ();
+                   handler_import_file () ] in
   Dialog.Right_clic_dialog.create lstr lhandler
 
 let right_clic_dialog_closed_project =
@@ -306,6 +326,30 @@ let _ =
     Js._true
   ); 
   Dom.appendChild document##body button;
+
+  (* Creation du formulaire pour exporter les projets
+     Solution temporaire *)
+
+  let form = createForm document in
+  let i = createInput
+    ~_type:(Js.string "text")
+    ~name:(Js.string "project")
+    document
+  in
+  i##id <- Js.string "project-name-form";
+  let submit = createInput
+    ~_type:(Js.string "submit")
+    ~name:(Js.string "export-submit")
+    document
+  in
+  submit##id <- Js.string "export-submit-form";
+  form##_method <- Js.string "post";
+  form##action <- Js.string "export";
+  form##style##display <- Js.string "none";
+  
+  Dom.appendChild form i;
+  Dom.appendChild form submit;
+  Dom.appendChild document##body form;
 
   let callback_open_workspace ls =
     let sideprojects =

@@ -34,3 +34,6 @@ val delete_project :
 
 val delete_file :
   callback:(unit -> unit) -> project:string -> filename:string -> unit
+
+val export_project :
+  callback:(unit -> unit) -> project:string -> unit

@@ -2,9 +2,13 @@
 * Ctrl-S
   -> pouvoir le faire pas que quand l'éditeur est focused
 
-* Serveur Web
-  - discuter pour savoir comment le faire
-     -> script CGI en ocaml ?
+* Serveur Web 
+  - "session" utilisateur actuellement stockées dans une hashtbl ->
+  lorsque l'utilisateur ne fait plus de requète depuis un certain temps,
+  il est supprimé de la table (par le GC, ce qui ne devrait pas être le cas)
+     -> Rajouter une base de donnée pour garder cette information ? (moins lourd
+     qu'un fichier session)
+     -> Trouver un workaround ?
 
 * Les onglets
   ! Voir si on peut pas mettre le code dans le DOM a la place du Htbl 
