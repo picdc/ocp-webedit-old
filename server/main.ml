@@ -249,25 +249,25 @@ let project_delete_function user project file =
     Shell.call ~stdout:(Shell.to_buffer b) [ res ]
   with _ -> raise Fail_shell_call
 
-let export_function user project =
-  let user = email_to_dirname user in
-  let proj_path = Format.sprintf "%s/%s/%s" ppath user project in
-  let filename = Format.sprintf "%s.tar.gz" proj_path in
-  let res = Shell.cmd "tar" [ "-zcf"; filename; proj_path ] in
-  Format.printf "tar -zcf %s %s@." filename proj_path;
-  Shell.call [ res ];
-  filename, Format.sprintf "%s.tar.gz" project
-
-
 (* let export_function user project = *)
 (*   let user = email_to_dirname user in *)
-(*   let user_path = Format.sprintf "%s/%s" ppath user in *)
-(*   let filename = Format.sprintf "%s/%s.tar.gz" user_path project in *)
-
-(*   Format.printf "tar -zcf %s %s@." filename project; *)
-(*   let res = Shell.cmd "tar" [ "-zcf"; filename; "-C"; user_path; project ] in *)
+(*   let proj_path = Format.sprintf "%s/%s/%s" ppath user project in *)
+(*   let filename = Format.sprintf "%s.tar.gz" proj_path in *)
+(*   let res = Shell.cmd "tar" [ "-zcf"; filename; proj_path ] in *)
+(*   Format.printf "tar -zcf %s %s@." filename proj_path; *)
 (*   Shell.call [ res ]; *)
 (*   filename, Format.sprintf "%s.tar.gz" project *)
+
+
+let export_function user project =
+  let user = email_to_dirname user in
+  let user_path = Format.sprintf "%s/%s" ppath user in
+  let filename = Format.sprintf "%s/%s.tar.gz" user_path project in
+
+  Format.printf "tar -zcf %s %s@." filename project;
+  let res = Shell.cmd "tar" [ "-zcf"; filename; "-C"; user_path; project ] in
+  Shell.call [ res ];
+  filename, Format.sprintf "%s.tar.gz" project
 
 let empty_dyn_service = 
   { Nethttpd_services.dyn_handler = (fun _ _ -> ());
