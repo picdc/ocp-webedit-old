@@ -5,6 +5,7 @@ open Ace_utils
 module H = Hashtbl
 
 let focused_file = ref None
+let project_shown = H.create 19
 
 let get_class_filename file is_active =
   let l = "side_file_name" in
@@ -19,12 +20,16 @@ let get_class_filename file is_active =
   Js.string l
 
 
-let reload_icons_project container project is_shown =
+let reload_icons_project project =
+  let container = query_selector
+    (get_element_by_id ("side_project_"^project^"_title"))
+    ".side_project_icons"
+  in
   let ic_p = Ace_utils.query_selector container ".side_icon_plus" in
   let ic_m = Ace_utils.query_selector container ".side_icon_minus" in
   let ic_o = Ace_utils.query_selector container ".side_icon_open" in
   let ic_c = Ace_utils.query_selector container ".side_icon_close" in
-  if is_shown then
+  if H.find project_shown project then
     (ic_m##style##display <- Js.string "";
      ic_p##style##display <- Js.string "none")
   else
@@ -62,13 +67,15 @@ let add_file container file =
   in
   let li = createLi document in
   let icons = createImg document in
+  let text = createSpan document in
 
   li##id <- Js.string (Format.sprintf "side_file_%d" id);
   li##className <- get_class_filename file false;
   icons##alt <- Js.string "-";
-  icons##src <- Js.string "icons/file.png";
+  icons##src <- Js.string "icons/file_little.png";
   icons##className <- Js.string "side_file_icons";
-  li##innerHTML <- Js.string filename;
+  text##className <- Js.string "side_file_name_text";
+  text##innerHTML <- Js.string filename;
   li##onclick <- handler (fun _ -> 
     let project, filename, is_open =
       file.Filemanager.project,		(* Obligé de refresh ici *)
@@ -88,12 +95,9 @@ let add_file container file =
   ) in
   make_event_oncontextmenu li hand;
 
-  Ace_utils.insert_first li icons;
+  Dom.appendChild li icons;
+  Dom.appendChild li text;
   Dom.appendChild container li
-
-let rename_file container filename =
-  container##innerHTML <- (Js.string filename)
-
 
 
 let focused_project = ref None
@@ -109,6 +113,19 @@ let get_class_project_name is_active =
 
 let create_file project filename =
   Event_manager.create_file#trigger (project, filename)
+
+let handler_open_project title = handler (fun _ ->
+  let ul = get_element_by_id ("side_project_"^title) in
+  if not (Filemanager.is_project_opened title) then
+    Event_manager.open_project#trigger title
+  else if not (H.find project_shown title) then
+    (ul##style##display <- Js.string "";
+     H.replace project_shown title true)
+  else
+    (ul##style##display <- Js.string "none";
+     H.replace project_shown title false);
+  reload_icons_project title;
+  Js._true)
 
 let handler_rename_project () = handler (fun _ ->
   match !focused_project with
@@ -144,8 +161,7 @@ let handler_import_file () =
     let i = get_element_by_id "input_file_import" in
     let i = Ace_utils.coerceTo_input i in
     i##click ();
-    Js._true
-  )
+    Js._true)
 
 let right_clic_dialog_opened_project =
   let lstr = [ "Create new file" ; 
@@ -182,29 +198,16 @@ let right_clic_dialog_closed_project =
   Dialog.Right_clic_dialog.create lstr lhandler
 
 let add_project container title =
+  H.add project_shown title false;
   let li = createLi document in
   let ul = createUl document in
   let name = createDiv document in
+  let text = createSpan document in
   let icons = createSpan document in
   let ic_p = createImg document in
   let ic_m = createImg document in
   let ic_o = createImg document in
   let ic_c = createImg document in
-  let is_shown = ref false in
-
-  let handler_onclick =  handler (fun ev ->
-    if not (Filemanager.is_project_opened title) then
-      (Event_manager.open_project#trigger title;
-       is_shown := true)
-    else if not !is_shown then
-      (ul##style##display <- Js.string "";
-       is_shown := true)
-    else
-      (ul##style##display <- Js.string "none";
-       is_shown := false);
-    reload_icons_project icons title !is_shown;
-    Js._true)
-  in
 
   li##id <- Js.string ("side_container_project_"^title);
   li##className <- Js.string "side_project";
@@ -224,9 +227,10 @@ let add_project container title =
   ic_o##className <- Js.string "side_icon_open";
   ic_c##className <- Js.string "side_icon_close";
   name##className <- get_class_project_name false;
-  name##innerHTML <- Js.string title;
   name##id <- Js.string ("side_project_"^title^"_title");
-  name##onclick <- handler_onclick;
+  name##onclick <- handler_open_project title;
+  text##className <- Js.string "side_project_name_text";
+  text##innerHTML <- Js.string title;
   let hand = handler (fun ev ->
     let ev = Js.Opt.get (Dom_html.CoerceTo.mouseEvent ev) (fun () ->
       failwith "fail on coerceTo mouseEvent TAG:#48977") in
@@ -243,11 +247,12 @@ let add_project container title =
   Dom.appendChild icons ic_m;
   Dom.appendChild icons ic_o;
   Dom.appendChild icons ic_c;
-  Ace_utils.insert_first name icons;
+  Dom.appendChild name icons;
+  Dom.appendChild name text;
   Dom.appendChild li name;
   Dom.appendChild li ul;
   Dom.appendChild container li;
-  reload_icons_project icons title false
+  reload_icons_project title 
 
 
 
@@ -355,6 +360,7 @@ let _ =
   let callback_close_workspace () =
     focused_file := None;
     focused_project := None;
+    H.reset project_shown;
     let sideprojects =
       query_selector global_conf.container "#side_projects" in
     let cl = Dom.list_of_nodeList sideprojects##childNodes in
@@ -362,31 +368,29 @@ let _ =
   in
 
   let callback_rename_file file =
-    let id, project, filename =
-      file.Filemanager.id,
-      file.Filemanager.project,
-      file.Filemanager.filename in
-    let id_container = Format.sprintf "side_file_%d" id in
-    let container = get_element_by_id id_container in
-    rename_file container filename
+    let id, filename = file.Filemanager.id, file.Filemanager.filename in
+    let container = query_selector
+      (get_element_by_id (Format.sprintf "side_file_%d" id))
+      ".side_file_name_text"
+    in
+    container##innerHTML <- (Js.string filename)
   in
 
   let callback_create_project project =
     let sideprojects = get_element_by_id "side_projects" in
-    add_project sideprojects project
+    add_project sideprojects project;
+    H.replace project_shown project true;
+    reload_icons_project project
   in
 
   let callback_close_file file =
-    match Filemanager.get_current_file () with
-    | Some id when id = file.Filemanager.id ->
-      let id_c_file = Format.sprintf "side_file_%d" id in
-      let c_file = get_element_by_id id_c_file in
-      c_file##className <- get_class_filename file false;
-      let id_c_project = Format.sprintf "side_project_%s_title"
-	file.Filemanager.project in
-      let c_project = get_element_by_id id_c_project in
-      c_project##className <- get_class_project_name false
-    | _ -> ()
+    let id_c_file = Format.sprintf "side_file_%d" file.Filemanager.id in
+    let c_file = get_element_by_id id_c_file in
+    c_file##className <- get_class_filename file false;
+    let id_c_project = Format.sprintf "side_project_%s_title"
+      file.Filemanager.project in
+    let c_project = get_element_by_id id_c_project in
+    c_project##className <- get_class_project_name false
   in
 
   let callback_create_file file =
@@ -399,30 +403,32 @@ let _ =
   let callback_open_project (project, files) =
     let id_container = "side_project_"^project in
     let container = get_element_by_id id_container in
-    let id_container_project = "side_container_project_"^project in
-    let container_project = get_element_by_id id_container_project in
-    let icons =
-      Ace_utils.query_selector container_project ".side_project_icons" in
-    reload_icons_project icons project true;
+    H.replace project_shown project true;
+    reload_icons_project project;
     List.iter (fun file ->
       add_file container file) files
   in
 
   let callback_delete_file file =
-    let id_c_project = "side_project_"^file.Filemanager.project in
-    let c_project = get_element_by_id id_c_project in
+    callback_close_file file;
     let id_c_file = Format.sprintf "side_file_%d" file.Filemanager.id in
     let c_file = get_element_by_id id_c_file in
-    Dom.removeChild c_project c_file
+    remove_node c_file
   in
 
   let callback_rename_project (name, new_name) =
+    let b = H.find project_shown name in
+    H.remove project_shown name;
+    H.add project_shown new_name b;
     let id_c_project = "side_project_"^name in
     let c_project = get_element_by_id id_c_project in
     c_project##id <- Js.string ("side_project_"^new_name);
     let id_c_title = "side_project_"^name^"_title" in
     let c_title = get_element_by_id id_c_title in
-    c_title##innerHTML <- Js.string new_name
+    c_title##id <- Js.string ("side_project_"^new_name^"_title");
+    c_title##onclick <- handler_open_project new_name;
+    let c_title_text = query_selector c_title ".side_project_name_text" in
+    c_title_text##innerHTML <- Js.string new_name
   in
 
   let callback_delete_project project =

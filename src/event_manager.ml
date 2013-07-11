@@ -35,7 +35,20 @@ let create_and_switch_action callback (project, filename) =
 
 let open_file = new event open_and_switch_action
 let create_file = new event create_and_switch_action
-let close_file = new event Filemanager.close_file 
+
+let close_and_switch_action callback file =
+  let callback args =
+    callback args;
+    let prev_file_opt = Filemanager.get_prev_opened_file () in
+    match prev_file_opt with
+    | Some prev_file -> 
+(      Ace_utils.console_debug prev_file;
+      switch_file#trigger prev_file.Filemanager.id)
+    | None -> ()
+  in
+  Filemanager.close_file callback file
+
+let close_file = new event close_and_switch_action 
 let save_file = new event Filemanager.save_file
 
 
@@ -51,4 +64,15 @@ let import_and_switch_action callback (project, filename, content) =
 let import_file = new event import_and_switch_action
 let unsaved_file = new event Filemanager.unsaved_file
 let delete_project = new event Filemanager.delete_project
-let delete_file = new event Filemanager.delete_file
+
+let delete_and_switch_action callback file =
+  let callback args =
+    callback args;
+    let prev_file_opt = Filemanager.get_prev_opened_file () in
+    match prev_file_opt with
+    | Some prev_file -> switch_file#trigger prev_file.Filemanager.id
+    | None -> ()
+  in
+  Filemanager.delete_file callback file
+
+let delete_file = new event delete_and_switch_action
