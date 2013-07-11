@@ -41,7 +41,7 @@ INCLUDEJS=-I . -I $(OCPDIR) -I $(ACDIR) -I $(REDIR) $(JSFLAGS) \
 	-I $(OPAMLIB)/ocaml/compiler-libs \
 	-I ~/.opam/4.00.1/lib/lwt \
 	-I ~/.opam/4.00.1/lib/js_of_ocaml_compiler-libs \
-	$(TOPLVLDIR)/toplevel_runtime.js
+	$(TOPLVLDIR)/toplevel_runtime.js js_filemanager.js
 
 JSFLAGS = -pretty -linkall -toplevel $(INCLUDEJS_TOPLVL)
 
