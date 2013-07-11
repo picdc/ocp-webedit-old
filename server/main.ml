@@ -57,10 +57,10 @@ exception Wrong_assertion_key
 exception User_not_found
 
 
-let verify_logged_user user key =
+let verify_logged_user user key = 
   Format.printf "Verifying cookie@.";
   if not (H.mem logged_users user) then
-    () (* /!\ temporary *) 
+    () (* /!\ temporary *)
   else
     let stored_key = H.find logged_users user in
     if stored_key <> key then
@@ -394,7 +394,7 @@ let project_save_service =
 	  let project = get_argument cgi "project" in
 	  let file = get_argument cgi "file" in
 	  let content = get_argument cgi "content" in
-	  project_save_function project user file content;
+	  project_save_function user project file content;
 	  print_string "Saved" cgi
 	with
 	  _ -> print_string "Error !" cgi
