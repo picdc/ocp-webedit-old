@@ -159,6 +159,9 @@ let default_output = function
   | None -> Config.default_executable_name
 
 let main () =
+  let a = Sys.argv in
+  Array.iter (fun s -> print_endline s) a;
+  
   try
     Arg.parse Options.list anonymous usage;
     if
@@ -210,4 +213,6 @@ let main () =
     Errors.report_error ppf x;
     exit 2
 
-let _ = main ()
+let _ = 
+  (Js.Unsafe.coerce Dom_html.window)##compile <- Js.wrap_callback
+    main

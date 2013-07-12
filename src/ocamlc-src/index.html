@@ -1,0 +1,6 @@
+<div id="output"></div>
+<script src="ocamlc.js"></script>
+<script>
+  caml_global_filesystem["toto.ml"] = new MlString("let _ = print_endline \"coucou\"");
+  this.compile();
+</script>
