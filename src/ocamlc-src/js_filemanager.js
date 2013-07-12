@@ -1,4 +1,91 @@
 
+//Provides: caml_output_val
+//Requires: caml_marshal_constants, caml_int64_to_bytes, caml_failwith
+var caml_output_val = function (){
+  function Writer () { this.chunk = []; }
+  Writer.prototype = {
+    chunk_idx:20, block_len:0, obj_counter:0, size_32:0, size_64:0,
+    write:function (size, value) {
+      for (var i = size - 8;i >= 0;i -= 8)
+        this.chunk[this.chunk_idx++] = (value >> i) & 0xFF;
+    },
+    write_code:function (size, code, value) {
+      this.chunk[this.chunk_idx++] = code;
+      for (var i = size - 8;i >= 0;i -= 8)
+        this.chunk[this.chunk_idx++] = (value >> i) & 0xFF;
+    },
+    finalize:function () {
+      this.block_len = this.chunk_idx - 20;
+      this.chunk_idx = 0;
+      this.write (32, 0x8495A6BE);
+      this.write (32, this.block_len);
+      this.write (32, this.obj_counter);
+      this.write (32, this.size_32);
+      this.write (32, this.size_64);
+      return this.chunk;
+    }
+  }
+  return function (v) {
+    var writer = new Writer ();
+    var stack = [];
+    function extern_rec (v) {
+      var cst = caml_marshal_constants;
+      if (v instanceof Array && v[0] === (v[0]|0)) {
+        if (v[0] == 255) {
+          // Int64
+          writer.write (8, cst.CODE_CUSTOM);
+          for (var i = 0; i < 3; i++) writer.write (8, "_j\0".charCodeAt(i));
+          var b = caml_int64_to_bytes (v);
+          for (var i = 0; i < 8; i++) writer.write (8, b[i]);
+          writer.size_32 += 4;
+          writer.size_64 += 3;
+          return;
+        }
+        if (v[0] < 16 && v.length - 1 < 8)
+          writer.write (8, cst.PREFIX_SMALL_BLOCK + v[0] + ((v.length - 1)<<4));
+        else
+          writer.write_code(32, cst.CODE_BLOCK32, (v.length << 10) | v[0]);
+        writer.size_32 += v.length;
+        writer.size_64 += v.length;
+        if (v.length > 1) stack.push (v, 1);
+      } else if (v instanceof MlString) {
+        var len = v.getLen();
+        if (len < 0x20)
+          writer.write (8, cst.PREFIX_SMALL_STRING + len);
+        else if (len < 0x100)
+          writer.write_code (8, cst.CODE_STRING8, len);
+        else
+          writer.write_code (32, cst.CODE_STRING32, len);
+        for (var i = 0;i < len;i++) writer.write (8, v.get(i));
+        writer.size_32 += 1 + (((len + 4) / 4)|0);
+        writer.size_64 += 1 + (((len + 8) / 8)|0);
+      } else {
+        // if (v != (v|0)) caml_failwith("output_value: non-serializable value");
+        if (v >= 0 && v < 0x40) {
+          writer.write (8, cst.PREFIX_SMALL_INT + v);
+        } else {
+          if (v >= -(1 << 7) && v < (1 << 7))
+            writer.write_code(8, cst.CODE_INT8, v);
+          else if (v >= -(1 << 15) && v < (1 << 15))
+            writer.write_code(16, cst.CODE_INT16, v);
+          else
+            writer.write_code(32, cst.CODE_INT32, v);
+        }
+      }
+    }
+    extern_rec (v);
+    while (stack.length > 0) {
+      var i = stack.pop ();
+      var v = stack.pop ();
+      if (i + 1 < v.length) stack.push (v, i + 1);
+      extern_rec (v[i]);
+    }
+    writer.finalize ();
+    return writer.chunk;
+  }
+} ();
+
+
 //Provides: caml_global_filesystem
 var caml_global_filesystem = [0];
 
@@ -109,7 +196,10 @@ function caml_ml_output_char (x, c) {
 //Requires: caml_ml_output
 function caml_ml_output_int (x, i) {
     console.log("##### caml_ml_output_int #####");
-    var s = new MlString(i);
+    console.debug(i);
+    var s;
+    if (i == undefined) s = new MlString("");
+    else s = new MlString(i);
     return caml_ml_output (x, s);
 }
 
@@ -149,6 +239,15 @@ function caml_sys_exit(x) {
 //Provides: caml_ml_seek_in
 function caml_ml_seek_in(x, i) {
     console.log("##### caml_ml_seek_in #####");
+    console.debug(x);
+    console.debug(i);
+    x.offset = i;
+    return 0;
+}
+
+//Provides: caml_ml_seek_out
+function caml_ml_seek_out(x, i) {
+    console.log("##### caml_ml_seek_out #####");
     console.debug(x);
     console.debug(i);
     x.offset = i;
