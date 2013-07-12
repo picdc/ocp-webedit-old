@@ -67,7 +67,7 @@ function caml_ml_open_descriptor_out (x) {
 //Provides: caml_ml_output
 function caml_ml_output (x, s, p, l) {
     console.log("##### caml_ml_output #####");
-    // console.debug(x);
+    console.debug(x);
     if ( x == 1 ) { // stdout
 	// console.log(s.toString());
 	var o = document.getElementById("output");
@@ -82,8 +82,8 @@ function caml_ml_output (x, s, p, l) {
 	console.debug(x);
 	console.debug(s);
 	// x.string = "pouet";
-	var s = new MlString(x.toJsString()+s.toJsString());
-	x.string = s.string;
+	var s = new MlString(x.toBytes()+s.toBytes());
+	x.string = s.bytes;
 	x.bytes = s.bytes;
 	x.fullBytes = s.fullBytes;
 	x.len = s.len;
@@ -102,17 +102,25 @@ function caml_ml_output (x, s, p, l) {
 //Requires: caml_ml_output
 function caml_ml_output_char (x, c) {
     console.log("##### caml_ml_output_char #####");
-    return caml_ml_output (x, String.fromCharCode (c), 0, 1);
+    return caml_ml_output (x, String.fromCharCode (c));
+}
+
+//Provides: caml_ml_output_int
+//Requires: caml_ml_output
+function caml_ml_output_int (x, i) {
+    console.log("##### caml_ml_output_int #####");
+    var s = new MlString(i);
+    return caml_ml_output (x, s);
 }
 
 //Provides: caml_output_value
-//Requires: caml_ml_output
+//Requires: caml_ml_output, caml_output_value_to_string
 function caml_output_value (x, v) {
     console.log("##### caml_output_value #####");
     console.debug(x);
     console.debug(v);
-    return 0// caml_ml_output (x, v[1], 0, 1)
-    ;
+    var s = caml_output_value_to_string(v);
+    return caml_ml_output (x, s);
 }
 
 //Provides: caml_sys_get_argv const
@@ -153,4 +161,9 @@ function caml_md5_chan(x) {
     return x;
 }
 
+
+//Provides: caml_ml_pos_out
+function caml_ml_pos_out(x) {
+    return x.offset;
+}
 
