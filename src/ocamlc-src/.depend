@@ -22,5 +22,7 @@ optmain.cmo : opterrors.cmi optcompile.cmi main_args.cmi optmain.cmi
 optmain.cmx : opterrors.cmx optcompile.cmx main_args.cmx optmain.cmi
 pparse.cmo : pparse.cmi
 pparse.cmx : pparse.cmi
+progmagic.cmo :
+progmagic.cmx :
 toto.cmo :
 toto.cmx :
