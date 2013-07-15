@@ -213,6 +213,6 @@ let main () =
     Errors.report_error ppf x;
     exit 2
 
-let _ = 
+let _ =
   (Js.Unsafe.coerce Dom_html.window)##compile <- Js.wrap_callback
     main
