@@ -213,6 +213,15 @@ let main () =
     Errors.report_error ppf x;
     exit 2
 
+let my_compile name =
+  objfiles := []; 
+  process_file ppf "std_exit.ml";
+  process_file ppf name;
+  Compile.init_path();
+  Bytelink.link ppf (List.rev !objfiles) "toto.byte";
+  Warnings.check_fatal ();
+  exit 0
+
 let _ =
-  (Js.Unsafe.coerce Dom_html.window)##compile <- Js.wrap_callback
-    main
+  (Js.Unsafe.coerce Dom_html.window)##mycompile <- Js.wrap_callback
+    my_compile
