@@ -22,6 +22,7 @@ CAMLFIND=ocamlfind
 CAMLDEP=ocamldep -pp $(PP)
 CAMLJS= $(CAMLFIND) $(CAMLC) $(JSPKGS) $(FLAGS) 
 
+
 .SUFFIXES:
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .mll .mly
 
@@ -38,6 +39,7 @@ all: depend $(CMIS) ocamlc
 
 ocamlc: $(CMOS)
 	$(CAMLJS) $(INCLUDES) $^ -o $@.byte 
+
 
 depend: $(SRC) $(SRC_I)
 	$(CAMLDEP) *.mli *.ml > .depend

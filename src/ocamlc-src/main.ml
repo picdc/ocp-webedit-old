@@ -214,10 +214,13 @@ let main () =
     exit 2
 
 let my_compile name =
-  objfiles := []; 
+  objfiles := [];
   process_file ppf "std_exit.ml";
   process_file ppf name;
   Compile.init_path();
+ 
+  Firebug.console##log(Js.string "DEBUG MAIN.ML");
+  Firebug.console##debug(objfiles);
   Bytelink.link ppf (List.rev !objfiles) "toto.byte";
   Warnings.check_fatal ();
   exit 0
