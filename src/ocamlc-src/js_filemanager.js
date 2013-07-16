@@ -1,3 +1,29 @@
+// Js_of_ocaml toplevel runtime support
+// http://www.ocsigen.org/js_of_ocaml/
+// Copyright (C) 2011 Jérôme Vouillon
+// Laboratoire PPS - CNRS Université Paris Diderot
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, with linking exception;
+// either version 2.1 of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+
+//Provides: caml_raise_sys_error
+//Requires: caml_raise_with_string, caml_global_data
+function caml_raise_sys_error (msg) {
+    console.log("##### caml_raise_sys_error #####");
+    caml_raise_with_string(caml_global_data[2], msg);
+}
 
 //Provides: caml_output_val
 //Requires: caml_marshal_constants, caml_int64_to_bytes, caml_failwith
@@ -85,8 +111,52 @@ var caml_output_val = function (){
   }
 } ();
 
+//Provides: caml_ml_input
+//Require: caml_blit_string
+function caml_ml_input (f, s, i, l) {
+    console.log("##### caml_ml_input #####");
+    var l2 = f.getLen() - f.offset;
+    if (l2 < l) l = l2;
+    caml_blit_string(f, f.offset, s, i, l);
+    f.offset += l;
+    return l;
+}
+
+//Provides: caml_input_value
+//Requires: caml_marshal_data_size, caml_input_value_from_string
+function caml_input_value (s) {
+    console.log("##### caml_input_value #####");
+    caml_marshal_data_size (s, s.offset);
+    return caml_input_value_from_string(s, s.offset);
+}
+
+//Provides: caml_reify_bytecode
+//Requires: caml_global_data
+// function caml_reify_bytecode (code, sz) {
+//     console.log("##### caml_reify_data #####");
+//     return eval(caml_global_data.compile(code).toString());
+// }
+
+//Provides: caml_get_global_data
+//Requires: caml_global_data
+function caml_get_global_data () { 
+    console.log("##### caml_get_global_data #####");
+    return caml_global_data;
+}
 
 
+
+// -------------------------------------------------
+// -------------------------------------------------
+// -------------------------------------------------
+// -------------------------------------------------
+// -------------------------------------------------
+// ça c'est à nous
+// -------------------------------------------------
+// -------------------------------------------------
+// -------------------------------------------------
+// -------------------------------------------------
+// -------------------------------------------------
 
 
 //Provides: caml_global_filesystem
@@ -110,7 +180,7 @@ function add_to_output(x, s, p, l) {
     // x.len = s.len;
     // x.last = s.last;
     // x.offset = s.offset;
-    var s = new MlString(s.bytes.slice(p, l));
+    var s = new MlString(s.getBytes().slice(p, l));
     var xl = x.getLen();
     var sl = s.getLen();
     var str = caml_create_string(xl+sl|0);
@@ -121,21 +191,21 @@ function add_to_output(x, s, p, l) {
     x.fullBytes = str.fullBytes;
     x.len = str.len;
     x.last = str.last;
-    x.offset = str.offset;
+    x.offset = xl+sl;
 
 
     // DEBUG
     var div = document.getElementById("toto.cmi");
     if ( caml_global_filesystem["toto.cmi"] ) {
-	var el = document.createElement("li");
-	el.innerHTML = caml_global_filesystem["toto.cmi"].bytes;
-	div.appendChild(el);
+	//var el = document.createElement("li");
+	div.innerHTML = caml_global_filesystem["toto.cmi"].bytes;
+	//div.appendChild(el);
     }
     var div = document.getElementById("toto.cmo");
     if ( caml_global_filesystem["toto.cmo"] ) {
-	var el = document.createElement("li");
-	el.innerHTML = caml_global_filesystem["toto.cmo"].bytes;
-	div.appendChild(el);
+	//var el = document.createElement("li");
+	div.innerHTML = caml_global_filesystem["toto.cmo"].bytes;
+	//div.appendChild(el);
     }
 
     return 0;
@@ -145,18 +215,21 @@ function add_to_output(x, s, p, l) {
 //Requires: MlString, caml_raise_sys_error, caml_global_data, caml_global_filesystem
 function caml_sys_open (x, y) {
     console.log("##### caml_sys_open #####"); 
-    console.debug(x);
+    console.log("Open de : "+x.toJsString());
+    
+    if ( list_mem(y, 0) ) console.log("RDONLY");
+    if ( list_mem(y, 1) ) console.log("WRONLY");
 
     var v = caml_global_data.interfaces[x];
     var f = caml_global_filesystem[x];
 
-    if (v) {
+    if (f != undefined) {
+	return f;
+    } else if (v) {
 	var s = new MlString (v);
 	s.offset = 0;
-	console.debug(s);
+	// console.debug(s);
 	return s;
-    } else if (f != undefined) {
-	return f;
     } else {
 	if ( list_mem(y, 3) ) {
 	    var s = new MlString ("");
@@ -184,21 +257,21 @@ function caml_sys_file_exists (x) {
 //Provides: caml_ml_open_descriptor_in
 function caml_ml_open_descriptor_in (x) {
     console.log("##### caml_ml_open_descriptor_in #####");
-    console.debug(x);
+    // console.debug(x);
     return x;
 }
 
 //Provides: caml_ml_open_descriptor_out
 function caml_ml_open_descriptor_out (x) {
     console.log("##### caml_ml_open_descriptor_out #####");
-    console.debug(x);
+    // console.debug(x);
     return x;
 }
 
 //Provides: caml_ml_output
 function caml_ml_output (x, s, p, l) {
     console.log("##### caml_ml_output #####");
-    console.debug(x);
+    // console.debug(x);
 
     if ( ! (x instanceof MlString) ) { 
 	if ( x == 1 ) { // stdout
@@ -212,10 +285,10 @@ function caml_ml_output (x, s, p, l) {
 	}
     } else {
 	// DUMMY !
-	console.log("x = ");
-	console.debug(x);
-	console.log("s = ");
-	console.debug(s);
+	// console.log("x = ");
+	// console.debug(x);
+	// console.log("s = ");
+	// console.debug(s);
 
 	add_to_output(x, s, p, l);;
     }
@@ -234,7 +307,7 @@ function caml_ml_output_char (x, c) {
 //Requires: caml_ml_output
 function caml_ml_output_int (x, i) {
     console.log("##### caml_ml_output_int #####");
-    console.debug(i);
+    // console.debug(i);
     var s;
     if (i == undefined) return 0;// s = new MlString(String.fromCharCode(0));
     
@@ -246,12 +319,12 @@ function caml_ml_output_int (x, i) {
 //Requires: caml_ml_output, caml_output_value_to_string
 function caml_output_value (x, v, fl) {
     console.log("##### caml_output_value #####");
-    console.debug(x);
+    // console.debug(x);
 
-    console.debug(v);
+    // console.debug(v);
     var s = new MlStringFromArray(caml_output_val(v));
     var str = new MlString(s.getBytes());
-    console.debug(str);
+    // console.debug(str);
 
     return add_to_output(x, str, 0, str.getLen());
 }
@@ -282,8 +355,8 @@ function caml_sys_exit(x) {
 //Provides: caml_ml_seek_in
 function caml_ml_seek_in(x, i) {
     console.log("##### caml_ml_seek_in #####");
-    console.debug(x);
-    console.debug(i);
+    // console.debug(x);
+    // console.debug(i);
     x.offset = i;
     return 0;
 }
@@ -301,7 +374,8 @@ function caml_ml_seek_out(x, i) {
 function caml_md5_chan(x) {
     console.log("##### caml_md5_chan #####");
     console.debug(x);
-    return x;
+    var s = caml_md5_string(x, x.offset, x.getLen());
+    return s;
 }
 
 
@@ -311,3 +385,8 @@ function caml_ml_pos_out(x) {
     return x.offset;
 }
 
+//Provides: caml_ml_close_channel
+function caml_ml_close_channel(x) {
+    console.log("##### caml_ml_pos_out #####");
+    return 0;
+}

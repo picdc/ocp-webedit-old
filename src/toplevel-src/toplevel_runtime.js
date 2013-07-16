@@ -20,19 +20,27 @@
 //Provides: caml_raise_sys_error
 //Requires: caml_raise_with_string, caml_global_data
 function caml_raise_sys_error (msg) {
-  caml_raise_with_string(caml_global_data[2], msg);
+  console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+console.log("##### caml_raise_sys_error #####");
+caml_raise_with_string(caml_global_data[2], msg);
 }
 
 //Provides: caml_raise_not_found
 //Requires: caml_raise_constant, caml_global_data
-function caml_raise_not_found () { caml_raise_constant(caml_global_data[7]); }
+function caml_raise_not_found () {console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+console.log("##### caml_raise_not_found #####");
+ caml_raise_constant(caml_global_data[7]); }
 
 //Provides: caml_sys_getenv
 //Requires: caml_raise_not_found
-function caml_sys_getenv () { caml_raise_not_found (); }
+function caml_sys_getenv () { console.log("~~~~~~~~~ TOPLEVEL CRITICAL ~~~~~~~~");
+console.log("##### caml_caml_sys_getenv #####");
+caml_raise_not_found (); }
 
 //Provides: caml_terminfo_setup
-function caml_terminfo_setup () { return 1; } // Bad_term
+function caml_terminfo_setup () { console.log("~~~~~~~~~ TOPLEVEL CRITICAL ~~~~~~~~");
+console.log("##### caml_terminfo_setup #####");
+return 1; } // Bad_term
 
 //////////////////////////////////////////////////////////////////////
 
@@ -40,12 +48,16 @@ function caml_terminfo_setup () { return 1; } // Bad_term
 
 //Provides: caml_sys_file_exists
 //Requires: caml_global_data
-function caml_sys_file_exists (x) { return (caml_global_data.interfaces[x])?1:0; }
+function caml_sys_file_exists (x) {console.log("~~~~~~~~~ TOPLEVEL CRITICAL~~~~~~~~");
+console.log("##### caml_sys_file_exists #####");
+ return (caml_global_data.interfaces[x])?1:0; }
 
 //Provides: caml_sys_open
 //Requires: MlString, caml_raise_sys_error, caml_global_data
 function caml_sys_open (x) {
-  var v = caml_global_data.interfaces[x];
+  console.log("~~~~~~~~~ TOPLEVEL CRITICAL ~~~~~~~~");
+console.log("##### caml_sys_open #####");
+var v = caml_global_data.interfaces[x];
   if (v) {
     var s = new MlString (v);
     s.offset = 0;
@@ -55,61 +67,91 @@ function caml_sys_open (x) {
 }
 
 //Provides: caml_ml_open_descriptor_in
-function caml_ml_open_descriptor_in (x) { return x; }
+function caml_ml_open_descriptor_in (x) {
+    console.log("~~~~~~~~~ TOPLEVEL CRITICAL~~~~~~~~"); 
+    console.log("##### caml_ml_open_descriptor_in #####");
+    return x; }
 
 //Provides: caml_ml_input
 //Require: caml_blit_string
 function caml_ml_input (f, s, i, l) {
-  var l2 = f.getLen() - f.offset;
-  if (l2 < l) l = l2;
-  caml_blit_string(f, f.offset, s, i, l);
-  f.offset += l;
-  return l;
+    console.log("##### caml_ml_input #####");
+    var l2 = f.getLen() - f.offset;
+    if (l2 < l) l = l2;
+    caml_blit_string(f, f.offset, s, i, l);
+    f.offset += l;
+    return l;
 }
 
 //Provides: caml_input_value
 //Requires: caml_marshal_data_size, caml_input_value_from_string
 function caml_input_value (s) {
+    console.log("##### caml_input_value #####");
     caml_marshal_data_size (s, s.offset);
-  return caml_input_value_from_string(s, s.offset);
+    return caml_input_value_from_string(s, s.offset);
 }
 
 //Provides: caml_ml_close_channel
-function caml_ml_close_channel () { return 0;}
+function caml_ml_close_channel () {
+    console.log("##### caml_ml_close_channel #####");
+    return 0;}
 
 //////////////////////////////////////////////////////////////////////
 
 //Provides: caml_get_global_data
 //Requires: caml_global_data
-function caml_get_global_data () { return caml_global_data; }
+function caml_get_global_data () { 
+    console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+    console.log("##### caml_get_global_data #####");
+    return caml_global_data; }
 
 //Provides: caml_get_section_table
 //Requires: caml_global_data
-function caml_get_section_table () { return caml_global_data.toc; }
+function caml_get_section_table () {
+    console.log("~~~~~~~~~ TOPLEVEL CRITICAL~~~~~~~~");
+    console.log("##### caml_get_section_table #####");
+    return caml_global_data.toc; }
 
 //Provides: caml_dynlink_get_current_libs
-function caml_dynlink_get_current_libs () { return [0]; }
+function caml_dynlink_get_current_libs () { 
+    console.log("~~~~~~~~~ TOPLEVEL CRITICAL ~~~~~~~~");
+    console.log("##### caml_dynlink_get_current_lib #####");
+    return [0]; }
 
 //Provides: caml_reify_bytecode
 //Requires: caml_global_data
 function caml_reify_bytecode (code, sz) {
-  return eval(caml_global_data.compile(code).toString());
+    console.log("~~~~~~~~~ TOPLEVEL CRITICAL ~~~~~~~~");
+    console.log("##### caml_reify_data #####");
+return eval(caml_global_data.compile(code).toString());
 }
 
 //Provides: caml_static_release_bytecode
-function caml_static_release_bytecode () { return 0; }
+function caml_static_release_bytecode () { 
+console.log("~~~~~~~~~ TOPLEVEL CRITICAL ~~~~~~~~");
+console.log("##### caml_static_release_bytecode #####");
+return 0; }
 
 //Provides: caml_static_alloc
 //Requires: MlString
-function caml_static_alloc (len) { return new MlMakeString (len); }
+function caml_static_alloc (len) { 
+    console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+    console.log("##### caml_static_alloc #####");
+    
+    return new MlMakeString (len); }
 
 //Provides: caml_static_free
-function caml_static_free () { return 0; }
+function caml_static_free () { 
+    console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+    console.log("##### caml_free #####");
+    return 0; }
 
 //Provides: caml_realloc_global
 //Requires: caml_global_data
 function caml_realloc_global (len) {
-  if (len + 1 > caml_global_data.length) caml_global_data.length = len + 1;
+  console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+console.log("##### caml_realloc_global #####");
+if (len + 1 > caml_global_data.length) caml_global_data.length = len + 1;
   return 0;
 }
 
@@ -119,11 +161,15 @@ function caml_realloc_global (len) {
 
 //Provides: caml_sys_exit
 // function caml_sys_exit () { return 0; }
-function caml_sys_exit () { caml_raise_sys_error("caml_sys_exit not implemented"); }
+function caml_sys_exit () { console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+console.log("##### caml_sys_exit #####");
+caml_raise_sys_error("caml_sys_exit not implemented"); }
 
 //Provides: caml_ml_output
 function caml_ml_output (x, s, p, l) {
-  var o = document.getElementById("output");
+  console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+console.log("##### caml_ml_output #####");
+var o = document.getElementById("output");
   o.appendChild (document.createTextNode(s.toString().slice(p,p+l)));
   return 0;
 }
@@ -131,17 +177,23 @@ function caml_ml_output (x, s, p, l) {
 //Provides: caml_ml_output_char
 //Requires: caml_ml_output
 function caml_ml_output_char (x, c) {
-    return caml_ml_output (x, String.fromCharCode (c), 0, 1);
+    console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+console.log("##### caml_ml_output_char #####");
+return caml_ml_output (x, String.fromCharCode (c), 0, 1);
 }
 
 //Provides: caml_raise_end_of_file
 //Requires: caml_raise_constant, caml_global_data
 function caml_raise_end_of_file () {
-  caml_raise_constant(caml_global_data[5]);
+  console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+console.log("##### caml_raise_end_of_file #####");
+caml_raise_constant(caml_global_data[5]);
 }
 
 //Provides: caml_ml_input_char
 //Requires: caml_raise_end_of_file
 function caml_ml_input_char (f) {
-  caml_raise_end_of_file ();
+  console.log("~~~~~~~~~ TOPLEVEL ~~~~~~~~");
+console.log("##### caml_ml_input_char #####");
+caml_raise_end_of_file ();
 }

@@ -10,7 +10,8 @@ COMPLIBS= ~/.opam/4.00.1/lib/ocaml/compiler-libs
 INC= ocamlcommon.cma ocamlbytecomp.cma
 INCLUDES= -I $(COMPLIBS) $(INC)
 INCLUDEJS= -I $(COMPLIBS) -I ../toplevel-src/cmicomp \
-	../toplevel-src/toplevel_runtime.js js_filemanager.js
+	-I ~/.opam/4.00.1/lib/js_of_ocaml_compiler-libs/ code.cmi \
+	js_filemanager.js
 
 JSFLAGS = -pretty -noinline -toplevel
 JSPKGS = -package js_of_ocaml,js_of_ocaml.syntax,js_of_ocaml_compiler,js_of_ocaml_compiler-libs \
