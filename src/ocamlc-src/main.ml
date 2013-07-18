@@ -214,6 +214,7 @@ let main () =
     exit 2
 
 let my_compile name =
+  (* Clflags.dump_parsetree := true; *)
   objfiles := [];
   process_file ppf "std_exit.ml";
   process_file ppf name;
@@ -225,3 +226,15 @@ let my_compile name =
 let _ =
   (Js.Unsafe.coerce Dom_html.window)##mycompile <- Js.wrap_callback
     my_compile
+
+(* let _ = *)
+(*   (\* let out = open_out "test.mldelamort" in *\) *)
+(*   (\* output_value out "coucou"; *\) *)
+(*   (\* close_out out; *\) *)
+
+(*   objfiles := []; *)
+(*   process_file ppf "std_exit.ml"; *)
+(*   Compile.init_path(); *)
+(*   Bytelink.link ppf (List.rev !objfiles) "std_exit.byte"; *)
+(*   Warnings.check_fatal (); *)
+(*   exit 0 *)

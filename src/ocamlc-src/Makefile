@@ -22,6 +22,7 @@ CAMLC=ocamlc
 CAMLFIND=ocamlfind
 CAMLDEP=ocamldep -pp $(PP)
 CAMLJS= $(CAMLFIND) $(CAMLC) $(JSPKGS) $(FLAGS) 
+# CAMLJS= $(CAMLC) $(FLAGS)
 
 
 .SUFFIXES:
