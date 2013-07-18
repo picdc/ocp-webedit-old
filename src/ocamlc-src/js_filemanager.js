@@ -256,6 +256,11 @@ function caml_get_global_data () {
 var caml_global_filesystem = [0];
 caml_global_filesystem["std_exit.ml"] = new MlString("let _ = do_at_exit()");
 
+function createBinaryString (nMask) {
+    // nMask must be between -2147483648 and 2147483647
+    for (var nFlag = 0, nShifted = nMask, sMask = ""; nFlag < 32; nFlag++, sMask += String(nShifted >>> 31), nShifted <<= 1);
+    return sMask;
+}
 
 function list_mem(l, o) {
     if (l[0]) { return false; }
@@ -438,16 +443,29 @@ function caml_ml_output_char (x, c) {
     return add_to_output(x, String.fromCharCode(c), 0, 1);
 }
 
+function binaryToInt8(s) {
+    var i = 0;
+    for ( n=0 ; n<8 ; n++ )
+	i += s[7-n] * (1 << n);
+    return i;
+}
+
 //Provides: caml_ml_output_int
 //Requires: caml_ml_output
 function caml_ml_output_int (x, i) {
     console.log("##### caml_ml_output_int #####");
     // console.debug(i);
-    var s;
-    if (i == undefined) return 0;// s = new MlString(String.fromCharCode(0));
-    
-    else s = new MlString(i+"");
-    return add_to_output(x, s, 0, s.getLen());
+
+    var res = "";
+
+    var s = createBinaryString(i);
+    for ( var n=0 ; n<32 ; n+=8 ) {
+	var str = s.slice(n, n+8);
+	res += String.fromCharCode(binaryToInt8(str));
+    }
+
+    var res = new MlString(res);
+    return add_to_output(x, res, 0, res.getLen());
 }
 
 //Provides: caml_output_value
