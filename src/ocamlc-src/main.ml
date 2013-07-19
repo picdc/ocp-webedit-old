@@ -216,8 +216,13 @@ let main () =
 let my_compile name =
   (* Clflags.dump_parsetree := true; *)
   objfiles := [];
-  process_file ppf "std_exit.ml";
   process_file ppf name;
+  (* let cmi = Cmi_format.read_cmi "std_exit.cmi" in *)
+  (* Firebug.console##debug(cmi.Cmi_format.cmi_name); *)
+  (* Firebug.console##debug(cmi.Cmi_format.cmi_sign); *)
+  (* Firebug.console##debug(cmi.Cmi_format.cmi_crcs); *)
+  (* Firebug.console##debug(cmi.Cmi_format.cmi_flags); *)
+  (* exit 0; *)
   Compile.init_path();
   Bytelink.link ppf (List.rev !objfiles) "toto.byte";
   Warnings.check_fatal ();
@@ -227,14 +232,24 @@ let _ =
   (Js.Unsafe.coerce Dom_html.window)##mycompile <- Js.wrap_callback
     my_compile
 
-(* let _ = *)
-(*   (\* let out = open_out "test.mldelamort" in *\) *)
-(*   (\* output_value out "coucou"; *\) *)
-(*   (\* close_out out; *\) *)
+(* type typeenum = A of string | B of int | C of int * int *)
 
-(*   objfiles := []; *)
-(*   process_file ppf "std_exit.ml"; *)
-(*   Compile.init_path(); *)
-(*   Bytelink.link ppf (List.rev !objfiles) "std_exit.byte"; *)
-(*   Warnings.check_fatal (); *)
-(*   exit 0 *)
+(* type t = { a : string ; mutable b : int ; c : int ; d : (typeenum * int) list } *)
+
+(* let _ = *)
+(*   let t1 = C (1,2) in *)
+(*   let t2 = A ("string") in *)
+(*   let obj = { a = "coucou" ; b = 5 ; c = 4 ; d = [(t1, 0); (t2, 1)] } in *)
+(*   let out = open_out "test.mldelamort" in *)
+(*   output_value out obj; *)
+(*   close_out out; *)
+
+  (* objfiles := []; *)
+  (* process_file ppf "std_exit.ml"; *)
+  (* Compile.init_path(); *)
+  (* Bytelink.link ppf (List.rev !objfiles) "std_exit.byte"; *)
+  (* Warnings.check_fatal (); *)
+  (* exit 0 *)
+
+
+

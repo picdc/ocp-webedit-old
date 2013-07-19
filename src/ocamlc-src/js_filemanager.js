@@ -25,12 +25,12 @@ var caml_output_val = function (){
     Writer.prototype = {
 	chunk_idx:20, block_len:0, obj_counter:0, size_32:0, size_64:0,
 	write:function (size, value) {
-	    // console.log("write (size = "+size+" ; value = "+value+")");
+	     //console.log("write (size = "+size+" ; value = "+value+")");
 	    for (var i = size - 8;i >= 0;i -= 8)
 		this.chunk[this.chunk_idx++] = (value >> i) & 0xFF;
 	},
 	write_code:function (size, code, value) {
-	    // console.log("write_code (size = "+size+")");
+	     //console.log("write_code (size = "+size+")");
 	    this.chunk[this.chunk_idx++] = code;
 	    for (var i = size - 8;i >= 0;i -= 8)
 		this.chunk[this.chunk_idx++] = (value >> i) & 0xFF;
@@ -71,9 +71,10 @@ var caml_output_val = function (){
 		if (v.length > 1) stack.push (v, 1);
 		// HACK XXX
 		writer.obj_counter++;
+		// END HACK
 	    } else if (v instanceof MlString) {
 		var len = v.getLen();
-		if (len < 0x20)
+		if (len < 0x20) 
 		    writer.write (8, cst.PREFIX_SMALL_STRING + len);
 		else if (len < 0x100)
 		    writer.write_code (8, cst.CODE_STRING8, len);
@@ -84,6 +85,7 @@ var caml_output_val = function (){
 		writer.size_64 += 1 + (((len + 8) / 8)|0);
 		// HACK XXX
 		writer.obj_counter++;
+		// END HACK
 	    } else {
 		if (v != (v|0)) {
 		    caml_failwith("output_value: non-serializable value");
@@ -204,13 +206,36 @@ function caml_raise_sys_error (msg) {
 //   }
 // } ();
 
+function my_caml_blit_string(x, i, s, j, l) {
+    var x_str = x.getBytes().slice(i, l);
+    var s_str = s.getBytes();
+    var sl = s_str.length;
+
+    var str = s_str.substring(0, j) + x_str + s_str.substring(j+l, sl);
+ 
+    var str = new MlString(str);
+    s.bytes = str.bytes;
+    s.fullBytes = str.bytes;
+    s.len = str.len;
+    s.last = str.last;
+    s.offset = j+l;
+
+    return 0;
+}
+
 //Provides: caml_ml_input
 //Require: caml_blit_string
 function caml_ml_input (f, s, i, l) {
     console.log("##### caml_ml_input #####");
+    console.log("i = "+i+" ; l = "+l);
+    mlstrdebug(f);
     var l2 = f.getLen() - f.offset;
     if (l2 < l) l = l2;
-    caml_blit_string(f, f.offset, s, i, l);
+
+    mlstrdebug(s);
+    my_caml_blit_string(f, f.offset, s, i, l);
+    mlstrdebug(s);
+
     f.offset += l;
     return l;
 }
@@ -252,9 +277,21 @@ function caml_get_global_data () {
 // -------------------------------------------------
 
 
-//Provides: caml_global_filesystem
+//Provides: std_exit_cmo
+var std_exit_cmo = "\\067\\097\\109\\108\\049\\057\\057\\057\\079\\048\\048\\055\\000\\000\\000\\048\\099\\000\\000\\000\\056\\000\\000\\000\\000\\000\\000\\000\\080\\000\\000\\000\\033\\000\\000\\000\\058\\000\\000\\000\\057\\000\\000\\000\\000\\000\\000\\000\\132\\149\\166\\190\\000\\000\\000\\100\\000\\000\\000\\018\\000\\000\\000\\070\\000\\000\\000\\063\\008\\000\\000\\036\\000\\040\\083\\116\\100\\095\\101\\120\\105\\116\\080\\096\\160\\160\\145\\176\\064\\042\\080\\101\\114\\118\\097\\115\\105\\118\\101\\115\\065\\072\\160\\160\\146\\176\\064\\004\\010\\065\\092\\064\\160\\160\\004\\012\\048\\014\\085\\111\\108\\229\\022\\016\\039\\239\\072\\087\\181\\144\\226\\173\\195\\160\\160\\042\\080\\101\\114\\118\\097\\115\\105\\118\\101\\115\\048\\072\\054\\194\\084\\240\\234\\202\\217\\047\\191\\103\\171\\197\\037\\253\\218\\064\\064\\064\\064\\064";
+
+function read_cmo(str) {
+    var res = "";
+    for ( var i=0 ; i < str.length ; i+=4 )
+	res += String.fromCharCode(str.substring(i+1, i+4));
+    return new MlString(res);
+}
+
+// Provides: caml_global_filesystem
+// Requires: stdlib_cma, std_exit_cmo
 var caml_global_filesystem = [0];
-caml_global_filesystem["std_exit.ml"] = new MlString("let _ = do_at_exit()");
+caml_global_filesystem["std_exit.cmo"] = read_cmo(std_exit_cmo);
+caml_global_filesystem["stdlib.cma"] = read_cmo(stdlib_cma);
 
 function createBinaryString (nMask) {
     // nMask must be between -2147483648 and 2147483647
@@ -297,46 +334,69 @@ function add_to_output(x, s, p, l) {
     // x.len = s.len;
     // x.last = s.last;
     // x.offset = s.offset;
-    console.log("x = ");
+    console.log("Ecriture dans : "+x.title);
     mlstrdebug(x);
-    console.log("s = ");
-    mlstrdebug(s);
-    console.debug("p = "+p);
-    console.debug("l = "+l);
+    //console.log("x = ");
+    //mlstrdebug(x);
+    //console.log("s = ");
+    //mlstrdebug(s);
+    //console.debug("p = "+p);
+    //console.debug("l = "+l);
 
-    var s = new MlString(s.getBytes().slice(p, l));
-    console.log("s apres slice = ");
-    mlstrdebug(s);
-    var xl = x.getLen();
-    var sl = s.getLen();
-    var str = caml_create_string(xl+sl|0);
-    caml_blit_string(x,0,str,0,xl);
-    caml_blit_string(s,0,str,xl,sl);
+    var xoffset = x.offset;
+    var x_str = x.getBytes();
+    var s = s.getBytes().slice(p, l);
+    // console.log("x_str="+x_str);
+    // console.log("s="+s);
+
+    var xl = x_str.length;
+    var sl = s.length;
+    var off = xoffset + sl;
+    var len = (off>xl)?off:xl;;
+    var str = x_str.substring(0, xoffset) + s + x_str.substring(off, len);
+    // console.log("str = ");
+    // console.debug(str);
+    var str = new MlString(str);
+
+    // var s = new MlString(s.getBytes().slice(p, l));
+    // console.log("s apres slice = ");
+    // mlstrdebug(s);
+    // var xl = x.getLen();
+    // var sl = s.getLen();
+    // var off = x.offset + sl;
+    // var len = (off>xl)?off:xl;
+    // var str = caml_create_string(len|0);
+    // console.log("len = "+len);
+    // console.log("off = "+off);
+    // console.log("x.offset = "+x.offset);
+    // caml_blit_string(x, 0, str,        0, xl);
+    // caml_blit_string(s, 0, str, x.offset, sl);
+    // BLIT NE MARCHAIT PAS TROP BIEN !
 
     x.bytes = str.bytes;
     x.fullBytes = str.bytes;
     x.len = str.len;
     x.last = str.last;
-    x.offset = xl;
-
-
-    console.log("\nResultat :");
+    x.offset = off;
     mlstrdebug(x);
 
+    // console.log("\nResultat :");
+    // mlstrdebug(x);
 
-    // DEBUG
-    var div = document.getElementById("toto.cmi");
-    if ( caml_global_filesystem["std_exit.cmi"] ) {
-	// var el = document.createElement("li");
-	div.innerHTML = caml_global_filesystem["std_exit.cmi"].bytes;
-	// div.appendChild(el);
-    }
-    var div = document.getElementById("toto.cmo");
-    if ( caml_global_filesystem["std_exit.cmo"] ) {
-    	//var el = document.createElement("li");
-    	div.innerHTML = caml_global_filesystem["std_exit.cmo"].bytes;
-    	//div.appendChild(el);
-    }
+
+    // // DEBUG
+    // var div = document.getElementById("toto.cmi");
+    // if ( caml_global_filesystem["std_exit.cmi"] ) {
+    // 	// var el = document.createElement("li");
+    // 	div.innerHTML = caml_global_filesystem["std_exit.cmi"].bytes;
+    // 	// div.appendChild(el);
+    // }
+    // var div = document.getElementById("toto.cmo");
+    // if ( caml_global_filesystem["std_exit.cmo"] ) {
+    // 	//var el = document.createElement("li");
+    // 	div.innerHTML = caml_global_filesystem["std_exit.cmo"].bytes;
+    // 	//div.appendChild(el);
+    // }
 
     return 0;
 }
@@ -357,27 +417,48 @@ function caml_sys_open (x, y) {
     var v = caml_global_data.interfaces[x];
     var f = caml_global_filesystem[id];
 
-    if (f != undefined) {
-	if ( list_mem(y, 4) ) { // Open_trunc
-	    var s = new MlString("");
+    if ( list_mem(y, 1) ) {
+	if (f != undefined) {
+	    if ( list_mem(y, 4) ) { // Open_trunc
+		var s = new MlString("");
+		s.offset = 0;
+		s.title = id;
+		caml_global_filesystem[id] = s;
+	    }
+	    mlstrdebug(caml_global_filesystem[id]);
+	    return caml_global_filesystem[id];
+	} else if (v) {
+	    var s = new MlString (v);
 	    s.offset = 0;
-	    caml_global_filesystem[id] = s;
-	}
-	return caml_global_filesystem[id];
-    } else if (v) {
-	var s = new MlString (v);
-	s.offset = 0;
-	// console.debug(s);
-	return s;
-    } else {
-	if ( list_mem(y, 3) ) {
-	    // console.log("Create !")
-	    var s = new MlString("");
-	    caml_global_filesystem[id] = s;
-	    // console.debug(s);
+	    s.title = id;
+	    // mlstrdebug(s);
 	    return s;
-	} else
-	    caml_raise_sys_error (x + ": no such file or directory");
+	} else {
+	    if ( list_mem(y, 3) ) {
+		// console.log("Create !")
+		var s = new MlString("");
+		caml_global_filesystem[id] = s;
+		s.offset = 0;
+		s.title = id
+		mlstrdebug(s);
+		return s;
+	    } else
+		caml_raise_sys_error (x + ": no such file or directory");
+	}
+    } else if ( list_mem(y, 0) ) {
+	if (f != undefined) {
+	    mlstrdebug(caml_global_filesystem[id]);
+	    var copy = new MlString(caml_global_filesystem[id].getBytes());
+	    copy.offset = 0;
+	    return copy;
+	} else if (v) {
+	    var s = new MlString (v);
+	    s.offset = 0;
+	    s.title = id;
+	    return s;
+	} else {
+	    return new MlString("");
+	}
     }
 }
 
@@ -476,7 +557,7 @@ function caml_output_value (x, v, fl) {
 
     // console.debug(v);
     var s = new MlStringFromArray(caml_output_val(v));
-    console.debug(s);
+    // console.debug(s);
     var str = new MlString(s.getBytes());
     // console.debug(str);
 
@@ -510,7 +591,7 @@ function caml_sys_exit(x) {
 function caml_ml_seek_in(x, i) {
     console.log("##### caml_ml_seek_in #####");
     // console.debug(x);
-    // console.debug(i);
+    console.debug(i);
     x.offset = i;
     return 0;
 }
@@ -519,7 +600,7 @@ function caml_ml_seek_in(x, i) {
 function caml_ml_seek_out(x, i) {
     console.log("##### caml_ml_seek_out #####");
     // console.debug(x);
-    // console.debug(i);
+    console.debug(i);
     x.offset = i;
     return 0;
 }
@@ -527,19 +608,19 @@ function caml_ml_seek_out(x, i) {
 //Provides: caml_md5_chan
 function caml_md5_chan(x, l) {
     console.log("##### caml_md5_chan #####");
-    console.debug(x);
-    console.debug(l);
+    // console.debug(x);
+    // console.debug(l);
     var str = x.getBytes();
     var len = (l==-1)?str.length:l;
-    console.debug(str);
-    console.debug(len);
+    // console.debug(str);
+    // console.debug(len);
     var s = caml_md5_string(x, 0, len);
 
     // var test = new MlString("coucou");
     // var testres = caml_md5_string(test, 0, 6);
     // console.debug(testres);
 
-    console.debug(s);
+    // console.debug(s);
     return s;
 }
 
@@ -547,6 +628,7 @@ function caml_md5_chan(x, l) {
 //Provides: caml_ml_pos_out
 function caml_ml_pos_out(x) {
     console.log("##### caml_ml_pos_out #####");
+    // console.debug(x.offset);
     return x.offset;
 }
 
@@ -554,4 +636,31 @@ function caml_ml_pos_out(x) {
 function caml_ml_close_channel(x) {
     console.log("##### caml_ml_pos_out #####");
     return 0;
+}
+
+//Provides: caml_sys_close
+function caml_sys_close(x) {
+    console.log("##### caml_sys_close #####");
+    return 0;
+}
+
+
+//Provides: caml_ml_input_int
+function caml_ml_input_int(x) {
+    console.log("##### caml_ml_input_int #####");
+    // console.debug(x);
+    var str = x.getBytes();
+    var i = str.substring(x.offset, x.offset+4);
+    console.debug(i|0);
+    x.offset += 4;
+    return (i|0);
+}
+
+//Provides: caml_input_value
+//Requires: caml_marshal_data_size, caml_input_value_from_string
+function caml_input_value (s) {
+    console.log("##### caml_input_value #####");
+    console.debug(s);
+    //caml_marshal_data_size (s, s.offset);
+    return caml_input_value_from_string(s, s.offset);
 }

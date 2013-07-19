@@ -75,7 +75,6 @@ function caml_ml_open_descriptor_in (x) {
 //Provides: caml_ml_input
 //Require: caml_blit_string
 function caml_ml_input (f, s, i, l) {
-    console.log("##### caml_ml_input #####");
     var l2 = f.getLen() - f.offset;
     if (l2 < l) l = l2;
     caml_blit_string(f, f.offset, s, i, l);
