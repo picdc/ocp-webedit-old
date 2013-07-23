@@ -18,8 +18,8 @@ let mlstrdebug filename =
       let c = input_byte inc in
       begin
 	match c with
-	(* | i when i >= 33 && i <= 126 -> *)
-	(*   Buffer.add_char buf (char_of_int i) *)
+	| i when i >= 33 && i <= 126 ->
+	  Buffer.add_char buf (char_of_int i)
 	| i ->
 	  (Buffer.add_string buf "\\\\";
 	   if i < 10 then Buffer.add_string buf "00"

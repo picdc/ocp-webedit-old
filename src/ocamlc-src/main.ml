@@ -213,24 +213,45 @@ let main () =
     Errors.report_error ppf x;
     exit 2
 
+
+
+
+let dump content =
+  let uriContent =
+    Js.string ("data:application/octet-stream," ^
+           (Js.to_string (Js.encodeURI content))) in
+  let _ = Dom_html.window##open_(uriContent, Js.string "Try OCaml", Js.null) in
+  Dom_html.window##close ()
+
+
 let my_compile name =
   (* Clflags.dump_parsetree := true; *)
+  Clflags.dump_parsetree := true;
+  Clflags.dump_rawlambda := true;
+  Clflags.dump_lambda := true;
+  Clflags.dump_instr := true;
+
   objfiles := [];
-  process_file ppf name;
+  process_implementation ppf name;
   (* let cmi = Cmi_format.read_cmi "std_exit.cmi" in *)
   (* Firebug.console##debug(cmi.Cmi_format.cmi_name); *)
   (* Firebug.console##debug(cmi.Cmi_format.cmi_sign); *)
   (* Firebug.console##debug(cmi.Cmi_format.cmi_crcs); *)
   (* Firebug.console##debug(cmi.Cmi_format.cmi_flags); *)
   (* exit 0; *)
+  Firebug.console##log(Js.string "##### MY COMPILE DEBUG 1 #####");
+  Firebug.console##debug(objfiles);
   Compile.init_path();
-  Bytelink.link ppf (List.rev !objfiles) "toto.byte";
+  Firebug.console##log(Js.string "##### MY COMPILE DEBUG 2 #####");
+  Firebug.console##debug(objfiles);
+Bytelink.link ppf (List.rev !objfiles) "toto.byte";
   Warnings.check_fatal ();
   exit 0
 
 let _ =
   (Js.Unsafe.coerce Dom_html.window)##mycompile <- Js.wrap_callback
-    my_compile
+    my_compile;
+  (Js.Unsafe.coerce Dom_html.window)##dump <- Js.wrap_callback dump
 
 (* type typeenum = A of string | B of int | C of int * int *)
 

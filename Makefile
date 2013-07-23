@@ -12,6 +12,9 @@ server:
 run:
 	server/server -fg
 
+myrun:
+	server/server -fg -conf server/notmy_server.conf
+
 
 clean:
 	$(MAKE) -C src clean-all
