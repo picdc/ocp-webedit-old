@@ -223,28 +223,28 @@ let dump content =
   let _ = Dom_html.window##open_(uriContent, Js.string "Try OCaml", Js.null) in
   Dom_html.window##close ()
 
-
+type t = { a : string ; b : string }
 let my_compile name =
-  (* Clflags.dump_parsetree := true; *)
-  Clflags.dump_parsetree := true;
-  Clflags.dump_rawlambda := true;
-  Clflags.dump_lambda := true;
-  Clflags.dump_instr := true;
+  Clflags.preprocessor := None;
+  Clflags.dump_parsetree := false;
+  Clflags.dump_rawlambda := false;
+  Clflags.dump_lambda := false;
+  Clflags.dump_instr := false;
+
+
+  let s = "Toto" in
+  let out = open_out "test.txt" in
+  let a = { a = s ; b = s } in
+  output_value out a;
 
   objfiles := [];
-  process_implementation ppf name;
-  (* let cmi = Cmi_format.read_cmi "std_exit.cmi" in *)
-  (* Firebug.console##debug(cmi.Cmi_format.cmi_name); *)
-  (* Firebug.console##debug(cmi.Cmi_format.cmi_sign); *)
-  (* Firebug.console##debug(cmi.Cmi_format.cmi_crcs); *)
-  (* Firebug.console##debug(cmi.Cmi_format.cmi_flags); *)
-  (* exit 0; *)
+  process_file ppf name;
   Firebug.console##log(Js.string "##### MY COMPILE DEBUG 1 #####");
   Firebug.console##debug(objfiles);
   Compile.init_path();
   Firebug.console##log(Js.string "##### MY COMPILE DEBUG 2 #####");
   Firebug.console##debug(objfiles);
-Bytelink.link ppf (List.rev !objfiles) "toto.byte";
+  Bytelink.link ppf (List.rev !objfiles) "toto.byte";
   Warnings.check_fatal ();
   exit 0
 
