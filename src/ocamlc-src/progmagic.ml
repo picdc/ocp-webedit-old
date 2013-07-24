@@ -12,24 +12,29 @@ let byte_to_hex i =
 
 let mlstrdebug filename =
   let inc = open_in filename in
-  let buf = Buffer.create 503 in
+  let out = open_out (filename ^ "_out") in
+  (* let buf = Buffer.create 503 in *)
   let rec aux () =
     try
       let c = input_byte inc in
       begin
 	match c with
-	| i when i >= 33 && i <= 126 ->
-	  Buffer.add_char buf (char_of_int i)
+	(* | i when i >= 33 && i <= 126 -> *)
+	(*   Buffer.add_char buf (char_of_int i) *)
 	| i ->
-	  (Buffer.add_string buf "\\\\";
-	   if i < 10 then Buffer.add_string buf "00"
-	   else if i < 100 then Buffer.add_string buf "0";
-	   Buffer.add_string buf (string_of_int i))
+           let prefix = 
+	     if i < 10 then "00"
+	     else if i < 100 then "0"
+             else ""
+           in
+	   output_string out 
+             (Format.sprintf "\\%s%s" prefix (string_of_int i))
       end;
       aux ()
-    with _ -> Buffer.contents buf
+    with _ -> ()
   in
-  print_endline (aux ())
+  aux ();
+  close_out out
 
 let _ =
   let a = Sys.argv in
