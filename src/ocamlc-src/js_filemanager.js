@@ -313,19 +313,17 @@ function is_long(v) {
 }
 
 function is_value_unseen(v) {
-    console.log("function : is_in_value start");
+    // console.log("function : is_in_value start");
     cf = offset_of_value_seen(v);    
-    console.debug(cf);
+    // console.debug(cf);
     var res = ( cf == null);
-    console.log("function : is_in_value end");
+    // console.log("function : is_in_value end");
     return res;
 }
 
 function offset_of_value_seen(v) {
-    console.log("extern_fc start");
-    console.debug(v);
+    // console.log("extern_fc start");
     for (val in extern_value_area) {
-        console.debug(val);
         if (extern_value_area[val][1] === v) return extern_value_area[val][0];
     }
 
@@ -333,11 +331,11 @@ function offset_of_value_seen(v) {
 }
 
 function extern_record_location(v) {
-    console.log("extern_rl start");
+    // console.log("extern_rl start");
     var i = obj_counter;
     extern_value_area.push([i, v]);
     obj_counter++;
-    console.log("extern_rl end");
+    // console.log("extern_rl end");
     return 0;
 }
 
@@ -348,12 +346,12 @@ var caml_output_val = function (){
     Writer.prototype = {
 	chunk_idx:20, block_len:0, size_32:0, size_64:0,
 	write:function (size, value) {
-	     //console.log("write (size = "+size+" ; value = "+value+")");
+	    //console.log("write (size = "+size+" ; value = "+value+") ; chuck = "+this.chunk_idx);
 	    for (var i = size - 8;i >= 0;i -= 8)
 		this.chunk[this.chunk_idx++] = (value >> i) & 0xFF;
 	},
 	write_code:function (size, code, value) {
-	     //console.log("write_code (size = "+size+")");
+	    console.log("write_code (size = "+size+") ; code = "+code+" ; value = "+value+" ! ; chuck = "+this.chunk_idx);
 	    this.chunk[this.chunk_idx++] = code;
 	    for (var i = size - 8;i >= 0;i -= 8)
 		this.chunk[this.chunk_idx++] = (value >> i) & 0xFF;
@@ -375,7 +373,6 @@ var caml_output_val = function (){
 	}
     }
     return function (v) {
-        console.debug(v);
 	var writer = new Writer ();
         obj_counter = 0;
         extern_value_area = new Array();
@@ -415,7 +412,7 @@ var caml_output_val = function (){
                     }
 		    else {
                         //   console.debug("case 3");
-		        writer.write_code(32, cst.CODE_BLOCK32, (v.length << 10) | v[0]);
+		        writer.write_code(32, cst.CODE_BLOCK32, ((v.length - 1) << 10) | v[0]);
                     }
 		    writer.size_32 += v.length;
 		    writer.size_64 += v.length;

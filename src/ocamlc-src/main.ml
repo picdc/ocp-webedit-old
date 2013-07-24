@@ -218,8 +218,8 @@ let main () =
 
 let dump content =
   let uriContent =
-    Js.string ("data:application/octet-stream," ^
-           (Js.to_string (Js.encodeURI content))) in
+    Js.string ("data:application/octet-stream;charset=utf-8," ^
+           (Js.to_string  content)) in
   let _ = Dom_html.window##open_(uriContent, Js.string "Try OCaml", Js.null) in
   Dom_html.window##close ()
 
