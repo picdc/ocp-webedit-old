@@ -223,27 +223,19 @@ let dump content =
   let _ = Dom_html.window##open_(uriContent, Js.string "Try OCaml", Js.null) in
   Dom_html.window##close ()
 
-type t = { a : string ; b : string }
+
+
 let my_compile name =
   Clflags.preprocessor := None;
   Clflags.dump_parsetree := false;
   Clflags.dump_rawlambda := false;
   Clflags.dump_lambda := false;
   Clflags.dump_instr := false;
-
-
-  let s = "Toto" in
-  let out = open_out "test.txt" in
-  let a = { a = s ; b = s } in
-  output_value out a;
+  Clflags.custom_runtime := false;
 
   objfiles := [];
   process_file ppf name;
-  Firebug.console##log(Js.string "##### MY COMPILE DEBUG 1 #####");
-  Firebug.console##debug(objfiles);
   Compile.init_path();
-  Firebug.console##log(Js.string "##### MY COMPILE DEBUG 2 #####");
-  Firebug.console##debug(objfiles);
   Bytelink.link ppf (List.rev !objfiles) "toto.byte";
   Warnings.check_fatal ();
   exit 0
@@ -252,25 +244,5 @@ let _ =
   (Js.Unsafe.coerce Dom_html.window)##mycompile <- Js.wrap_callback
     my_compile;
   (Js.Unsafe.coerce Dom_html.window)##dump <- Js.wrap_callback dump
-
-(* type typeenum = A of string | B of int | C of int * int *)
-
-(* type t = { a : string ; mutable b : int ; c : int ; d : (typeenum * int) list } *)
-
-(* let _ = *)
-(*   let t1 = C (1,2) in *)
-(*   let t2 = A ("string") in *)
-(*   let obj = { a = "coucou" ; b = 5 ; c = 4 ; d = [(t1, 0); (t2, 1)] } in *)
-(*   let out = open_out "test.mldelamort" in *)
-(*   output_value out obj; *)
-(*   close_out out; *)
-
-  (* objfiles := []; *)
-  (* process_file ppf "std_exit.ml"; *)
-  (* Compile.init_path(); *)
-  (* Bytelink.link ppf (List.rev !objfiles) "std_exit.byte"; *)
-  (* Warnings.check_fatal (); *)
-  (* exit 0 *)
-
 
 
