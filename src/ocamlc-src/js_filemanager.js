@@ -531,6 +531,16 @@ function caml_get_global_data () {
 // -------------------------------------------------
 // -------------------------------------------------
 
+function MlstringToBlob(str){
+    var str = str.toArray();
+    var a = new Uint8Array(str.length);
+
+    for (k in str) 
+        a[k] = str[k];
+
+    return new Blob([a.buffer], {type: "application/octet-stream;charset=utf-8"})
+}
+
 
 
 //Provides: std_exit_cmo
