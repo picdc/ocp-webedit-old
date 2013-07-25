@@ -19,16 +19,16 @@ let mlstrdebug filename =
       let c = input_byte inc in
       begin
 	match c with
-	(* | i when i >= 33 && i <= 126 -> *)
-	(*   Buffer.add_char buf (char_of_int i) *)
-	  | i ->
-           let prefix = 
-	     if i < 10 then "00"
-	     else if i < 100 then "0"
-             else ""
-           in
-	   output_string out 
-             (Format.sprintf "\\\\%s%s" prefix (string_of_int i))
+	| i when i >= 33 && i <= 126 ->
+	  output_char out (char_of_int i)
+	| i ->
+            let prefix = 
+	      if i < 10 then "00"
+	      else if i < 100 then "0"
+              else ""
+            in
+	    output_string out 
+              (Format.sprintf "\\%s%s" prefix (string_of_int i))
       end;
       done
     with _ -> close_out out

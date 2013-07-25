@@ -390,12 +390,12 @@ var caml_output_val = function (){
         extern_value_area = new Array();
 	var stack = [];
 	function extern_rec (v) {
-            console.debug("extern rec start : value = ");
+            //console.debug("extern rec start : value = ");
 	    var cst = caml_marshal_constants;
-            console.debug(v);
+            //console.debug(v);
 
             if ( is_long(v) ) {
-                console.log("LONG");
+                //console.log("LONG");
                 // Numeric value
 		if (v >= 0 && v < 0x40)
 		    writer.write (8, cst.PREFIX_SMALL_INT + v);
@@ -407,16 +407,17 @@ var caml_output_val = function (){
 		    writer.write_code(32, cst.CODE_INT32, v);
             } else if ( v instanceof Array && v[0] === (v[0]|0) && v[0] == 255) {
                 // Int 64
-                console.log("INT64");
+                //console.log("INT64");
 		writer.write (8, cst.CODE_CUSTOM);
 		for (var i = 0; i < 3; i++) writer.write (8, "_j\0".charCodeAt(i));
 		var b = caml_int64_to_bytes (v);
 		for (var i = 0; i < 8; i++) writer.write (8, b[i]);
 		writer.size_32 += 4;
 		writer.size_64 += 3;
-		return;                
+		extern_record_location(v);
+                return;                
             } else if ( is_value_unseen(v) ) {
-                console.log("IS_IN_VALUE_AREA");
+                //console.log("IS_IN_VALUE_AREA");
 	        if (v instanceof Array && v[0] === (v[0]|0)) {
 		    if (v[0] < 16 && v.length - 1 < 8) {
                         //    console.debug("case 2");
@@ -446,7 +447,7 @@ var caml_output_val = function (){
 	        }
 
             } else if ( (cf = offset_of_value_seen(v)) != null ) {
-                console.log("EXTERN_FIND_CODE");
+                //console.log("EXTERN_FIND_CODE");
                 var d = obj_counter - cf;
                 if ( d < 0x100 )
                     writer.write_code (8, cst.CODE_SHARED8, d);
@@ -636,8 +637,8 @@ function add_to_output(x, s, p, l) {
     x.offset = off;
     // mlstrdebug(x);
 
-    console.log("\nResultat :");
-    mlstrdebug(x);
+    // console.log("\nResultat :");
+    // mlstrdebug(x);
 
     return 0;
 }
@@ -754,7 +755,7 @@ function caml_ml_output (x, s, p, l) {
 //Requires: caml_ml_output
 function caml_ml_output_char (x, c) {
     console.log("\n##### caml_ml_output_char #####");
-    // console.log("Ecriture de : "+String.fromCharCode(c)+" (c="+c+")");
+    console.log("Ecriture de : "+String.fromCharCode(c)+" (c="+c+")");
     return add_to_output(x, new MlString(String.fromCharCode(c)), 0, 1);
 }
 
