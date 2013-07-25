@@ -1,6 +1,6 @@
 
-SRC_I = main.mli compile.mli errors.mli main_args.mli pparse.mli
-SRC= compile.ml errors.ml main_args.ml pparse.ml main.ml
+SRC_I = bytelink.mli main.mli compile.mli errors.mli main_args.mli pparse.mli
+SRC= bytelink.ml compile.ml errors.ml main_args.ml pparse.ml main.ml
 
 CMIS=$(SRC_I:.mli=.cmi)
 CMOS=$(SRC:.ml=.cmo)
