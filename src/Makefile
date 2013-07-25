@@ -2,10 +2,10 @@
 include Makefile.config
 include Makefile.rules
 
-SOURCES= ace.ml ace_utils.ml request.ml filemanager.ml event_manager.ml \
-	dialog.ml tabs.ml sidepanel.ml centerpanel.ml login.ml
-SOURCESI= ace.mli ace_utils.mli request.mli filemanager.mli \
-	event_manager.mli dialog.mli tabs.mli
+SOURCES= ace.ml ace_utils.ml myparser.ml request.ml mycompile.ml filemanager.ml \
+	 event_manager.ml dialog.ml tabs.ml sidepanel.ml centerpanel.ml login.ml
+SOURCESI= ace.mli ace_utils.mli conftypes.mli myparser.mli request.mli \
+	 mycompile.mli filemanager.mli event_manager.mli dialog.mli tabs.mli
 
 OCPDIR= ocp-indent-src
 OCPLIB= -I $(OCPDIR) ocp_indent.cma

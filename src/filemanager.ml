@@ -3,11 +3,18 @@
 
  *)
 
+type compile_opts = {
+  mutable fids : int list;
+  mutable output : string
+}
+
 type project = {
   name : string ;
   mutable opened : bool;
-  mutable files : string list
+  mutable files : string list;
+  compile_opts : compile_opts
 } 
+
 type file = {
   id : int;
   mutable project: string;
@@ -79,11 +86,13 @@ let is_project_opened project =
   with Not_found -> raise (Project_not_found project)
 
 let add_project name =
-  let project = { name ; opened = false ; files = [] } in
+  let project = { name ; opened = false ; files = [] ;
+                  compile_opts = { fids = [] ; output = "" } } in
   H.add existing_projects name project
 
 let add_new_project name =
-  let project = { name ; opened = true ; files = [] } in
+  let project = { name ; opened = true ; files = [] ;
+                  compile_opts = { fids = [] ; output = "" } } in
   H.add existing_projects name project
 
 let add_file file =

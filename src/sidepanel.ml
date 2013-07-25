@@ -143,6 +143,24 @@ let handler_delete_project () = handler (fun _ ->
       Event_manager.delete_project#trigger project;
       Js._true)
 
+let handler_compileopts_project () = handler (fun _ ->
+  match !focused_project with
+    | None -> assert false
+    | Some project ->
+        let callback files =
+          let files = Myparser.split files ' ' in
+          let callback output =
+            let compile_conf = { Conftypes.files ; Conftypes.output } in
+            Ace_utils.console_debug
+              (Js.string (Myparser.generate_conf
+                            (Myparser.generate_compile_conf compile_conf)))
+          in
+          Dialog.Prompt_dialog.prompt "Output's name" "a.out" callback
+        in
+        Dialog.Prompt_dialog.prompt "Compile file order (file1.ml file2.ml ...)"
+          "" callback;
+        Js._true)
+
 let handler_export_project () = handler (fun _ ->
   match !focused_project with
     | None -> assert false
@@ -165,6 +183,7 @@ let handler_import_file () =
 
 let right_clic_dialog_opened_project =
   let lstr = [ "Create new file" ; 
+               "Change compile options" ;
                "Rename project" ; 
                "Delete project"; 
                "Export project";
@@ -178,6 +197,7 @@ let right_clic_dialog_opened_project =
         Js._true)
   in		 
   let lhandler = [ handler_new_file ; 
+                   handler_compileopts_project ();
                    handler_rename_project ();
 		   handler_delete_project ();
                    handler_export_project ();

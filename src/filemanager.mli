@@ -1,9 +1,16 @@
 
+type compile_opts = {
+  mutable fids : int list;
+  mutable output : string
+}
+
 type project = {
   name : string ;
   mutable opened : bool;
-  mutable files : string list
+  mutable files : string list;
+  compile_opts : compile_opts
 } 
+
 type file = {
   id : int; (* Must be unique for all files *)
   mutable project: string;
