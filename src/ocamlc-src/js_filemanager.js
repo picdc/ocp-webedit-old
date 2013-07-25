@@ -606,6 +606,14 @@ function mlstrdebug(s) {
 
 
 function add_to_output(x, s, p, l) {
+
+    if ( ! (x instanceof MlString) ) { 
+	if ( x == 1 || x == 2 ) { // stdout
+	    var o = document.getElementById("output");
+	    o.appendChild (document.createTextNode(s.toString().slice(p,p+l)));
+        }
+        return 0;
+    } 
     console.log("Ecriture dans : "+x.title);
     // mlstrdebug(x);
     //console.log("x = ");
@@ -739,14 +747,14 @@ function caml_ml_output (x, s, p, l) {
     console.log("Ecriture de (p="+p+") (l="+l+"): ");
     console.debug(s);
 
-    if ( ! (x instanceof MlString) ) { 
-	if ( x == 1 || x == 2 ) { // stdout
-	    var o = document.getElementById("output");
-	    o.appendChild (document.createTextNode(s.toString().slice(p,p+l)));
-        }
-    } else {
+    // if ( ! (x instanceof MlString) ) { 
+    //     if ( x == 1 || x == 2 ) { // stdout
+    //         var o = document.getElementById("output");
+    //         o.appendChild (document.createTextNode(s.toString().slice(p,p+l)));
+    //     }
+    // } else {
 	add_to_output(x, s, p, l);
-    }
+    // }
 
     return 0;
 }
