@@ -28,7 +28,7 @@ let mlstrdebug filename =
              else ""
            in
 	   output_string out 
-             (Format.sprintf "\\\\%s%s" prefix (string_of_int i))
+             (Format.sprintf "\\%s%s" prefix (string_of_int i))
       end;
       done
     with _ -> close_out out

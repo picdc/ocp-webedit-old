@@ -284,7 +284,7 @@ let link_bytecode ppf tolink exec_name standalone =
     open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
                  0o777 exec_name in
   try
-    let standalone = false in
+    (* let standalone = false in *)
     if standalone then begin
       (* Copy the header *)
       try
