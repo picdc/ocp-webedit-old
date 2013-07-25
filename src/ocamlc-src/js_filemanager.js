@@ -487,7 +487,6 @@ function my_caml_blit_string(x, i, s, j, l) {
     var str = new MlString(str);
     s.bytes = str.bytes;
     s.fullBytes = str.bytes;
-    s.len = str.len;
     s.last = str.last;
     s.offset = j+l;
     return 0;
@@ -881,3 +880,5 @@ function caml_sys_system_command(str) {
     console.log("Command = "+str);
     caml_failwith("caml_sys_system_command : not implemented");
 }
+
+

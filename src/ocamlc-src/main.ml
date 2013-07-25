@@ -232,6 +232,7 @@ let my_compile name =
   Clflags.dump_lambda := false;
   Clflags.dump_instr := false;
   Clflags.custom_runtime := false;
+  Clflags.no_std_include := true;
 
   objfiles := [];
   process_file ppf name;

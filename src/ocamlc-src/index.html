@@ -4,7 +4,7 @@
 <script src="FileSaver.js"></script>
 <script src="ocamlc.js"></script>
 <script>
-  caml_global_filesystem["camlheader"] = new MlString("#!ocamlrun");
+  caml_global_filesystem["camlheader"] = new MlString("#!/home/dmaison/.opam/4.00.1/bin/ocamlrun\n");
   caml_global_filesystem["toto.ml"] = new MlString("let _ = print_endline \"Hello world\"");
   var pouetbefore = caml_global_data.interfaces["std_exit.cmi"];
   <!-- var d = document.getElementById("res_toto.cmi"); -->
@@ -12,7 +12,7 @@
 
   <!-- caml_global_data.interfaces["std_exit.cmi"] = undefined; -->
   <!-- try { -->
-    this.mycompile(new MlString("toto.ml")); --
+    this.mycompile(new MlString("toto.ml"));
     console.debug("IT'S COMPILING");
 <!-- } -->
   <!-- catch (err) { -->
@@ -36,7 +36,8 @@ mlstrdebug(caml_global_filesystem["toto.cmi"]);
 mlstrdebug(new MlString(toto_cmo));
 mlstrdebug(caml_global_filesystem["toto.cmo"]);
 
-var cmo_blob = MlstringToBlob(caml_global_filesystem["toto.cmo"])
+var cmo_blob = MlstringToBlob(caml_global_filesystem["toto.cmo"]);
 <!-- saveAs(cmo_blob, "toto.cmo") -->;
+var byte_blob = MlstringToBlob(caml_global_filesystem["toto.byte"]);
 
 </script>
