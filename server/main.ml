@@ -9,7 +9,7 @@ module H = Hashtbl
 let logged_users = H.create 127
 
 (* let ppath = "/home/dmaison/ace-ocaml/data" *)
-let ppath = Format.sprintf "%s/projects/ocp-webedit/data" (Sys.getenv "HOME")
+let ppath = Format.sprintf "%s/ocp-webedit/data" (Sys.getenv "HOME")
 
 let email_to_dirname str =
   let pos_at = String.index str '@' in
@@ -56,6 +56,40 @@ let user_exists user =
 exception Wrong_assertion_key
 exception User_not_found
 
+(** Utils functions **)
+
+let split str c =
+  let rec aux acc str =
+    let pos = 
+      try String.index str c
+      with Not_found -> -1 in
+    if pos <> -1 then
+      let el = String.sub str 0 pos in
+      let next = String.sub str (pos+1) (String.length str - pos-1) in
+      aux (el::acc) next
+    else str::acc
+  in
+  List.rev (aux [] str)
+
+
+let get_dir full_path =
+  (* Format.printf "full_path = %s@." full_path; *)
+  let l = String.length full_path in
+  (* let full_path = String.sub full_path 0 (l-2) in *)
+  let pos = String.rindex full_path ' ' in
+  String.sub full_path (pos+1) (l - pos - 1)
+
+let compute_ls_result str =
+  (* Format.printf "ENtering compute_ls_result@."; *)
+  let dirs = split str '\n' in
+  let dirs = 
+    List.rev
+      (List.fold_left (fun acc str -> 
+        if String.length str <> 0 then (get_dir str)::acc
+        else acc) 
+         [] dirs)
+  in
+  (String.concat "\n" dirs) ^ "\n"
 
 let verify_logged_user user key = 
   Format.printf "Verifying cookie@.";
@@ -148,24 +182,49 @@ let login_function assertion =
 let project_function user =
   let user = email_to_dirname user in
   let path = Format.sprintf "%s/%s" ppath user in
-  let res = Shell.cmd "ls" [ path ] in
+  let res = Shell.cmd "ls" [ "-l"; path ] in
+  (* Format.printf "Before grep@."; *)
+  let grep = Shell.cmd "grep" [ "^d" ] in
+  (* Format.printf "After grep@."; *)
   let b = Buffer.create 503 in
   try
-    Shell.call ~stdout:(Shell.to_buffer b) [ res ];
-    Buffer.contents b
-  with _ -> raise Fail_shell_call
+    Shell.call ~stdout:(Shell.to_buffer b) [ res; grep ];
+    let r = compute_ls_result (Buffer.contents b) in
+    (* Format.printf "Heeeeellloooooo !@."; *)
+    (* Format.printf "%s@." r; *)
+    r
+  with e -> 
+    Format.printf "Fail_shell_call, oups@.";
+    raise e
 
 
 let project_list_function user project =
   let user = email_to_dirname user in
   let path = Format.sprintf "%s/%s/%s" ppath user project in
   let res = Shell.cmd "ls" [ path ] in
+  Format.printf "Before greps@.";
+  let g_ml = Shell.cmd "grep" [ "ml$" ] in
+  let g_mli = Shell.cmd "grep" [ "mli$" ] in
+  Format.printf "Greps created@.";
   let b = Buffer.create 503 in
   try
-    Shell.call ~stdout:(Shell.to_buffer b) [ res ];
+    Format.printf "Calling@.";
+    begin
+      try
+        Shell.call ~stdout:(Shell.to_buffer b) [ res; g_ml ];
+      with _ -> ();
+    end;
+    Format.printf ".ml found : %s @." (Buffer.contents b);
+    
+    begin
+      try
+        Shell.call ~stdout:(Shell.to_buffer b) [ res; g_mli ];
+      with _ -> ();
+    end;
+    Format.printf ".mli found : %s @." (Buffer.contents b);
     Buffer.contents b
   with _ -> raise Fail_shell_call
-
+  
 
 let project_load_function user project file =
   let user = email_to_dirname user in
@@ -310,14 +369,14 @@ let project_service =
   { empty_dyn_service with
     Nethttpd_services.dyn_handler =
       (fun _ cgi -> 
-	try
+	(* try *)
           let user = get_cookie cgi "user" in
           let key = get_cookie cgi "key" in
           verify_logged_user user key;
 	  let res = project_function user in
 	  print_string res cgi
-	with
-	  _ -> print_string "Error !" cgi
+	(* with *)
+	(*   _ -> print_string "Error !" cgi *)
       ); }
 
 let project_list_service =

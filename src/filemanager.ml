@@ -202,6 +202,16 @@ let create_project callback project =
 
 
 let create_file callback (project, filename) =
+  let _ = try Filename.chop_extension filename 
+    with _ -> 
+      raise (Invalid_argument "Filename must contain an extension .ml or .mli")
+  in
+  
+  if not (Filename.check_suffix filename "ml" 
+          || Filename.check_suffix filename  "mli") then
+    raise (Invalid_argument 
+         ("Extension impossible, only .ml or .mli allowed"));
+  
   if is_project_opened project then
     if not (file_exists ~project ~filename) then
       let callback () =
