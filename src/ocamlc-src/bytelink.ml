@@ -278,13 +278,12 @@ let make_absolute file =
 (* Create a bytecode executable file *)
 
 let link_bytecode ppf tolink exec_name standalone =
-  print_endline "Coucou c'est link_bytecode";
   Misc.remove_file exec_name; (* avoid permission problems, cf PR#1911 *)
   let outchan =
     open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
                  0o777 exec_name in
   try
-    (* let standalone = false in *)
+    let standalone = false in
     if standalone then begin
       (* Copy the header *)
       try
