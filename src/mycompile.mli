@@ -1,7 +1,9 @@
 
+type bytecode = string
+
 type compile_options = {
   src : (string * string) list ;
   output : string
 }
 
-val compile : compile_options -> unit
+val compile : (bytecode * string -> unit) ->  compile_options -> unit

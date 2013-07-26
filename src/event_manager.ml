@@ -76,3 +76,6 @@ let delete_and_switch_action callback file =
   Filemanager.delete_file callback file
 
 let delete_file = new event delete_and_switch_action
+
+let save_conf = new event Filemanager.save_conf
+let compile = new event Filemanager.compile

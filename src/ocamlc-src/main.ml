@@ -238,12 +238,21 @@ let my_compile name =
   process_file ppf name;
   Compile.init_path();
   Bytelink.link ppf (List.rev !objfiles) "toto.byte";
-  Warnings.check_fatal ();
-  exit 0
+  Warnings.check_fatal ()
 
+let onmessage f =
+  (Js.Unsafe.coerce Dom_html.window)##onmessage <- Js.wrap_callback f
+
+let postMessage msg =
+  (Js.Unsafe.coerce Dom_html.window)##postMessage(Js.string msg)
+
+let _ =
+  onmessage (fun _ -> postMessage "pouet") 
+
+(* TO BE DELETED *)
 let _ =
   (Js.Unsafe.coerce Dom_html.window)##mycompile <- Js.wrap_callback
     my_compile;
   (Js.Unsafe.coerce Dom_html.window)##dump <- Js.wrap_callback dump
-
+(* END TO BE DELETED *)
 

@@ -3,17 +3,17 @@
 
  *)
 
-type compile_opts = {
-  mutable fids : int list;
-  mutable output : string
-}
+open Conftypes
+
 
 type project = {
   name : string ;
   mutable opened : bool;
   mutable files : string list;
-  compile_opts : compile_opts
+  mutable compile_opts : compile_conf
 } 
+
+let default_compile_opts = { Conftypes.files = [] ; output = "a.out" }
 
 type file = {
   id : int;
@@ -69,6 +69,12 @@ let get_id ~project ~filename =
 
 
 (* Fonctions internes *)
+let set_project_conf project conf =
+  (H.find existing_projects project).compile_opts <- conf
+
+let get_project_conf project =
+  (H.find existing_projects project).compile_opts
+
 let project_exists name =
   H.mem existing_projects name
 
@@ -85,14 +91,13 @@ let is_project_opened project =
   try (H.find existing_projects project).opened
   with Not_found -> raise (Project_not_found project)
 
-let add_project name =
-  let project = { name ; opened = false ; files = [] ;
-                  compile_opts = { fids = [] ; output = "" } } in
+let add_project name compile_opts =
+  let project = { name ; opened = false ; files = [] ; compile_opts } in
   H.add existing_projects name project
 
 let add_new_project name =
   let project = { name ; opened = true ; files = [] ;
-                  compile_opts = { fids = [] ; output = "" } } in
+                  compile_opts = default_compile_opts } in
   H.add existing_projects name project
 
 let add_file file =
@@ -126,9 +131,29 @@ let get_content id =
 let workspace_opened = ref false
 let open_workspace callback () =
   if not !workspace_opened then
+    (* - On émet la requête pour avoir la liste des dossier
+       Pour chaque dossier de la liste :
+         - On émet une requête pour récupérer le .conf
+         - Quand on reçoit le .conf du project, on ajoute ce project dans la
+           liste
+         - Si le project ajouté était le dernier de la liste,
+           on appelle alors les callbacks qui étaient prévus quand on obtient
+           la liste des dossiers
+    *)
     (let callback ls =
-       List.iter (fun el -> add_project el) ls;
-       callback ls in
+       let projects_unloaded = ref (List.length ls) in
+       let callback_onload_project project strconf =
+         let conf = Myparser.parse_to_compile_conf
+           (Myparser.parse_to_conf strconf) in
+         add_project project conf;
+         decr projects_unloaded;
+         if !projects_unloaded <= 0 then
+           callback ls
+       in
+       List.iter (fun project -> 
+         Request.load_conf ~callback:(callback_onload_project project)
+            ~name:".webuild" ~project:(Some project) ())
+         ls in
      Request.get_list_of_projects ~callback;
      workspace_opened := true)
   else raise Workspace_already_opened
@@ -192,10 +217,23 @@ let close_file callback id =
   callback file
 
 let create_project callback project =
+  (* 
+     - On émet une requête pour créer un nouveau dossier pour le project
+     - Quand c'est fait, on émet une requête pour créer le .conf du project
+     - Quand c'est fait, on ajoute ce project au filemanager et on appelle les
+       callback prévus à la création du project
+  *)
   if not (project_exists project) then
     let callback () =
-      add_new_project project;
-      callback project
+      let content = Myparser.generate_of_conf
+        (Myparser.generate_of_compile_conf default_compile_opts) in
+      let name = ".webuild" in
+      let callback () =
+        add_new_project project;
+        callback project
+      in
+      let project = Some project in
+      Request.save_conf ~callback ~name ~project ~content
     in
     Request.create_project callback project 
   else raise (Bad_project_name project)
@@ -362,3 +400,37 @@ let delete_project callback name =
     in
     Request.delete_project ~callback ~project:name
   else raise (Project_not_found name)
+
+
+
+let save_conf callback (conftype, conf) =
+  let project = match conftype with
+    | Compile p -> Some p
+    | _ -> None in
+  let name = match conftype with
+    | Compile _ -> ".webuild" in
+  let content = Myparser.generate_of_conf conf in
+  let callback () =
+    (match conftype with
+      | Compile p ->
+          let conf = Myparser.parse_to_compile_conf conf in
+          set_project_conf p conf
+      | _ -> ());
+    callback (conftype, conf)
+  in
+  Request.save_conf ~callback ~name ~project ~content
+
+
+let compile callback project =
+  let cconf = get_project_conf project in
+  let src = List.rev (List.fold_left (fun acc filename ->
+    try
+      let file = get_file2 ~project ~filename in
+      let content = match get_content file.id with
+        | Some s -> Js.to_string s
+        | None -> "" in
+      (filename, content)::acc
+    with File_not_found2 (_,_) -> acc
+  ) [] cconf.Conftypes.files) in
+  let cconf = Mycompile.({ src ; output = cconf.Conftypes.output }) in
+  Mycompile.compile callback cconf

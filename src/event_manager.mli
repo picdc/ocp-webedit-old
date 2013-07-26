@@ -25,3 +25,8 @@ val switch_file : (int option * int, int) event
 
 val delete_file : (Filemanager.file, int) event
 val delete_project : (string, string) event
+
+
+val save_conf : (Conftypes.conftype * Conftypes.conf,
+                 Conftypes.conftype * Conftypes.conf) event
+val compile : (string * string, string) event

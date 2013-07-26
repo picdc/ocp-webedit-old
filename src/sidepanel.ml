@@ -147,18 +147,20 @@ let handler_compileopts_project () = handler (fun _ ->
   match !focused_project with
     | None -> assert false
     | Some project ->
+        let conf = Filemanager.get_project_conf project in
+        let default_files = String.concat " " conf.Conftypes.files in
         let callback files =
           let files = Myparser.split files ' ' in
           let callback output =
             let compile_conf = { Conftypes.files ; Conftypes.output } in
-            Ace_utils.console_debug
-              (Js.string (Myparser.generate_conf
-                            (Myparser.generate_compile_conf compile_conf)))
+            let conf = Myparser.generate_of_compile_conf compile_conf in
+            Event_manager.save_conf#trigger (Conftypes.Compile(project), conf)
           in
-          Dialog.Prompt_dialog.prompt "Output's name" "a.out" callback
+          Dialog.Prompt_dialog.prompt "Output's name"
+            conf.Conftypes.output callback
         in
         Dialog.Prompt_dialog.prompt "Compile file order (file1.ml file2.ml ...)"
-          "" callback;
+          default_files callback;
         Js._true)
 
 let handler_export_project () = handler (fun _ ->

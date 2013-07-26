@@ -48,29 +48,22 @@ return 1; } // Bad_term
 
 //Provides: caml_sys_file_exists
 //Requires: caml_global_data
-function caml_sys_file_exists (x) {console.log("~~~~~~~~~ TOPLEVEL CRITICAL~~~~~~~~");
-console.log("##### caml_sys_file_exists #####");
- return (caml_global_data.interfaces[x])?1:0; }
+function caml_sys_file_exists (x) { return (caml_global_data.interfaces[x])?1:0; }
 
 //Provides: caml_sys_open
 //Requires: MlString, caml_raise_sys_error, caml_global_data
 function caml_sys_open (x) {
-  console.log("~~~~~~~~~ TOPLEVEL CRITICAL ~~~~~~~~");
-console.log("##### caml_sys_open #####");
-var v = caml_global_data.interfaces[x];
-  if (v) {
-    var s = new MlString (v);
-    s.offset = 0;
-    return s;
-  } else
-    caml_raise_sys_error (x + ": no such file or directory");
+    var v = caml_global_data.interfaces[x];
+    if (v) {
+        var s = new MlString (v);
+        s.offset = 0;
+        return s;
+    } else
+        caml_raise_sys_error (x + ": no such file or directory");
 }
 
 //Provides: caml_ml_open_descriptor_in
-function caml_ml_open_descriptor_in (x) {
-    console.log("~~~~~~~~~ TOPLEVEL CRITICAL~~~~~~~~"); 
-    console.log("##### caml_ml_open_descriptor_in #####");
-    return x; }
+function caml_ml_open_descriptor_in (x) { return x; }
 
 //Provides: caml_ml_input
 //Require: caml_blit_string
