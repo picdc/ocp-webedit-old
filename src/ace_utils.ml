@@ -96,7 +96,7 @@ let alert str =
 let console_log str =
   Firebug.console##log(Js.string str)
 
-let console_debug o =
+let console o =
   Firebug.console##debug(o)
 
 let get_element_by_id id =
@@ -107,7 +107,7 @@ let query_selector el query =
   Js.Opt.get el##querySelector(Js.string query)
     (fun () -> 
       console_log "Failure QuerySelector on #Dom.element :";
-      console_debug el;
+      console el;
       failwith ("QuerySelector fail with : "^query))
 
 let query_selector_all el query =

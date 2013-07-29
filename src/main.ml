@@ -5,11 +5,27 @@
 open Ace_utils
 open Indent
 
+(* Widget contenant l'output du compilateur *)
+let make_compilation_widget () =
+  let div = Dom_html.createDiv Dom_html.document in
+  let comp_out = Dom_html.createPre Dom_html.document in
+  let byte_res = Dom_html.createButton Dom_html.document in
+  div##id <- Js.string "compilation";
+  comp_out##id <- Js.string "compilation_output";
+  byte_res##id <- Js.string "bytecode";
+  byte_res##innerHTML <- Js.string "Get compiled bytecode";
+  byte_res##disabled <- Js._true;
+  Dom.appendChild div comp_out;
+  Dom.appendChild div byte_res;
+  div
+
+
 (* Widget contenant le top-level et l'output *)
 let make_bottom_widget () =
   (* Création du widget pour le toplevel *)
   let toplevel = Mytoplevel.make_toplevel () in
   let output = Mytoplevel.make_output () in
+  let compilation = make_compilation_widget () in
   let div = Dom_html.createDiv Dom_html.document in
   let div_titles = Dom_html.createDiv Dom_html.document in
   let curr_tab = ref "toplevel" in
@@ -20,17 +36,23 @@ let make_bottom_widget () =
 
   let title_toplevel = Dom_html.createDiv Dom_html.document in
   let title_output = Dom_html.createDiv Dom_html.document in
+  let title_compilation = Dom_html.createDiv Dom_html.document in
 
   title_toplevel##innerHTML <- Js.string "Toplevel";
   title_toplevel##id <- Js.string "bottabs_toplevel_title";
   title_output##innerHTML <- Js.string "Output";
   title_output##id <- Js.string "bottabs_output_title";
+  title_compilation##innerHTML <- Js.string "Compilation";
+  title_compilation##id <- Js.string "bottabs_compilation_title";
   title_toplevel##className <- Js.string "bottabs_tab bottabs_tab_active";
   title_output##className <- Js.string "bottabs_tab bottabs_tab_noactive";
+  title_compilation##className <- Js.string "bottabs_tab bottabs_tab_noactive";
   toplevel##className <- Js.string "bottabs_content";
   toplevel##style##display <- Js.string "";
   output##style##display <- Js.string "none";
   output##className <- Js.string "bottabs_content";
+  compilation##className <- Js.string "bottabs_content";
+  compilation##style##display <- Js.string "none";
 
   title_toplevel##onclick <- Dom_html.handler (fun _ ->
     let id_old_tab = Format.sprintf "bottabs_%s_title" !curr_tab in
@@ -52,12 +74,35 @@ let make_bottom_widget () =
     output##style##display <- Js.string "";
     curr_tab := "output";
     Js._true);
+  let switch_to_compilation_tab () =
+    let id_old_tab = Format.sprintf "bottabs_%s_title" !curr_tab in
+    let old_tab = Ace_utils.get_element_by_id id_old_tab in
+    let old_content = Ace_utils.get_element_by_id !curr_tab in
+    old_tab##className <- Js.string "bottabs_tab bottabs_tab_noactive";
+    title_compilation##className <- Js.string "bottabs_tab bottabs_tab_active";
+    old_content##style##display <- Js.string "none";
+    compilation##style##display <- Js.string "";
+    curr_tab := "compilation"
+  in
+  title_compilation##onclick <- Dom_html.handler (fun _ ->
+    switch_to_compilation_tab ();
+    Js._true);
+
+  (* Ajout de l'event pour la compilation *)
+  Event_manager.compile#add_event (fun result ->
+    switch_to_compilation_tab ();
+    let container = query_selector compilation "#compilation_output" in
+    container##innerHTML <- Js.string result.Mycompile.stdout
+  );
 
   Dom.appendChild div_titles title_toplevel;
   Dom.appendChild div_titles title_output;
+  Dom.appendChild div_titles title_compilation;
   Dom.appendChild div toplevel;
   Dom.appendChild div output;
+  Dom.appendChild div compilation;
   div
+
 
 
 (* <div> contenant l'éditeur et tous les autres widgets
@@ -70,10 +115,11 @@ let main_content =
    let div_editor = Dom_html.createDiv doc in
    div_main##id <- Js.string "divmain";
    div_editor##id <- Js.string "editor";
-   div_main##style##display <- Js.string "none";
+   (* div_main##style##display <- Js.string "none"; *)
    div_global##style##minWidth <- Js.string "750px";
    let sidepanel = Sidepanel.make_sidepanel () in
    let centerpanel = Centerpanel.make_centerpanel () in
+   centerpanel##style##display <- Js.string "none";
    let bottabs = make_bottom_widget () in
    let div_tabs = Tabs.make_tabs () in
    Dom.appendChild div_global sidepanel;
@@ -137,8 +183,7 @@ let _ =
 
   (* Fonction callback pour le lancement du workspace *)
   let launch _ =
-    Dom.appendChild main_container global_conf.container;
-    disable_editor ()
+    Dom.appendChild main_container global_conf.container
   in
 
   (* Fonction callback pour la fermeture du workspace *)
@@ -148,14 +193,14 @@ let _ =
   in
 
   (* Fonction callback pour afficher le center panel *)
-  let editor_shown = ref false in
-  let switch_to_centerpanel _ =
-    if Filemanager.get_nb_files_opened () = 0 then
-      (let centerpanel = get_element_by_id "centerpanel" in
-       let divmain = get_element_by_id "divmain" in
-       centerpanel##style##display <- Js.string "";
-       divmain##style##display <- Js.string "none";
-       editor_shown := false)
+  let editor_shown = ref true in
+  let switch_to_centerpanel _ = ()
+    (* if Filemanager.get_nb_files_opened () = 0 then *)
+    (*   (let centerpanel = get_element_by_id "centerpanel" in *)
+    (*    let divmain = get_element_by_id "divmain" in *)
+    (*    centerpanel##style##display <- Js.string ""; *)
+    (*    divmain##style##display <- Js.string "none"; *)
+    (*    editor_shown := false) *)
   in
 
   (* Fonction callback pour afficher l'éditeur *)

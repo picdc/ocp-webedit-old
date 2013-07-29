@@ -81,7 +81,7 @@ let execute (str: string) =
       try !Toploop.parse_toplevel_phrase lb
       with End_of_file -> raise End_of_input
     in
-    Ace_utils.console_debug phr;
+    Ace_utils.console phr;
     ignore(Toploop.execute_phrase true ppf phr)
       (* (!Toploop.parse_use_file lb) *)
   with

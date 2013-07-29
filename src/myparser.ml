@@ -29,7 +29,6 @@ let parse_to_conf str =
     try split_first line '='
     with Not_found -> raise Bad_conf_file
   in 
-  Ace_utils.console_debug str;
   List.rev (List.fold_left
               (fun acc line -> if line <> "" then (get_var line)::acc
                 else acc) [] (split str '\n'))

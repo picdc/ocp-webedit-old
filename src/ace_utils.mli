@@ -27,7 +27,7 @@ val tabs_widget : string list -> Dom_html.element Js.t list -> int ->
 
 val alert : string -> unit
 val console_log : string -> unit
-val console_debug : 'a -> unit
+val console : 'a -> unit
 
 val get_element_by_id : string -> Dom_html.element Js.t
 val query_selector : Dom_html.element Js.t -> string -> Dom_html.element Js.t

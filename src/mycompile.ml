@@ -19,7 +19,7 @@ let compile callback opts =
   let msg = Json.output opts in
   worker##onmessage <- (fun ev ->
     let data: compile_result = Json.unsafe_input ev##data in
-    Ace_utils.console_debug data);
+    callback data);
   worker##postMessage(msg)
 
 let _ =

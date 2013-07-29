@@ -44,6 +44,11 @@ let opened_file_order = ref []
 
 let file_content = H.create 19
 
+let welcome_session = Ace.createEditSession "OCamlPro Banzaï !" "ace/mode/text"
+
+let set_welcome_session () =
+  (Ace_utils.editor())##setSession(welcome_session);
+  (Ace_utils.editor())##setReadOnly(Js.bool true)
 
 let get_current_file () =
   !current_file
@@ -142,6 +147,7 @@ let open_workspace callback () =
     *)
     (let callback ls =
        let projects_unloaded = ref (List.length ls) in
+       set_welcome_session ();
        let callback_onload_project project strconf =
          let conf = Myparser.parse_to_compile_conf
            (Myparser.parse_to_conf strconf) in
@@ -206,6 +212,8 @@ let close_file callback id =
   let file = get_file id in
   file.is_open <- false;
   decr nb_files_opened;
+  if !nb_files_opened = 0 then
+    set_welcome_session ();
   opened_file_order := List.filter (fun el -> el <> id) !opened_file_order;
   file.is_unsaved <- false;
   H.remove file_content id;

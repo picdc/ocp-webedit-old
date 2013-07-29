@@ -24,6 +24,7 @@ let get_class_filename file =
   in
   Js.string l
 
+
 let exist_tab id =
   H.mem htbl id
 
@@ -274,7 +275,7 @@ and close_tab id =
   H.remove htbl id;
   Dom.removeChild line tab;
   Dom.removeChild list tabli;
-  
+ 
   refresh_tabs ()
 
 

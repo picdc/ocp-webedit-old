@@ -109,7 +109,6 @@ let remove_required (rel, pos) =
   | _ -> ()
 
 let scan_file obj_name tolink =
-  Format.printf "Scanning files";
   let file_name =
     try
       find_in_path !load_path obj_name
@@ -133,7 +132,6 @@ let scan_file obj_name tolink =
       (* This is an archive file. Each unit contained in it will be linked
          in only if needed. *)
       let pos_toc = input_binary_int ic in    (* Go to table of contents *)
-      Format.printf "COMPILING CMA@.@.@.pos_toc : %d@." pos_toc;
       seek_in ic pos_toc;
       let toc = (input_value ic : library) in
       close_in ic;

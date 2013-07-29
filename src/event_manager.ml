@@ -41,9 +41,7 @@ let close_and_switch_action callback file =
     callback args;
     let prev_file_opt = Filemanager.get_prev_opened_file () in
     match prev_file_opt with
-    | Some prev_file -> 
-(      Ace_utils.console_debug prev_file;
-      switch_file#trigger prev_file.Filemanager.id)
+    | Some prev_file -> switch_file#trigger prev_file.Filemanager.id
     | None -> ()
   in
   Filemanager.close_file callback file
