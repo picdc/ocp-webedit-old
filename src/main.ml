@@ -1,6 +1,5 @@
 
-(**  TESTER RENOMMAGE
--> doit changer les id apres un renommage !!! **)
+(**  TypeError : null of getLen quand on a un exit 2 **)
 
 open Ace_utils
 open Indent
@@ -92,8 +91,18 @@ let make_bottom_widget () =
   Event_manager.compile#add_event (fun result ->
     switch_to_compilation_tab ();
     let container = query_selector compilation "#compilation_output" in
-    container##innerHTML <- Js.string result.Mycompile.stdout
-  );
+    container##innerHTML <- Js.string result.Mycompile.stdout;
+    let blob = Ace_utils.string_to_blob result.Mycompile.bytecode in
+    let button = Ace_utils.coerceTo_button
+      (query_selector compilation "#bytecode") in
+    if result.Mycompile.code = 0 then
+      (button##onclick <- Dom_html.handler (fun _ ->
+        Js.Unsafe.fun_call (Js.Unsafe.variable "saveAs")
+          [| Js.Unsafe.inject blob;
+             Js.Unsafe.inject (Js.string result.Mycompile.exec)|];
+        Js._true);
+       button##disabled <- Js._false)
+    else button##disabled <- Js._true);
 
   Dom.appendChild div_titles title_toplevel;
   Dom.appendChild div_titles title_output;

@@ -90,6 +90,21 @@ let init_container el = global_conf.container <- el
 
 (* Bindings des fonctions JS utiles *)
 
+type blob
+let string_to_blob s =
+  let open Typed_array in
+  let a = jsnew int8Array(String.length s) in
+  for i = 0 to (String.length s) - 1 do
+    set a i (int_of_char s.[i])
+  done;
+  let a = [| a##buffer |] in 
+  Js.Unsafe.fun_call (Js.Unsafe.variable "new Blob")
+    [| Js.Unsafe.inject a ; 
+       Js.Unsafe.inject
+         (Js.Unsafe.variable 
+            "{type: \"application/octet-stream;charset=utf-8\"}") |]
+
+
 let alert str =
   Dom_html.window##alert(Js.string str)
 
@@ -117,6 +132,11 @@ let coerceTo_input el =
   match Js.Opt.to_option (Dom_html.CoerceTo.input el) with
   | Some s -> s
   | None -> failwith "coerco_input failed"
+
+let coerceTo_button el =
+  match Js.Opt.to_option (Dom_html.CoerceTo.button el) with
+  | Some s -> s
+  | None -> failwith "coerco_button failed"
 
 let coerceTo_textarea el =
   match Js.Opt.to_option (Dom_html.CoerceTo.textarea el) with

@@ -24,6 +24,8 @@ val tabs_widget : string list -> Dom_html.element Js.t list -> int ->
   ?style_tabs:string -> ?style_content:string -> unit
   -> Dom_html.element Js.t
 
+type blob
+val string_to_blob : string -> blob
 
 val alert : string -> unit
 val console_log : string -> unit
@@ -34,6 +36,7 @@ val query_selector : Dom_html.element Js.t -> string -> Dom_html.element Js.t
 val query_selector_all : Dom_html.element Js.t -> string -> Dom_html.element Js.t list
 
 val coerceTo_input : Dom_html.element Js.t -> Dom_html.inputElement Js.t
+val coerceTo_button : Dom_html.element Js.t -> Dom_html.buttonElement Js.t
 val coerceTo_textarea : Dom_html.element Js.t -> Dom_html.textAreaElement Js.t
 val insert_first : #Dom.node Js.t -> #Dom.node Js.t -> unit
 val remove_node : #Dom.node Js.t -> unit

@@ -255,7 +255,9 @@ type compile_options = {
 
 type compile_result = {
   stdout : string ;
-  bytecode : string
+  exec : string ;
+  bytecode : string;
+  code: int
 }
 
 
@@ -297,7 +299,7 @@ let main data =
   print_endline (Format.sprintf "Compilation started at %s@."
                    (Js.to_string start_date##toString()));
 
-  begin
+  let code =
     try
       List.iter (fun (name, content) ->
         add_to_filemanager name content;
@@ -314,15 +316,16 @@ let main data =
       let end_date = jsnew Js.date_now() in
       print_endline (Format.sprintf "@.Compilation <span style=\"color:green; font-weight:bold;\">finished</span> at %s@." 
                        (Js.to_string end_date##toString()));
+      0
     with x ->
       Errors.report_error ppf x;
       let end_date = jsnew Js.date_now() in
       print_endline (Format.sprintf "@.Compilation <span style=\"color:red; font-weight:bold;\">exited abnormally</span> with code <span style=\"color:red; font-weight:bold;\">2</span> at %s"
-                       (Js.to_string end_date##toString()))
-  end;
+                       (Js.to_string end_date##toString()));
+      2 in
   let stdout = Js.to_string (Js.Unsafe.coerce Dom_html.window)##stdout in
   let bytecode = get_from_filemanager args.output in
-  let result = { stdout ; bytecode } in
+  let result = { stdout ; exec = args.output; bytecode ; code } in
   let msg = Json.output result in
   postMessage(msg)
 
