@@ -433,6 +433,10 @@ let save_conf callback (conftype, conf) =
 
 let compile callback project =
   let cconf = get_project_conf project in
+  let _get_file_content callback filename =
+    Request.get_content_of_file ~callback ~project ~filename
+  in
+  
   let src = List.rev (List.fold_left (fun acc filename ->
     try
       let file = get_file2 ~project ~filename in
