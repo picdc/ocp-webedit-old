@@ -248,6 +248,19 @@ let create_function user dirname =
 
 
 let project_create_function user project file =
+  (* Verification server-side, in case someone tries to send a request on its
+     own. Just a security matter.
+  *)
+  let _ = try Filename.chop_extension file 
+    with _ -> 
+      raise (Invalid_argument "Filename must contain an extension .ml or .mli")
+  in
+  
+  if not (Filename.check_suffix file "ml" 
+          || Filename.check_suffix file  "mli") then
+    raise (Invalid_argument 
+         ("Extension impossible, only .ml or .mli allowed"));
+
   let user = email_to_dirname user in
   let path = Format.sprintf "%s/%s/%s/%s"
     ppath user project file in
