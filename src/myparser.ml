@@ -1,8 +1,6 @@
 
 open Conftypes
 
-type conf = (string * string) list
-
 exception Bad_conf_file
 
 
@@ -26,11 +24,12 @@ let split str c =
   List.rev (aux [] str)
  
 
-let parse_conf str =
+let parse_to_conf str =
   let get_var line =
     try split_first line '='
     with Not_found -> raise Bad_conf_file
   in 
+  Ace_utils.console_debug str;
   List.rev (List.fold_left
               (fun acc line -> if line <> "" then (get_var line)::acc
                 else acc) [] (split str '\n'))
@@ -38,7 +37,7 @@ let parse_conf str =
     
 exception Unknown_conf_var of string
     
-let parse_compile_conf conf =
+let parse_to_compile_conf conf =
   let files = ref [] in
   let output = ref "" in
   let step (key, value) =
@@ -51,7 +50,7 @@ let parse_compile_conf conf =
   { files = !files; output = !output }
 
 
-let generate_conf conf =
+let generate_of_conf conf =
   let buf = Buffer.create 503 in
   List.iter (fun (key,value) ->
     let s = Format.sprintf "%s=%s\n" key value in
@@ -59,9 +58,8 @@ let generate_conf conf =
   Buffer.contents buf
 
 
-let generate_compile_conf cconf =
-  let first = List.hd cconf.files in
-  let files =
-    List.fold_left (fun acc el -> acc^","^el) first (List.tl cconf.files) in
+let generate_of_compile_conf cconf =
+  let files = List.filter (fun s -> s <> "") cconf.files in 
+  let files = String.concat "," files in
   ["files", files ; "output", cconf.output]
 

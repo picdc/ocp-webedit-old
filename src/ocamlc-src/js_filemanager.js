@@ -614,7 +614,7 @@ function add_to_output(x, s, p, l) {
         }
         return 0;
     } 
-    console.log("Ecriture dans : "+x.title);
+    //console.log("Ecriture dans : "+x.title);
     // mlstrdebug(x);
     //console.log("x = ");
     //mlstrdebug(x);
@@ -731,13 +731,13 @@ function caml_sys_file_exists (x) {
 
 //Provides: caml_ml_open_descriptor_in
 function caml_ml_open_descriptor_in (x) {
-    console.log("\n##### caml_ml_open_descriptor_in #####");
+    // console.log("\n##### caml_ml_open_descriptor_in #####");
     return x;
 }
 
 //Provides: caml_ml_open_descriptor_out
 function caml_ml_open_descriptor_out (x) {
-    console.log("\n##### caml_ml_open_descriptor_out #####");
+    // console.log("\n##### caml_ml_open_descriptor_out #####");
     return x;
 }
 
@@ -804,14 +804,14 @@ function caml_output_value (x, v, fl) {
 //Provides: caml_sys_get_argv const
 //Requires: MlString
 function caml_sys_get_argv () {
-    console.log("\n##### caml_sys_get_argv #####");
+    // console.log("\n##### caml_sys_get_argv #####");
     // caml_failwith("caml_sys_get_argv : not implemented");
     return [0, 0, 0];
 }
 
 //Provides: caml_sys_remove
 function caml_sys_remove() {
-    console.log("\n##### caml_sys_remove #####");
+    // console.log("\n##### caml_sys_remove #####");
     // caml_failwith("caml_sys_remove : not implemented");
     return 0;
 }

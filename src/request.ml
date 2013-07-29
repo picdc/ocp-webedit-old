@@ -96,7 +96,23 @@ let delete_file ~callback ~project ~filename =
 
 let export_project ~callback ~project =
   let msg = Format.sprintf "project=%s" project in
-  let callback _ =
-    
-    callback () in
+  let callback _ = callback () in
   pull_request ~callback ~meth:"POST" ~url:"export" ~asyn:true ~msg
+
+let save_conf ~callback ~name ?(project=None) ~content =
+  let msg = match project with
+    | None -> Format.sprintf "file=%s&content=%s"
+        name (Url.urlencode content)
+    | Some s -> Format.sprintf "project=%s&file=%s&content=%s"
+        s name (Url.urlencode content)
+  in
+  let callback _ = callback () in
+  pull_request ~callback ~meth:"POST" ~url:"conf/save" ~asyn:true ~msg
+
+
+let load_conf ~callback ~name ?(project=None) () =
+  let msg = match project with
+    | None -> Format.sprintf "file=%s" name
+    | Some s -> Format.sprintf "project=%s&file=%s" s name
+  in
+  pull_request ~callback ~meth:"POST" ~url:"conf/load" ~asyn:true ~msg

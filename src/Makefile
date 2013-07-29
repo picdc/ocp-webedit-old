@@ -2,10 +2,12 @@
 include Makefile.config
 include Makefile.rules
 
-SOURCES= ace.ml ace_utils.ml myparser.ml request.ml mycompile.ml filemanager.ml \
-	 event_manager.ml dialog.ml tabs.ml sidepanel.ml centerpanel.ml login.ml
-SOURCESI= ace.mli ace_utils.mli conftypes.mli myparser.mli request.mli \
-	 mycompile.mli filemanager.mli event_manager.mli dialog.mli tabs.mli
+SOURCES= webworker.ml ace.ml ace_utils.ml myparser.ml request.ml mycompile.ml \
+	filemanager.ml event_manager.ml dialog.ml tabs.ml sidepanel.ml \
+	centerpanel.ml login.ml
+SOURCESI= webworker.mli ace.mli ace_utils.mli conftypes.mli \
+	myparser.mli request.mli \
+	mycompile.mli filemanager.mli event_manager.mli dialog.mli tabs.mli
 
 OCPDIR= ocp-indent-src
 OCPLIB= -I $(OCPDIR) ocp_indent.cma
@@ -15,6 +17,8 @@ ACLIB= -I $(ACDIR) autocomplete.cma
 
 REDIR= ~/.opam/4.00.1/lib/re
 RELIB= -I $(REDIR) re.cma re_emacs.cma re_str.cma
+
+OCAMLCDIR= ocamlc-src
 
 TOPLVLDIR = toplevel-src
 TOPLVLLIB = -I $(TOPLVLDIR)/toplevellib-4.00.1 \
@@ -50,6 +54,10 @@ JSFLAGS = -pretty -linkall -toplevel $(INCLUDEJS_TOPLVL)
 all: depend main.js
 	cp main.js ../www/main.js
 
+ocamlc.js:
+	$(MAKE) -C $(OCAMLCDIR)
+	cp $(OCAMLCDIR)/$@ ../www/
+
 main.js: main.byte
 	js_of_ocaml $(INCLUDEJS) $<
 
@@ -80,6 +88,7 @@ clean:
 	rm -f *.byte a.out main.js .depend
 
 clean-all: clean
+	$(MAKE) -C $(OCAMLCDIR) clean
 	$(MAKE) -C $(OCPDIR) clean
 	$(MAKE) -C ./autocomplete clean
 

@@ -1,14 +1,11 @@
 
-type compile_opts = {
-  mutable fids : int list;
-  mutable output : string
-}
+open Conftypes
 
 type project = {
   name : string ;
   mutable opened : bool;
   mutable files : string list;
-  compile_opts : compile_opts
+  mutable compile_opts : compile_conf
 } 
 
 type file = {
@@ -32,6 +29,7 @@ val is_project_opened : string -> bool
 val is_file_opened : project:string -> filename:string -> bool
 val file_exists : project:string -> filename:string -> bool
 val project_exists : string -> bool
+val get_project_conf : string -> Conftypes.compile_conf
 
 val get_current_file : unit -> int option
 val get_nb_files_opened : unit -> int
@@ -59,3 +57,5 @@ val switch_file : (int option * int -> unit) -> int -> unit
    avec le fichier qui vient d'être supprimé *)
 val delete_file : (file -> unit) -> int -> unit
 val delete_project : (string -> unit) -> string -> unit
+val save_conf : (conftype * conf -> unit) -> conftype * conf -> unit
+val compile : (string * string -> unit) -> string -> unit

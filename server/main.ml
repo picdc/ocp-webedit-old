@@ -237,6 +237,7 @@ let project_load_function user project file =
   with _ -> raise Fail_shell_call
 
 let create_function user dirname =
+  print_endline "coucou";
   let user = email_to_dirname user in
   let path = Format.sprintf "%s/%s/%s" ppath user dirname in
   let res = Shell.cmd "mkdir" [ path ] in
@@ -321,15 +322,6 @@ let project_delete_function user project file =
     Shell.call ~stdout:(Shell.to_buffer b) [ res ]
   with _ -> raise Fail_shell_call
 
-(* let export_function user project = *)
-(*   let user = email_to_dirname user in *)
-(*   let proj_path = Format.sprintf "%s/%s/%s" ppath user project in *)
-(*   let filename = Format.sprintf "%s.tar.gz" proj_path in *)
-(*   let res = Shell.cmd "tar" [ "-zcf"; filename; proj_path ] in *)
-(*   Format.printf "tar -zcf %s %s@." filename proj_path; *)
-(*   Shell.call [ res ]; *)
-(*   filename, Format.sprintf "%s.tar.gz" project *)
-
 
 let export_function user project =
   let user = email_to_dirname user in
@@ -340,6 +332,34 @@ let export_function user project =
   let res = Shell.cmd "tar" [ "-zcf"; filename; "-C"; user_path; project ] in
   Shell.call [ res ];
   filename, Format.sprintf "%s.tar.gz" project
+
+let save_conf_function user name ?(project=None) content =
+  let user = email_to_dirname user in
+  let user_path = Format.sprintf "%s/%s" ppath user in
+  let path = match project with
+    | None -> Format.sprintf "%s/%s" user_path name
+    | Some s -> Format.sprintf "%s/%s/%s" user_path s name
+  in
+  print_endline path;
+  let res = Shell.cmd "echo" [ content ] in
+  let stdout = Shell.to_file ~append:false path in
+  try Shell.call ~stdout [ res ]
+  with _ -> raise Fail_shell_call
+
+let load_conf_function user name ?(project=None) () =
+  let user = email_to_dirname user in
+  let user_path = Format.sprintf "%s/%s" ppath user in
+  let path = match project with
+    | None -> Format.sprintf "%s/%s" user_path name
+    | Some s -> Format.sprintf "%s/%s/%s" user_path s name
+  in
+  let res = Shell.cmd "cat" [ path ] in
+  let b = Buffer.create 503 in
+  try
+    Shell.call ~stdout:(Shell.to_buffer b) [ res ];
+    Buffer.contents b
+  with _ -> raise Fail_shell_call
+
 
 let empty_dyn_service = 
   { Nethttpd_services.dyn_handler = (fun _ _ -> ());
@@ -564,6 +584,40 @@ let export_service =
 	(* with _ -> print_string "Error !" cgi *)
       ); }
   
+let save_conf_service = 
+  { empty_dyn_service with
+    Nethttpd_services.dyn_handler =
+      (fun _ cgi -> 
+	try
+          let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
+          let name = get_argument cgi "file" in
+	  let content = get_argument cgi "content" in
+          let project = 
+            try Some (get_argument cgi "project")
+            with _ -> None in
+	  save_conf_function user name ~project content;
+	  print_string "Saved !" cgi
+	with _ -> print_string "Error !" cgi
+      ); }
+
+let load_conf_service = 
+  { empty_dyn_service with
+    Nethttpd_services.dyn_handler =
+      (fun _ cgi -> 
+	try
+          let user = get_cookie cgi "user" in
+          let key = get_cookie cgi "key" in
+          verify_logged_user user key;
+          let name = get_argument cgi "file" in
+	  let project = 
+            try Some (get_argument cgi "project")
+            with _ -> None in
+	  let res = load_conf_function user name ~project () in
+	  print_string res cgi
+	with _ -> print_string "" cgi
+      ); }
 
 
 let my_factory =
@@ -583,10 +637,10 @@ let my_factory =
       "project_rename_service", project_rename_service;
       "delete_service", delete_service;
       "project_delete_service", project_delete_service;
-      "export_service", export_service 
-    ]
-
-    ()
+      "export_service", export_service;
+      "save_conf_service", save_conf_service;
+      "load_conf_service", load_conf_service
+    ] ()
 
 let main() =
   (* Create a parser for the standard Netplex command-line arguments: *)

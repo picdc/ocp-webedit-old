@@ -37,3 +37,11 @@ val delete_file :
 
 val export_project :
   callback:(unit -> unit) -> project:string -> unit
+
+val save_conf :
+  callback:(unit -> unit) -> name:string -> ?project:string option ->
+  content:string -> unit
+
+val load_conf :
+  callback:(string -> unit) -> name:string -> ?project:string option -> unit ->
+  unit
