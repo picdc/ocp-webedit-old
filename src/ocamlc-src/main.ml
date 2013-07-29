@@ -158,74 +158,122 @@ let default_output = function
   | Some s -> s
   | None -> Config.default_executable_name
 
-let main () =
-  let a = Sys.argv in
-  Array.iter (fun s -> print_endline s) a;
+(* let main () = *)
+(*   let a = Sys.argv in *)
+(*   Array.iter (fun s -> print_endline s) a; *)
   
-  try
-    Arg.parse Options.list anonymous usage;
-    if
-      List.length (List.filter (fun x -> !x)
-                      [make_archive;make_package;compile_only;output_c_object])
-        > 1
-    then
-      if !print_types then
-        fatal "Option -i is incompatible with -pack, -a, -output-obj"
-      else
-        fatal "Please specify at most one of -pack, -a, -c, -output-obj";
-    if !make_archive then begin
-      Compile.init_path();
+(*   try *)
+(*     Arg.parse Options.list anonymous usage; *)
+(*     if *)
+(*       List.length (List.filter (fun x -> !x) *)
+(*                       [make_archive;make_package;compile_only;output_c_object]) *)
+(*         > 1 *)
+(*     then *)
+(*       if !print_types then *)
+(*         fatal "Option -i is incompatible with -pack, -a, -output-obj" *)
+(*       else *)
+(*         fatal "Please specify at most one of -pack, -a, -c, -output-obj"; *)
+(*     if !make_archive then begin *)
+(*       Compile.init_path(); *)
 
-      Bytelibrarian.create_archive ppf  (List.rev !objfiles)
-                                   (extract_output !output_name);
-      Warnings.check_fatal ();
-    end
-    else if !make_package then begin
-      Compile.init_path();
-      let extracted_output = extract_output !output_name in
-      let revd = List.rev !objfiles in
-      Bytepackager.package_files ppf revd (extracted_output);
-      Warnings.check_fatal ();
-    end
-    else if not !compile_only && !objfiles <> [] then begin
-      let target =
-        if !output_c_object then
-          let s = extract_output !output_name in
-          if (Filename.check_suffix s Config.ext_obj
-            || Filename.check_suffix s Config.ext_dll
-            || Filename.check_suffix s ".c")
-          then s
-          else
-            fatal
-              (Printf.sprintf
-                 "The extension of the output file must be .c, %s or %s"
-                 Config.ext_obj Config.ext_dll
-              )
-        else
-          default_output !output_name
-      in
-      Compile.init_path();
-      Bytelink.link ppf (List.rev !objfiles) target;
-      Warnings.check_fatal ();
-    end;
-    exit 0
-  with x ->
-    Errors.report_error ppf x;
-    exit 2
-
-
-
-
-let dump content =
-  let uriContent =
-    Js.string ("data:application/octet-stream;charset=utf-8," ^
-           (Js.to_string  content)) in
-  let _ = Dom_html.window##open_(uriContent, Js.string "Try OCaml", Js.null) in
-  Dom_html.window##close ()
+(*       Bytelibrarian.create_archive ppf  (List.rev !objfiles) *)
+(*                                    (extract_output !output_name); *)
+(*       Warnings.check_fatal (); *)
+(*     end *)
+(*     else if !make_package then begin *)
+(*       Compile.init_path(); *)
+(*       let extracted_output = extract_output !output_name in *)
+(*       let revd = List.rev !objfiles in *)
+(*       Bytepackager.package_files ppf revd (extracted_output); *)
+(*       Warnings.check_fatal (); *)
+(*     end *)
+(*     else if not !compile_only && !objfiles <> [] then begin *)
+(*       let target = *)
+(*         if !output_c_object then *)
+(*           let s = extract_output !output_name in *)
+(*           if (Filename.check_suffix s Config.ext_obj *)
+(*             || Filename.check_suffix s Config.ext_dll *)
+(*             || Filename.check_suffix s ".c") *)
+(*           then s *)
+(*           else *)
+(*             fatal *)
+(*               (Printf.sprintf *)
+(*                  "The extension of the output file must be .c, %s or %s" *)
+(*                  Config.ext_obj Config.ext_dll *)
+(*               ) *)
+(*         else *)
+(*           default_output !output_name *)
+(*       in *)
+(*       Compile.init_path(); *)
+(*       Bytelink.link ppf (List.rev !objfiles) target; *)
+(*       Warnings.check_fatal (); *)
+(*     end; *)
+(*     exit 0 *)
+(*   with x -> *)
+(*     Errors.report_error ppf x; *)
+(*     exit 2 *)
 
 
 
-let my_compile name =
+(* TO BE DELETED *)
+(* let dump content = *)
+(*   let uriContent = *)
+(*     Js.string ("data:application/octet-stream;charset=utf-8," ^ *)
+(*            (Js.to_string  content)) in *)
+(*   let _ = Dom_html.window##open_(uriContent, Js.string "Try OCaml", Js.null) in *)
+(*   Dom_html.window##close () *)
+
+
+let onmessage f =
+  (Js.Unsafe.coerce Dom_html.window)##onmessage <- Js.wrap_callback f
+
+let postMessage msg =
+  (Js.Unsafe.coerce Dom_html.window)##postMessage(msg)
+
+
+(* let my_compile name obj = *)
+(*   Clflags.preprocessor := None; *)
+(*   Clflags.dump_parsetree := false; *)
+(*   Clflags.dump_rawlambda := false; *)
+(*   Clflags.dump_lambda := false; *)
+(*   Clflags.dump_instr := false; *)
+(*   Clflags.custom_runtime := false; *)
+(*   Clflags.no_std_include := true; *)
+
+(*   objfiles := obj; *)
+(*   process_file ppf name; *)
+(*   Compile.init_path(); *)
+(*   Bytelink.link ppf (List.rev !objfiles) "toto.byte"; *)
+(*   Warnings.check_fatal () *)
+
+
+(* MUST BE Mycompile.compile_options ; TO BE DELETED *)
+type compile_options = {
+  src : (string * string) list ;
+  output : string
+}
+
+type compile_result = {
+  stdout : string ;
+  bytecode : string
+}
+
+
+let add_to_filemanager (name: string) (content: string) : unit =
+  ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "add_to_filemanager") 
+            [| Js.Unsafe.inject (Js.string name) ;
+               Js.Unsafe.inject content |])
+
+let reset_filemanager () : unit =
+  ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "reset_filemanager")  [| |])
+
+let get_from_filemanager (name: string) : string =
+  Js.Unsafe.fun_call (Js.Unsafe.variable "get_from_filemanager") 
+            [| Js.Unsafe.inject (Js.string name) |]
+
+
+let mycompile_init () =
+  reset_filemanager ();
   Clflags.preprocessor := None;
   Clflags.dump_parsetree := false;
   Clflags.dump_rawlambda := false;
@@ -233,26 +281,35 @@ let my_compile name =
   Clflags.dump_instr := false;
   Clflags.custom_runtime := false;
   Clflags.no_std_include := true;
+  objfiles := []
 
-  objfiles := [];
-  process_file ppf name;
+(* TO DO WITHOUT UNSAFE *)
+let main data =
+  let args = Json.unsafe_input data in
+
+  mycompile_init ();
+  List.iter (fun (name, content) ->
+    add_to_filemanager name content;
+    process_file ppf name
+  ) args.src;
   Compile.init_path();
-  Bytelink.link ppf (List.rev !objfiles) "toto.byte";
-  Warnings.check_fatal ()
+  Bytelink.link ppf (List.rev !objfiles) args.output;
+  Warnings.check_fatal ();
+print_endline "Je suis un print_endline";
+  let stdout = Js.to_string (Js.Unsafe.coerce Dom_html.window)##stdout in
+  let bytecode = get_from_filemanager args.output in
+  let result = { stdout ; bytecode } in
+  let msg = Json.output result in
+  postMessage(msg)
 
-let onmessage f =
-  (Js.Unsafe.coerce Dom_html.window)##onmessage <- Js.wrap_callback f
-
-let postMessage msg =
-  (Js.Unsafe.coerce Dom_html.window)##postMessage(Js.string msg)
 
 let _ =
-  onmessage (fun ev -> postMessage (Js.to_string ev##data)) 
+  onmessage (fun ev -> main ev##data) 
 
 (* TO BE DELETED *)
-let _ =
-  (Js.Unsafe.coerce Dom_html.window)##mycompile <- Js.wrap_callback
-    my_compile;
-  (Js.Unsafe.coerce Dom_html.window)##dump <- Js.wrap_callback dump
+(* let _ = *)
+(*   (Js.Unsafe.coerce Dom_html.window)##mycompile <- Js.wrap_callback *)
+(*     my_compile; *)
+(*   (Js.Unsafe.coerce Dom_html.window)##dump <- Js.wrap_callback dump *)
 (* END TO BE DELETED *)
 

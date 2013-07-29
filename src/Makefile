@@ -49,9 +49,9 @@ INCLUDEJS=-I . -I $(OCPDIR) -I $(ACDIR) -I $(REDIR) $(JSFLAGS) \
 
 JSFLAGS = -pretty -linkall -toplevel $(INCLUDEJS_TOPLVL)
 
-.PHONY: depend
+.PHONY: depend ocamlc.js
 
-all: depend main.js ocamlc.js
+all: depend main.js
 	cp main.js ../www/main.js
 
 ocamlc.js:

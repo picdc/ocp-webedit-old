@@ -58,4 +58,4 @@ val switch_file : (int option * int -> unit) -> int -> unit
 val delete_file : (file -> unit) -> int -> unit
 val delete_project : (string -> unit) -> string -> unit
 val save_conf : (conftype * conf -> unit) -> conftype * conf -> unit
-val compile : (string * string -> unit) -> string -> unit
+val compile : (Mycompile.compile_result -> unit) -> string -> unit

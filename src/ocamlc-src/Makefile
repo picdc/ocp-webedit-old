@@ -11,7 +11,7 @@ INC= ocamlcommon.cma ocamlbytecomp.cma
 INCLUDES= -I $(COMPLIBS) $(INC)
 INCLUDEJS= -I $(COMPLIBS) -I ../toplevel-src/cmicomp \
 	-I ~/.opam/4.00.1/lib/js_of_ocaml_compiler-libs/ code.cmi \
-	stdlib_cma.js js_filemanager.js
+	stdlib_cma.js ocp-runtime.js
 
 JSFLAGS = -pretty -noinline -toplevel
 JSPKGS = -package js_of_ocaml,js_of_ocaml.syntax,js_of_ocaml_compiler,js_of_ocaml_compiler-libs \

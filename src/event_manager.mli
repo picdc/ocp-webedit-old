@@ -29,4 +29,4 @@ val delete_project : (string, string) event
 
 val save_conf : (Conftypes.conftype * Conftypes.conf,
                  Conftypes.conftype * Conftypes.conf) event
-val compile : (string * string, string) event
+val compile : (Mycompile.compile_result, string) event
