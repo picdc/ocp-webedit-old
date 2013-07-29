@@ -143,6 +143,14 @@ let handler_delete_project () = handler (fun _ ->
       Event_manager.delete_project#trigger project;
       Js._true)
 
+let handler_compile_project () = handler (fun _ ->
+  match !focused_project with
+    | None -> assert false
+    | Some project ->
+        Event_manager.compile#trigger project;
+        Js._true
+)
+
 let handler_compileopts_project () = handler (fun _ ->
   match !focused_project with
     | None -> assert false
@@ -185,6 +193,7 @@ let handler_import_file () =
 
 let right_clic_dialog_opened_project =
   let lstr = [ "Create new file" ; 
+               "Compile project";
                "Change compile options" ;
                "Rename project" ; 
                "Delete project"; 
@@ -198,7 +207,8 @@ let right_clic_dialog_opened_project =
 	  (create_file project);
         Js._true)
   in		 
-  let lhandler = [ handler_new_file ; 
+  let lhandler = [ handler_new_file ;
+                   handler_compile_project ();
                    handler_compileopts_project ();
                    handler_rename_project ();
 		   handler_delete_project ();

@@ -247,7 +247,7 @@ let postMessage msg =
   (Js.Unsafe.coerce Dom_html.window)##postMessage(Js.string msg)
 
 let _ =
-  onmessage (fun _ -> postMessage "pouet") 
+  onmessage (fun ev -> postMessage (Js.to_string ev##data)) 
 
 (* TO BE DELETED *)
 let _ =

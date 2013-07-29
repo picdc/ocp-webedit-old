@@ -19,7 +19,7 @@ myrun:
 clean:
 	$(MAKE) -C src clean-all
 #	$(MAKE) -C server clean
-	rm -rf www/main.js
+	rm -rf www/main.js www/ocamlc.js
 
 
 .PHONY: all src server run clean

@@ -51,7 +51,7 @@ JSFLAGS = -pretty -linkall -toplevel $(INCLUDEJS_TOPLVL)
 
 .PHONY: depend
 
-all: depend main.js
+all: depend main.js ocamlc.js
 	cp main.js ../www/main.js
 
 ocamlc.js:
