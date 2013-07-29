@@ -433,18 +433,44 @@ let save_conf callback (conftype, conf) =
 
 let compile callback project =
   let cconf = get_project_conf project in
-  let _get_file_content callback filename =
-    Request.get_content_of_file ~callback ~project ~filename
+  let comp_tbl = H.create 19 in  
+  
+  (* Fonction qui produit la liste des fichiers avec leur contenu et l'envoi
+     pour compiler *)
+  let callback_onload () =
+    let src = List.rev (List.fold_left (fun acc filename ->
+      try
+        let file = get_file2 ~project ~filename in
+        let content = match get_content file.id with
+        | Some s -> Js.to_string s
+        | None -> H.find comp_tbl filename in
+        (filename, content)::acc
+      with File_not_found2 (_,_) -> acc
+    ) [] cconf.Conftypes.files) in
+    let cconf = Mycompile.({ src ; output = cconf.Conftypes.output }) in
+    Mycompile.compile callback cconf 
   in
   
-  let src = List.rev (List.fold_left (fun acc filename ->
-    try
+  (* Lorsque le contenu doit être chargé depuis le serveur, on appelle
+     directement cette fonction, qui vérifie si tous les fichiers ont bien été
+     chargé grâce à un compteur et appelle la fonction qui envoie au compilateur *)
+  let file_number = ref (List.length cconf.Conftypes.files) in
+  let get_file_content filename =
+    let callback c =
+      H.add comp_tbl filename c;
+      if !file_number <= 0 then
+        callback_onload ()
+    in
+    Request.get_content_of_file ~callback ~project ~filename
+  in
+
+  (* Vérifie si chaque fichier est en mémoire, si non appelle la fonction qui
+     charge le contenu et s'occupera d'appeler la compilation si tout a été
+     chargé *)
+  List.iter (fun filename ->
       let file = get_file2 ~project ~filename in
-      let content = match get_content file.id with
-        | Some s -> Js.to_string s
-        | None -> "" in
-      (filename, content)::acc
-    with File_not_found2 (_,_) -> acc
-  ) [] cconf.Conftypes.files) in
-  let cconf = Mycompile.({ src ; output = cconf.Conftypes.output }) in
-  Mycompile.compile callback cconf
+      decr file_number;
+      match get_content file.id with
+        | Some s -> H.add comp_tbl filename (Js.to_string s)
+        | None -> get_file_content filename
+  ) cconf.Conftypes.files
