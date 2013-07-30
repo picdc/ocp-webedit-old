@@ -65,6 +65,8 @@
 #compilation_output {
     height:200px;
     margin: 0px;
+    white-space: pre-wrap;
+    overflow: auto;
 }
 
 .dialog_right_clic_dialog {

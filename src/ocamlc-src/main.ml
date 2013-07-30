@@ -285,6 +285,8 @@ let mycompile_init () =
   Clflags.dump_instr := false;
   Clflags.custom_runtime := false;
   Clflags.no_std_include := true;
+  Bytelink.clear_crc_interfaces ();     (* A REMOVE ? *)
+  Bytelink.clear_implementations_defines ();     (* A REMOVE ? *)
   objfiles := []
 
 let objfiles_to_string () =

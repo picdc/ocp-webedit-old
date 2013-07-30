@@ -165,6 +165,9 @@ let scan_file obj_name tolink =
 let crc_interfaces = Consistbl.create ()
 let implementations_defined = ref ([] : (string * string) list)
 
+let clear_crc_interfaces () = Consistbl.clear crc_interfaces
+let clear_implementations_defines () = implementations_defined := []
+
 let check_consistency ppf file_name cu =
   begin try
     List.iter
@@ -282,17 +285,6 @@ let link_bytecode ppf tolink exec_name standalone =
                  0o777 exec_name in
   try
     let standalone = false in
-    if standalone then begin
-      (* Copy the header *)
-      try
-        let header =
-          if String.length !Clflags.use_runtime > 0
-          then "camlheader_ur" else "camlheader" ^ !Clflags.runtime_variant in
-        let inchan = open_in_bin (find_in_path !load_path header) in
-        copy_file inchan outchan;
-        close_in inchan
-      with Not_found | Sys_error _ -> ()
-    end;
     Bytesections.init_record outchan;
     (* The path to the bytecode interpreter (in use_runtime mode) *)
     if String.length !Clflags.use_runtime > 0 then begin
@@ -305,30 +297,13 @@ let link_bytecode ppf tolink exec_name standalone =
     Symtable.init();
     Consistbl.clear crc_interfaces;
     let sharedobjs = List.map Dll.extract_dll_name !Clflags.dllibs in
-    if standalone then begin
-      (* Initialize the DLL machinery *)
-      Dll.init_compile !Clflags.no_std_include;
-      Dll.add_path !load_path;
-      try Dll.open_dlls Dll.For_checking sharedobjs
-      with Failure reason -> raise(Error(Cannot_open_dll reason))
-    end;
     let output_fun = output_string outchan
     and currpos_fun () = pos_out outchan - start_code in
     List.iter (link_file ppf output_fun currpos_fun) tolink;
-    if standalone then Dll.close_all_dlls();
     (* The final STOP instruction *)
     output_byte outchan Opcodes.opSTOP;
     output_byte outchan 0; output_byte outchan 0; output_byte outchan 0;
     Bytesections.record outchan "CODE";
-    (* DLL stuff *)
-    if standalone then begin
-      (* The extra search path for DLLs *)
-      output_stringlist outchan !Clflags.dllpaths;
-      Bytesections.record outchan "DLPT";
-      (* The names of the DLLs *)
-      output_stringlist outchan sharedobjs;
-      Bytesections.record outchan "DLLS"
-    end;
     (* The names of all primitives *)
     Symtable.output_primitive_names outchan;
     Bytesections.record outchan "PRIM";

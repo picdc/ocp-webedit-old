@@ -20,6 +20,9 @@ val check_consistency: Format.formatter -> string -> Cmo_format.compilation_unit
 
 val extract_crc_interfaces: unit -> (string * Digest.t) list
 
+val clear_crc_interfaces: unit -> unit
+val clear_implementations_defines: unit -> unit
+
 type error =
     File_not_found of string
   | Not_an_object_file of string

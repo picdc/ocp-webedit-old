@@ -1,4 +1,15 @@
 
+BUGS =
+  - quand on delete qqch, il faut signaler que le fichier a été édité
+
+
+AMELIORATIONS =
+  - sauvegarder les fichiers compilés à la compilation
+  - runtime.js -> mieux gérer les fichiers (faire un champ opened et vérifier
+    a la lecture/ecriture que le flux est ouvert puis faire les primitives de 
+    close_in (ou destroy la copie pour le flux in) et out
+
+
 * Ctrl-S
   -> pouvoir le faire pas que quand l'éditeur est focused
 
