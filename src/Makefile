@@ -4,10 +4,10 @@ include Makefile.rules
 
 SOURCES= webworker.ml ace.ml global.ml myutils.ml myparser.ml request.ml \
 	mycompile.ml filemanager.ml eventmanager.ml dialog.ml tabs.ml \
-	sidepanel.ml centerpanel.ml login.ml
+	sidepanel.ml centerpanel.ml login.ml errors_lexer.mll
 SOURCESI= webworker.mli ace.mli global.mli myutils.mli conftypes.mli \
 	myparser.mli request.mli mycompile.mli filemanager.mli \
-	eventmanager.mli dialog.mli tabs.mli
+	eventmanager.mli dialog.mli tabs.mli errors_format.mli
 
 OCPDIR= ocp-indent-src
 OCPLIB= -I $(OCPDIR) ocp_indent.cma
@@ -24,7 +24,8 @@ TOPLVLDIR = toplevel-src
 TOPLVLLIB = -I $(TOPLVLDIR)/toplevellib-4.00.1 \
 	 ocamlcommon.cma ocamlbytecomp.cma ocamltoplevel.cma
 
-OBJS= $(SOURCES:.ml=.cmo)
+SOURCES1= $(SOURCES:.mll=.ml)
+OBJS= $(SOURCES1:.ml=.cmo)
 OBJSI= $(SOURCESI:.mli=.cmi)
 
 LIBS= $(OCPLIB) $(RELIB) $(ACLIB) $(TOPLVLLIB)
@@ -66,7 +67,7 @@ completion_js.cmo:
 	$(MAKE) -C $(ACDIR)
 	$(CAMLJS) -c $(ACLIB) $*.ml
 
-$(OBJS): $(OBJSI) $(SOURCES)
+$(OBJS): $(OBJSI) $(SOURCES1)
 	$(CAMLJS) -c $*.ml
 
 $(OBJSI): $(SOURCESI)
@@ -83,7 +84,7 @@ clean-all: clean
 
 
 depend: $(SOURCES)
-	$(CAMLDEP) -pp $(PP) *.mli *.ml > .depend
+	$(CAMLDEP) -pp $(PP) *.mll *.mli *.ml > .depend
 
 -include .depend
 
