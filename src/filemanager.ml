@@ -458,6 +458,7 @@ let compile callback project =
   let get_file_content filename =
     let callback c =
       H.add comp_tbl filename c;
+      decr file_number;
       if !file_number <= 0 then
         callback_onload ()
     in
@@ -469,8 +470,10 @@ let compile callback project =
      chargé *)
   List.iter (fun filename ->
       let file = get_file2 ~project ~filename in
-      decr file_number;
       match get_content file.id with
-        | Some s -> H.add comp_tbl filename (Js.to_string s)
+        | Some s -> H.add comp_tbl filename (Js.to_string s);
+            decr file_number;
+            if !file_number <= 0 then
+              callback_onload ()
         | None -> get_file_content filename
   ) cconf.Conftypes.files
