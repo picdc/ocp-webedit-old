@@ -6,7 +6,7 @@ SOURCES= webworker.ml ace.ml ace_utils.ml myparser.ml request.ml mycompile.ml \
 	filemanager.ml event_manager.ml dialog.ml tabs.ml sidepanel.ml \
 	centerpanel.ml login.ml errors_lexer.mll
 SOURCESI= webworker.mli ace.mli ace_utils.mli conftypes.mli \
-	myparser.mli request.mli \
+	myparser.mli request.mli errors_format.mli \
 	mycompile.mli filemanager.mli event_manager.mli dialog.mli tabs.mli
 
 OCPDIR= ocp-indent-src
@@ -78,7 +78,7 @@ completion_js.cmo:
 	$(MAKE) -C $(ACDIR)
 	$(CAMLJS) -c $(ACLIB) $*.ml
 
-$(OBJS): $(OBJSI) $(SOURCES)
+$(OBJS): $(OBJSI) $(SOURCES1)
 	$(CAMLJS) -c $*.ml
 
 $(OBJSI): $(SOURCESI)
@@ -95,7 +95,7 @@ clean-all: clean
 
 
 depend: $(SOURCES)
-	$(CAMLDEP) -pp $(PP) *.mli *.ml > .depend
+	$(CAMLDEP) -pp $(PP) *.mll *.mli *.ml > .depend
 
 -include .depend
 
