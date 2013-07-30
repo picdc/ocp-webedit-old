@@ -49,7 +49,6 @@ let add_item_file container file =
   icon##alt <- Js.string "-";
   icon##src <- Js.string "./icons/file_medium.png";
   div##id <- Js.string (Format.sprintf "center_file_num%d" id);
-  Ace_utils.console_debug (div##id);
   div##className <- Js.string "center_file";
   name##innerHTML <- Js.string filename;
   name##className <- Js.string "center_file_name";

@@ -6,7 +6,9 @@ type compile_options = {
 
 type compile_result = {
   stdout : string ;
-  bytecode : string
+  exec : string ;
+  bytecode : string;
+  code: int
 }
 
 val compile : (compile_result -> unit) ->  compile_options -> unit

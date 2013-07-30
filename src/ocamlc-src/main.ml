@@ -255,7 +255,9 @@ type compile_options = {
 
 type compile_result = {
   stdout : string ;
-  bytecode : string
+  exec : string ;
+  bytecode : string;
+  code: int
 }
 
 
@@ -273,6 +275,7 @@ let get_from_filemanager (name: string) : string =
 
 
 let mycompile_init () =
+  (Js.Unsafe.coerce Dom_html.window)##stdout <- Js.string "";
   reset_filemanager ();
   Clflags.preprocessor := None;
   Clflags.dump_parsetree := false;
@@ -283,22 +286,46 @@ let mycompile_init () =
   Clflags.no_std_include := true;
   objfiles := []
 
+let objfiles_to_string () =
+  match String.concat " " (List.rev !objfiles) with
+    | "" -> ""
+    | s -> s^" "
+
 (* TO DO WITHOUT UNSAFE *)
 let main data =
   let args = Json.unsafe_input data in
-
   mycompile_init ();
-  List.iter (fun (name, content) ->
-    add_to_filemanager name content;
-    process_file ppf name
-  ) args.src;
-  Compile.init_path();
-  Bytelink.link ppf (List.rev !objfiles) args.output;
-  Warnings.check_fatal ();
-print_endline "Je suis un print_endline";
+  let start_date = jsnew Js.date_now() in
+  print_endline (Format.sprintf "Compilation started at %s@."
+                   (Js.to_string start_date##toString()));
+
+  let code =
+    try
+      List.iter (fun (name, content) ->
+        add_to_filemanager name content;
+        print_endline (Format.sprintf "ocamlc -c %s%s"
+                         (objfiles_to_string()) name);
+        process_file ppf name
+      ) args.src;
+      Compile.init_path();
+      print_endline (Format.sprintf "ocamlc -o %s %s"
+                       args.output (objfiles_to_string()));
+      Bytelink.link ppf (List.rev !objfiles) args.output;
+      Warnings.check_fatal ();
+
+      let end_date = jsnew Js.date_now() in
+      print_endline (Format.sprintf "@.Compilation <span style=\"color:green; font-weight:bold;\">finished</span> at %s@." 
+                       (Js.to_string end_date##toString()));
+      0
+    with x ->
+      Errors.report_error ppf x;
+      let end_date = jsnew Js.date_now() in
+      print_endline (Format.sprintf "@.Compilation <span style=\"color:red; font-weight:bold;\">exited abnormally</span> with code <span style=\"color:red; font-weight:bold;\">2</span> at %s"
+                       (Js.to_string end_date##toString()));
+      2 in
   let stdout = Js.to_string (Js.Unsafe.coerce Dom_html.window)##stdout in
   let bytecode = get_from_filemanager args.output in
-  let result = { stdout ; bytecode } in
+  let result = { stdout ; exec = args.output; bytecode ; code } in
   let msg = Json.output result in
   postMessage(msg)
 
