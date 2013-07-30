@@ -380,8 +380,7 @@ let login_service =
           let u = Nethttp.Cookie.make "user" user in
           let k = Nethttp.Cookie.make "key" key in
           send_cookies [u; k] cgi
-	with
-	  _ -> Format.printf "OUps@."; print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let logout_service =
@@ -393,8 +392,7 @@ let logout_service =
           H.remove logged_users user;
           Format.printf "Logged out@.";
           print_string "Logged_out" cgi
-	with
-	  _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 
@@ -423,8 +421,7 @@ let project_list_service =
 	  let project = get_argument cgi "project" in
 	  let res = project_list_function user project in
 	  print_string res cgi
-	with
-	  _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 
@@ -440,8 +437,7 @@ let project_load_service =
 	  let file = get_argument cgi "file" in
 	  let res = project_load_function user project file in
 	  print_string res cgi
-	with
-	  _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let create_service =
@@ -455,8 +451,7 @@ let create_service =
 	  let project = get_argument cgi "name" in
 	  let _ = create_function user project in
 	  print_string "Project created successfully" cgi
-	with
-	  _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let project_create_service =
@@ -471,8 +466,8 @@ let project_create_service =
 	  let file = get_argument cgi "name" in
 	  let _ = project_create_function user project file in
 	  print_string "File created successfully" cgi
-	with
-	  _ -> print_string "Error !" cgi
+	
+	with e -> raise e
       ); }
 
 let project_save_service =
@@ -488,8 +483,7 @@ let project_save_service =
 	  let content = get_argument cgi "content" in
 	  project_save_function user project file content;
 	  print_string "Saved" cgi
-	with
-	  _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let project_import_service =
@@ -505,8 +499,7 @@ let project_import_service =
 	  let content = get_argument cgi "content" in
 	  project_import_function user project file content;
 	  print_string "Imported" cgi
-	with
-	  _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let rename_service = 
@@ -521,7 +514,7 @@ let rename_service =
 	  let new_name = get_argument cgi "newname" in
 	  rename_function user project new_name;
 	  print_string "Renamed" cgi
-	with _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let project_rename_service = 
@@ -537,8 +530,7 @@ let project_rename_service =
 	  let new_name = get_argument cgi "newname" in
 	  project_rename_function user project file new_name;
 	  print_string "Renamed" cgi
-	with
-	  _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let delete_service = 
@@ -552,7 +544,7 @@ let delete_service =
 	  let project = get_argument cgi "project" in
 	  delete_function user project;
 	  print_string "Deleted" cgi
-	with _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let project_delete_service = 
@@ -567,7 +559,7 @@ let project_delete_service =
 	  let file = get_argument cgi "file" in
 	  project_delete_function user project file;
 	  print_string "Deleted" cgi
-	with _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let export_service = 
@@ -599,7 +591,7 @@ let save_conf_service =
             with _ -> None in
 	  save_conf_function user name ~project content;
 	  print_string "Saved !" cgi
-	with _ -> print_string "Error !" cgi
+	with e -> raise e
       ); }
 
 let load_conf_service = 
@@ -616,7 +608,7 @@ let load_conf_service =
             with _ -> None in
 	  let res = load_conf_function user name ~project () in
 	  print_string res cgi
-	with _ -> print_string "" cgi
+	with e -> raise e
       ); }
 
 
