@@ -15,6 +15,7 @@ end
 
 module Prompt_dialog : sig
 
-  val prompt : string -> string -> (string -> unit) -> unit 
+  val prompt : title:string -> labels:string list -> names:string list ->
+    defaults:string list -> callback:((string * string) list -> unit) -> unit 
 
 end

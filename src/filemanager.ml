@@ -424,7 +424,7 @@ let delete_project callback name =
 let save_conf callback (conftype, conf) =
   let project = match conftype with
     | Compile p -> Some p
-    | _ -> None in
+    (* | _ -> None *) in
   let name = match conftype with
     | Compile _ -> ".webuild" in
   let content = Myparser.generate_of_conf conf in
@@ -433,7 +433,7 @@ let save_conf callback (conftype, conf) =
       | Compile p ->
           let conf = Myparser.parse_to_compile_conf conf in
           set_project_conf p conf
-      | _ -> ());
+      (* | _ -> () *));
     callback (conftype, conf)
   in
   Request.save_conf ~callback ~name ~project ~content

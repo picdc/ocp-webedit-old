@@ -47,16 +47,73 @@ end
 
 
 
+
+
 module Prompt_dialog = struct
 
-  let prompt title default f =
-    let res = Dom_html.window##prompt(Js.string title, Js.string default) in
-    match Js.Opt.to_option res with
-      | None -> ()
-      | Some s -> f (Js.to_string s)
-    (* try *)
-    (*   let res = Js.to_string res in *)
-    (*   f res *)
-    (* with _ -> () *)
+  let prompt ~title ~labels ~names ~defaults ~callback =
+    assert ((List.length labels) = (List.length defaults));
+    assert ((List.length labels) = (List.length names));
+    let div = createDiv document in
+    let container = createDiv document in
+    let background = createDiv document in
+    let c_title = createDiv document in
+    let c_content = createTable document in
+    let c_labels = Array.init (List.length labels)
+      (fun _ -> createSpan document) in (* Don't use Array.make ! *)
+    let c_inputs = Array.init (List.length defaults)
+      (fun _ -> createInput document) in
+    let b_cancel = createButton document in
+    let b_submit = createButton document in
+
+    div##className <- Js.string "dialog_prompt";
+    container##className <- Js.string "dialog_prompt_container";
+    background##className <- Js.string "dialog_prompt_background";
+    c_title##className <- Js.string "dialog_prompt_title";
+    c_title##innerHTML <- Js.string title;
+    c_content##className <- Js.string "dialog_prompt_content";
+
+    let hide () =
+      Dom.removeChild document##body div;
+      Dom.removeChild document##body background in
+    let submit () = 
+      let args = List.rev_map2 (fun n i -> (n, Js.to_string i##value))
+        names (Array.to_list c_inputs) in
+      hide ();
+      callback args in
+
+    b_submit##innerHTML <- Js.string "Submit";
+    b_submit##className <- Js.string "dialog_prompt_button_submit";
+    b_submit##onclick <- handler (fun _ -> submit(); Js._true);
+    b_cancel##innerHTML <- Js.string "Cancel";
+    b_cancel##className <- Js.string "dialog_prompt_button_cancel";
+    b_cancel##onclick <- handler (fun _ -> hide(); Js._true);
+
+    ignore (List.fold_left2 (fun i label default ->
+      let c_tr = createTr document in
+      let c_td1 = createTd document in
+      let c_td2 = createTd document in
+
+      c_labels.(i)##innerHTML <- Js.string label;
+      c_labels.(i)##className <- Js.string "dialog_prompt_label";
+      c_inputs.(i)##value <- Js.string default;
+      c_inputs.(i)##className <- Js.string "dialog_prompt_input";
+
+      Dom.appendChild c_td1 c_labels.(i);
+      Dom.appendChild c_td2 c_inputs.(i);
+      Dom.appendChild c_tr c_td1;
+      Dom.appendChild c_tr c_td2;
+      Dom.appendChild c_content c_tr;
+      i+1
+    ) 0 labels defaults);
+
+    Dom.appendChild container c_title;
+    Dom.appendChild container c_content;
+    Dom.appendChild container b_cancel;
+    Dom.appendChild container b_submit;
+    Dom.appendChild div container;
+    Dom.appendChild document##body background;
+    Dom.appendChild document##body div
+
 
 end

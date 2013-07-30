@@ -131,9 +131,18 @@ let handler_rename_project () = handler (fun _ ->
   match !focused_project with
   | None -> assert false
   | Some project ->
-    let f new_name =
-      Event_manager.rename_project#trigger (project, new_name) in
-    Dialog.Prompt_dialog.prompt "Choose new project name :" project f;
+    let callback res_list =
+      assert (List.length res_list = 1);
+      let name, value = List.hd res_list in
+      if name = "new_name" then 
+        Event_manager.rename_project#trigger (project, value)
+    in
+    Dialog.Prompt_dialog.prompt
+      ~title:"Rename project"
+      ~labels:["Choose new project name"]
+      ~names:["new_names"]
+      ~defaults:[project]
+      ~callback;
     Js._true)
 
 let handler_delete_project () = handler (fun _ ->
@@ -157,18 +166,25 @@ let handler_compileopts_project () = handler (fun _ ->
     | Some project ->
         let conf = Filemanager.get_project_conf project in
         let default_files = String.concat " " conf.Conftypes.files in
-        let callback files =
-          let files = Myparser.split files ' ' in
-          let callback output =
-            let compile_conf = { Conftypes.files ; Conftypes.output } in
-            let conf = Myparser.generate_of_compile_conf compile_conf in
-            Event_manager.save_conf#trigger (Conftypes.Compile(project), conf)
-          in
-          Dialog.Prompt_dialog.prompt "Output's name"
-            conf.Conftypes.output callback
+        let callback res_list =
+          assert (List.length res_list = 2);
+          let files, output = List.fold_left
+            (fun (acc_files, acc_output) (name, value) ->
+              match name with
+                | "files" -> Myparser.split value ' ', acc_output
+                | "output" -> acc_files, value
+                | _ -> acc_files, acc_output
+            ) ([], "") res_list in
+          let compile_conf = { Conftypes.files ; Conftypes.output } in
+          let conf = Myparser.generate_of_compile_conf compile_conf in
+          Event_manager.save_conf#trigger (Conftypes.Compile(project), conf) 
         in
-        Dialog.Prompt_dialog.prompt "Compile file order (file1.ml file2.ml ...)"
-          default_files callback;
+        Dialog.Prompt_dialog.prompt 
+          ~title:"Change compiling options"
+          ~labels:["Compile file order (file1.ml file2.ml ...)"; "Output's name"]
+          ~names:["files"; "output"]
+          ~defaults:[default_files; conf.Conftypes.output]
+          ~callback;
         Js._true)
 
 let handler_export_project () = handler (fun _ ->
@@ -203,8 +219,17 @@ let right_clic_dialog_opened_project =
     match !focused_project with
     | None -> assert false
     | Some project ->
-        Dialog.Prompt_dialog.prompt "Choose file name :" "untitled.ml"
-	  (create_file project);
+        let callback res_list =
+          assert (List.length res_list = 1);
+          let name, value = List.hd res_list in
+          if name = "name" then create_file project value
+        in
+        Dialog.Prompt_dialog.prompt 
+          ~title:"Create file"
+          ~labels:["Choose file name"]
+          ~names:["name"]
+          ~defaults:["untitled.ml"]
+	  ~callback;
         Js._true)
   in		 
   let lhandler = [ handler_new_file ;
@@ -298,9 +323,18 @@ let make_sidepanel () =
   let button_create_project = createButton document in
   button_create_project##innerHTML <- Js.string "Create new project";
   button_create_project##onclick <- handler (fun _ -> 
-    let f s = Event_manager.create_project#trigger s in
-    Dialog.Prompt_dialog.prompt "Choose new project's name :"
-      "new_project" f;
+    let callback res_list =
+      assert (List.length res_list = 1);
+      let name, value = List.hd res_list in
+      if name = "name" then
+        Event_manager.create_project#trigger value
+    in
+    Dialog.Prompt_dialog.prompt
+      ~title:"Create project"
+      ~labels:["Choose new project's name "]
+      ~names:["name"]
+      ~defaults:["new_project"]
+      ~callback;
     Js._true);
 
   sideprojects##id <- Js.string "side_projects";
