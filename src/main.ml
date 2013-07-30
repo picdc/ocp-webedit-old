@@ -102,7 +102,8 @@ let make_bottom_widget () =
              Js.Unsafe.inject (Js.string result.Mycompile.exec)|];
         Js._true);
        button##disabled <- Js._false)
-    else button##disabled <- Js._true);
+    else (button##onclick <- handler (fun _ -> ());
+          button##disabled <- Js._true));
 
   Dom.appendChild div_titles title_toplevel;
   Dom.appendChild div_titles title_output;

@@ -93,17 +93,20 @@ let init_container el = global_conf.container <- el
 type blob
 let string_to_blob s =
   let open Typed_array in
-  let a = jsnew int8Array(String.length s) in
-  for i = 0 to (String.length s) - 1 do
-    set a i (int_of_char s.[i])
-  done;
-  let a = [| a##buffer |] in 
-  Js.Unsafe.fun_call (Js.Unsafe.variable "new Blob")
-    [| Js.Unsafe.inject a ; 
-       Js.Unsafe.inject
-         (Js.Unsafe.variable 
-            "{type: \"application/octet-stream;charset=utf-8\"}") |]
-
+      let uint8Array : (int -> uint8Array Js.t) Js.constr =
+        Js.Unsafe.variable "this.Uint8Array"
+      in
+      let a = jsnew uint8Array(String.length s) in
+      for i = 0 to (String.length s) - 1 do
+        set a i (Char.code s.[i])
+      done;
+      let a = [| a##buffer |] in 
+      Js.Unsafe.fun_call (Js.Unsafe.variable "new Blob")
+        [| Js.Unsafe.inject a ; 
+           Js.Unsafe.inject
+             (Js.Unsafe.variable 
+                "{type: \"application/octet-stream;charset=utf-8\"}") |]
+        
 
 let alert str =
   Dom_html.window##alert(Js.string str)

@@ -277,6 +277,7 @@ let get_from_filemanager (name: string) : string =
 let mycompile_init () =
   (Js.Unsafe.coerce Dom_html.window)##stdout <- Js.string "";
   reset_filemanager ();
+  add_to_filemanager "camlheader" "";
   Clflags.preprocessor := None;
   Clflags.dump_parsetree := false;
   Clflags.dump_rawlambda := false;
