@@ -2,12 +2,12 @@
 include Makefile.config
 include Makefile.rules
 
-SOURCES= webworker.ml ace.ml ace_utils.ml myparser.ml request.ml mycompile.ml \
-	filemanager.ml event_manager.ml dialog.ml tabs.ml sidepanel.ml \
-	centerpanel.ml login.ml
-SOURCESI= webworker.mli ace.mli ace_utils.mli conftypes.mli \
-	myparser.mli request.mli \
-	mycompile.mli filemanager.mli event_manager.mli dialog.mli tabs.mli
+SOURCES= webworker.ml ace.ml global.ml myutils.ml myparser.ml request.ml \
+	mycompile.ml filemanager.ml eventmanager.ml dialog.ml tabs.ml \
+	sidepanel.ml centerpanel.ml login.ml
+SOURCESI= webworker.mli ace.mli global.mli myutils.mli conftypes.mli \
+	myparser.mli request.mli mycompile.mli filemanager.mli \
+	eventmanager.mli dialog.mli tabs.mli
 
 OCPDIR= ocp-indent-src
 OCPLIB= -I $(OCPDIR) ocp_indent.cma
@@ -23,17 +23,6 @@ OCAMLCDIR= ocamlc-src
 TOPLVLDIR = toplevel-src
 TOPLVLLIB = -I $(TOPLVLDIR)/toplevellib-4.00.1 \
 	 ocamlcommon.cma ocamlbytecomp.cma ocamltoplevel.cma
-
-
-#TOPLVLDIR= tryocaml-without_js
-#TOPLVLDIRLIB= $(TOPLVLDIR)/toplevellib/toplevellib-4.00.1
-#TOPLVLLIB= -package js_of_ocaml_compiler \
-#	-I $(TOPLVLDIR)/ocaml-num ocaml-num.cma \
-#	-I $(TOPLVLDIRLIB) ocamlcommon.cma ocamlbytecomp.cma ocamltoplevel.#cma \
-#	-I $(TOPLVLDIR)/try-ocaml lessons.cmo \
-#	-I $(TOPLVLDIR)/tutorial tutorial.cma \
-#	-I $(TOPLVLDIR)/ocp-jslib ocp-jslib.cma \
-#	-I $(TOPLVLDIR)/toplevel toplevel.cma 
 
 OBJS= $(SOURCES:.ml=.cmo)
 OBJSI= $(SOURCESI:.mli=.cmi)
@@ -62,7 +51,7 @@ main.js: main.byte
 	js_of_ocaml $(INCLUDEJS) $<
 
 
-main.byte: ace.cmo ace_utils.cmo completion_js.cmo $(OBJS) indent.cmo mytoplevel.cmo
+main.byte: ace.cmo global.cmo myutils.cmo completion_js.cmo $(OBJS) indent.cmo mytoplevel.cmo
 	$(CAMLJS) $(LIBS) -o $@ $^ $*.ml
 
 
@@ -98,7 +87,3 @@ depend: $(SOURCES)
 
 -include .depend
 
-
-
-test:
-	ocamlc -I toplevellib-4.00.1 ocamlcommon.cma ocamlbytecomp.cma ocamltoplevel.cma -o test.byte test.ml

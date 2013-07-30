@@ -1,7 +1,5 @@
 
-(**  TypeError : null of getLen quand on a un exit 2 **)
-
-open Ace_utils
+open Myutils
 open Indent
 
 (* Widget contenant l'output du compilateur *)
@@ -55,8 +53,8 @@ let make_bottom_widget () =
 
   title_toplevel##onclick <- Dom_html.handler (fun _ ->
     let id_old_tab = Format.sprintf "bottabs_%s_title" !curr_tab in
-    let old_tab = Ace_utils.get_element_by_id id_old_tab in
-    let old_content = Ace_utils.get_element_by_id !curr_tab in
+    let old_tab = get_element_by_id id_old_tab in
+    let old_content = get_element_by_id !curr_tab in
     old_tab##className <- Js.string "bottabs_tab bottabs_tab_noactive";
     title_toplevel##className <- Js.string "bottabs_tab bottabs_tab_active";
     old_content##style##display <- Js.string "none";
@@ -65,8 +63,8 @@ let make_bottom_widget () =
     Js._true);
   title_output##onclick <- Dom_html.handler (fun _ ->
     let id_old_tab = Format.sprintf "bottabs_%s_title" !curr_tab in
-    let old_tab = Ace_utils.get_element_by_id id_old_tab in
-    let old_content = Ace_utils.get_element_by_id !curr_tab in
+    let old_tab = get_element_by_id id_old_tab in
+    let old_content = get_element_by_id !curr_tab in
     old_tab##className <- Js.string "bottabs_tab bottabs_tab_noactive";
     title_output##className <- Js.string "bottabs_tab bottabs_tab_active";
     old_content##style##display <- Js.string "none";
@@ -75,8 +73,8 @@ let make_bottom_widget () =
     Js._true);
   let switch_to_compilation_tab () =
     let id_old_tab = Format.sprintf "bottabs_%s_title" !curr_tab in
-    let old_tab = Ace_utils.get_element_by_id id_old_tab in
-    let old_content = Ace_utils.get_element_by_id !curr_tab in
+    let old_tab = get_element_by_id id_old_tab in
+    let old_content = get_element_by_id !curr_tab in
     old_tab##className <- Js.string "bottabs_tab bottabs_tab_noactive";
     title_compilation##className <- Js.string "bottabs_tab bottabs_tab_active";
     old_content##style##display <- Js.string "none";
@@ -88,15 +86,15 @@ let make_bottom_widget () =
     Js._true);
 
   (* Ajout de l'event pour la compilation *)
-  Event_manager.compile#add_event (fun result ->
+  Eventmanager.compile#add_event (fun result ->
     switch_to_compilation_tab ();
     let container = query_selector compilation "#compilation_output" in
-    let button = Ace_utils.coerceTo_button
+    let button = coerceTo_button
         (query_selector compilation "#bytecode") in
     container##innerHTML <- Js.string result.Mycompile.stdout;
 
     if result.Mycompile.code = 0 then begin
-      let blob = Ace_utils.string_to_blob result.Mycompile.bytecode in
+      let blob = string_to_blob result.Mycompile.bytecode in
       button##onclick <- Dom_html.handler (fun _ ->
         ignore (Js.Unsafe.fun_call (Js.Unsafe.variable "saveAs")
                   [| Js.Unsafe.inject blob;
@@ -145,7 +143,7 @@ let main_content =
 let main_container = Dom_html.createDiv Dom_html.document
 let _ = 
   main_container##id <- Js.string "main_content";
-  global_conf.container <- main_content;
+  Global.(global_conf.container <- main_content);
   Dom.appendChild Dom_html.document##body main_container 
 
 
@@ -186,14 +184,14 @@ let _ =
     Dialog.Right_clic_dialog.hide_all ();
     Js._true);
 
-  let editor = query_selector global_conf.container "#editor"  in
-  init_editor editor;
-  (Js.Unsafe.coerce Dom_html.window)##editor <- (Ace_utils.editor ());
+  let editor = query_selector Global.(global_conf.container) "#editor"  in
+  Global.init_editor editor;
+  (Js.Unsafe.coerce Dom_html.window)##editor <- (Global.editor ());
 
 
   (* Fonction callback pour le lancement du workspace *)
   let launch _ =
-    Dom.appendChild main_container global_conf.container
+    Dom.appendChild main_container Global.(global_conf.container)
   in
 
   (* Fonction callback pour la fermeture du workspace *)
@@ -223,10 +221,10 @@ let _ =
       editor_shown := true
   in
 
-  Event_manager.open_workspace#add_event launch;
-  Event_manager.close_workspace#add_event close;
-  Event_manager.open_file#add_event switch_to_editor;
-  Event_manager.create_file#add_event switch_to_editor;
-  Event_manager.close_file#add_event switch_to_centerpanel;
-  Event_manager.delete_file#add_event switch_to_centerpanel
+  Eventmanager.open_workspace#add_event launch;
+  Eventmanager.close_workspace#add_event close;
+  Eventmanager.open_file#add_event switch_to_editor;
+  Eventmanager.create_file#add_event switch_to_editor;
+  Eventmanager.close_file#add_event switch_to_centerpanel;
+  Eventmanager.delete_file#add_event switch_to_centerpanel
 

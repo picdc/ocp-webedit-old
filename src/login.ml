@@ -2,7 +2,7 @@
 exception Bad_request_url of string
 
 open Dom_html
-open Ace_utils
+open Myutils
 
 let pull_request_with_failure ~callback ~callback_failure ~meth ~url ~asyn ~msg =
   let req = XmlHttpRequest.create () in
@@ -46,12 +46,12 @@ let verify_assertion ~callback assertion =
   let assertion = Js.to_string assertion in
   let callback json =
     (* Main.make_editor () *)
-    Event_manager.open_workspace#trigger ();
+    Eventmanager.open_workspace#trigger ();
     callback json
   in
   let callback_failure json =
     logout ();
-    console_log "Login failure"
+    console (Js.string "Login failure")
   in
   let msg = 
     Format.sprintf "assertion=%s" assertion
@@ -70,14 +70,14 @@ let verify_assertion ~callback assertion =
     ~msg
 
 let onlogout () =
-  Event_manager.close_workspace#trigger ();
+  Eventmanager.close_workspace#trigger ();
   let signin = get_element_by_id "signin" in
   let signout = get_element_by_id "signout" in
   signin##className <- Js.string "sign-button";
   signin##onclick <- onclick_signin;
   signout##className <- Js.string "sign-button sign-disabled";
   signout##onclick <- handler (fun _ -> Js._true);
-  console_log "Logged out"
+  console (Js.string "Logged out")
 
 let _ =
   

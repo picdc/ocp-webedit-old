@@ -1,6 +1,6 @@
 
 open Dom_html
-open Ace_utils
+open Myutils
 
 module H = Hashtbl
 
@@ -25,10 +25,10 @@ let reload_icons_project project =
     (get_element_by_id ("side_project_"^project^"_title"))
     ".side_project_icons"
   in
-  let ic_p = Ace_utils.query_selector container ".side_icon_plus" in
-  let ic_m = Ace_utils.query_selector container ".side_icon_minus" in
-  let ic_o = Ace_utils.query_selector container ".side_icon_open" in
-  let ic_c = Ace_utils.query_selector container ".side_icon_close" in
+  let ic_p = Myutils.query_selector container ".side_icon_plus" in
+  let ic_m = Myutils.query_selector container ".side_icon_minus" in
+  let ic_o = Myutils.query_selector container ".side_icon_open" in
+  let ic_c = Myutils.query_selector container ".side_icon_close" in
   if H.find project_shown project then
     (ic_m##style##display <- Js.string "";
      ic_p##style##display <- Js.string "none")
@@ -49,13 +49,13 @@ let right_clic_dialog_file =
     match !focused_file with
     | None -> assert false
     | Some file_id ->
-      Event_manager.save_file#trigger file_id;
+      Eventmanager.save_file#trigger file_id;
       Js._true) in
   let handler_delete_file = handler (fun _ ->
     match !focused_file with
     | None -> assert false
     | Some file_id ->
-      Event_manager.delete_file#trigger file_id;
+      Eventmanager.delete_file#trigger file_id;
       Js._true) in
   let lhandler = [ handler_save_file ; handler_delete_file ] in
   Dialog.Right_clic_dialog.create lstr lhandler
@@ -81,8 +81,8 @@ let add_file container file =
       file.Filemanager.project,		(* Obligé de refresh ici *)
       file.Filemanager.filename,	(* au cas où il y a eu du chgmt *)
       file.Filemanager.is_open in
-    if is_open then Event_manager.switch_file#trigger id
-    else Event_manager.open_file#trigger (project, filename);
+    if is_open then Eventmanager.switch_file#trigger id
+    else Eventmanager.open_file#trigger (project, filename);
     Js._true);
   let hand = handler (fun ev ->
     let ev = Js.Opt.get (Dom_html.CoerceTo.mouseEvent ev) (fun () ->
@@ -112,12 +112,12 @@ let get_class_project_name is_active =
   Js.string l
 
 let create_file project filename =
-  Event_manager.create_file#trigger (project, filename)
+  Eventmanager.create_file#trigger (project, filename)
 
 let handler_open_project title = handler (fun _ ->
   let ul = get_element_by_id ("side_project_"^title) in
   if not (Filemanager.is_project_opened title) then
-    Event_manager.open_project#trigger title
+    Eventmanager.open_project#trigger title
   else if not (H.find project_shown title) then
     (ul##style##display <- Js.string "";
      H.replace project_shown title true)
@@ -135,7 +135,7 @@ let handler_rename_project () = handler (fun _ ->
       assert (List.length res_list = 1);
       let name, value = List.hd res_list in
       if name = "new_name" then 
-        Event_manager.rename_project#trigger (project, value)
+        Eventmanager.rename_project#trigger (project, value)
     in
     Dialog.Prompt_dialog.prompt
       ~title:"Rename project"
@@ -149,14 +149,14 @@ let handler_delete_project () = handler (fun _ ->
   match !focused_project with
   | None -> assert false
   | Some project ->
-      Event_manager.delete_project#trigger project;
+      Eventmanager.delete_project#trigger project;
       Js._true)
 
 let handler_compile_project () = handler (fun _ ->
   match !focused_project with
     | None -> assert false
     | Some project ->
-        Event_manager.compile#trigger project;
+        Eventmanager.compile#trigger project;
         Js._true
 )
 
@@ -177,7 +177,7 @@ let handler_compileopts_project () = handler (fun _ ->
             ) ([], "") res_list in
           let compile_conf = { Conftypes.files ; Conftypes.output } in
           let conf = Myparser.generate_of_compile_conf compile_conf in
-          Event_manager.save_conf#trigger (Conftypes.Compile(project), conf) 
+          Eventmanager.save_conf#trigger (Conftypes.Compile(project), conf) 
         in
         Dialog.Prompt_dialog.prompt 
           ~title:"Change compiling options"
@@ -203,7 +203,7 @@ let handler_export_project () = handler (fun _ ->
 let handler_import_file () =
   handler (fun _ ->
     let i = get_element_by_id "input_file_import" in
-    let i = Ace_utils.coerceTo_input i in
+    let i = Myutils.coerceTo_input i in
     i##click ();
     Js._true)
 
@@ -247,7 +247,7 @@ let right_clic_dialog_closed_project =
     match !focused_project with
     | None -> assert false
     | Some project ->
-      Event_manager.open_project#trigger project;
+      Eventmanager.open_project#trigger project;
       Js._true)
   in		 
   let lhandler = [ handler_open_project ; handler_rename_project ();
@@ -327,7 +327,7 @@ let make_sidepanel () =
       assert (List.length res_list = 1);
       let name, value = List.hd res_list in
       if name = "name" then
-        Event_manager.create_project#trigger value
+        Eventmanager.create_project#trigger value
     in
     Dialog.Prompt_dialog.prompt
       ~title:"Create project"
@@ -383,7 +383,7 @@ let _ =
                 let filename, content = 
                   (Js.to_string f##name, Js.to_string s) 
                 in
-                Event_manager.import_file#trigger (project, filename, content);
+                Eventmanager.import_file#trigger (project, filename, content);
   		Js._false);
   	      reader##readAsText (( f :> (File.blob Js.t)));
   	    end
@@ -419,7 +419,7 @@ let _ =
 
   let callback_open_workspace ls =
     let sideprojects =
-      query_selector global_conf.container "#side_projects" in
+      query_selector Global.(global_conf.container) "#side_projects" in
     List.iter (fun el -> add_project sideprojects el) ls
   in
 
@@ -428,7 +428,7 @@ let _ =
     focused_project := None;
     H.reset project_shown;
     let sideprojects =
-      query_selector global_conf.container "#side_projects" in
+      query_selector Global.(global_conf.container) "#side_projects" in
     let cl = Dom.list_of_nodeList sideprojects##childNodes in
     List.iter (fun el -> Dom.removeChild sideprojects el) cl
   in
@@ -540,20 +540,20 @@ let _ =
 
     
 
-  Event_manager.open_workspace#add_event callback_open_workspace;
-  Event_manager.close_workspace#add_event callback_close_workspace;
-  Event_manager.create_file#add_event callback_create_file;
-  Event_manager.create_project#add_event callback_create_project;
-  Event_manager.rename_file#add_event callback_rename_file;
-  Event_manager.open_project#add_event callback_open_project;
-  Event_manager.close_file#add_event callback_close_file;
-  Event_manager.delete_file#add_event callback_delete_file;
-  Event_manager.save_file#add_event callback_save_and_unsaved_file;
-  Event_manager.unsaved_file#add_event callback_save_and_unsaved_file;
-  Event_manager.switch_file#add_event callback_switch_file;
-  Event_manager.rename_project#add_event callback_rename_project;
-  Event_manager.delete_project#add_event callback_delete_project;
+  Eventmanager.open_workspace#add_event callback_open_workspace;
+  Eventmanager.close_workspace#add_event callback_close_workspace;
+  Eventmanager.create_file#add_event callback_create_file;
+  Eventmanager.create_project#add_event callback_create_project;
+  Eventmanager.rename_file#add_event callback_rename_file;
+  Eventmanager.open_project#add_event callback_open_project;
+  Eventmanager.close_file#add_event callback_close_file;
+  Eventmanager.delete_file#add_event callback_delete_file;
+  Eventmanager.save_file#add_event callback_save_and_unsaved_file;
+  Eventmanager.unsaved_file#add_event callback_save_and_unsaved_file;
+  Eventmanager.switch_file#add_event callback_switch_file;
+  Eventmanager.rename_project#add_event callback_rename_project;
+  Eventmanager.delete_project#add_event callback_delete_project;
 
   (* Importer un fichier revient simplement à l'ajouter dans le sidepanel *)
-  Event_manager.import_file#add_event callback_create_file
+  Eventmanager.import_file#add_event callback_create_file
     

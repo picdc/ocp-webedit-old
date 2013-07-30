@@ -45,7 +45,7 @@ let kind_ext = IndentPrinter.Extended (fun block elt (line, acc) ->
 (* Renvoie le texte minimum nécessaire à ocp-indent pour indenter
    correctement les lignes [rowstart] à [rowend] grâce aux breakpoints *)
 let get_minimum_text rowstart rowend =
-  let doc = (Ace_utils.editor())##getSession()##getDocument() in
+  let doc = (Global.editor())##getSession()##getDocument() in
   let start = get_best_breakpoint rowstart in
   let col = String.length (Js.to_string (doc##getLine(rowend))) in
   let range =  Ace.range start 0 rowend col in
@@ -76,7 +76,7 @@ let call_ocp_indent str offset =
    i.e le nombre d'espace qui compose l'indentation *)
 let get_indent_size line =
   let size = String.length line in
-  let tab_size = (Ace_utils.editor())##getSession()##getTabSize() in
+  let tab_size = (Global.editor())##getSession()##getTabSize() in
   let rec aux i =
     if i >= size then i
     else
@@ -100,7 +100,7 @@ let get_indent_next_line row : Js.js_string Js.t =
 (* Remplace l'indentation de la ligne [row] de l'éditeur actuel
    par [n] espaces *)
 let replace_indent row n =
-  let doc = (Ace_utils.editor())##getSession()##getDocument() in
+  let doc = (Global.editor())##getSession()##getDocument() in
   let size = get_indent_size (Js.to_string doc##getLine(row)) in
   let range = Ace.range row 0 row size in
   let new_indent = String.make n ' ' in
@@ -148,11 +148,11 @@ let _ =
     try breakpoints := Hashtbl.find all_breakpoints id
     with _ -> failwith "Not_found in callback_switch_file in indent.ml"
   in
-  Event_manager.import_file#add_event callback_create_file;
-  Event_manager.switch_file#add_event callback_switch_file;
-  Event_manager.open_file#add_event callback_open_file;
-  Event_manager.create_file#add_event callback_create_file;
-  Event_manager.close_file#add_event callback_close_file;
+  Eventmanager.import_file#add_event callback_create_file;
+  Eventmanager.switch_file#add_event callback_switch_file;
+  Eventmanager.open_file#add_event callback_open_file;
+  Eventmanager.create_file#add_event callback_create_file;
+  Eventmanager.close_file#add_event callback_close_file;
 
 
   (* Fonctions accessibles depuis le javascript *)

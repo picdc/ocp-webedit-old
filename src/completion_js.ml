@@ -3,7 +3,7 @@
 **)
 let rec print_words = function
   | [] -> ()
-  | w :: l -> Ace_utils.console_log w; print_words l
+  | w :: l -> Myutils.console w; print_words l
 
 
 (** Js bindings of OCaml functions **)

@@ -1,6 +1,6 @@
 
 open Dom_html
-open Ace_utils
+open Myutils
 
 type state =
 | List_of_projects
@@ -31,7 +31,7 @@ let reload_centerpanel () =
 
 let handler_click_project name = handler (fun _ ->
   if not (Filemanager.is_project_opened name) then
-    Event_manager.open_project#trigger name;
+    Eventmanager.open_project#trigger name;
   state := List_of_files name;
   reload_centerpanel ();
   Js._true)
@@ -53,7 +53,7 @@ let add_item_file container file =
   name##innerHTML <- Js.string filename;
   name##className <- Js.string "center_file_name";
   div##onclick <- handler (fun _ ->
-    Event_manager.open_file#trigger (project, filename);
+    Eventmanager.open_file#trigger (project, filename);
     Js._true);
   Dom.appendChild div icon;
   Dom.appendChild div name;
@@ -131,8 +131,8 @@ let _ =
   let callback_delete_project project =
     let c_item = get_element_by_id ("center_project_"^project) in
     let c_fl = get_element_by_id ("center_file_list_of_"^project) in
-    Ace_utils.remove_node c_item;
-    Ace_utils.remove_node c_fl;
+    remove_node c_item;
+    remove_node c_fl;
     match !state with
     | List_of_files p when p = project ->
       state := List_of_projects;
@@ -184,11 +184,11 @@ let _ =
     add_item_file container file
   in
 
-  Event_manager.open_workspace#add_event callback_open_workspace;
-  Event_manager.open_project#add_event callback_open_project;
-  Event_manager.create_project#add_event callback_create_project;
-  Event_manager.create_file#add_event callback_create_file;
-  Event_manager.delete_project#add_event callback_delete_project;
-  Event_manager.delete_file#add_event callback_delete_file;
-  Event_manager.rename_project#add_event callback_rename_project;
-  Event_manager.rename_file#add_event callback_rename_file
+  Eventmanager.open_workspace#add_event callback_open_workspace;
+  Eventmanager.open_project#add_event callback_open_project;
+  Eventmanager.create_project#add_event callback_create_project;
+  Eventmanager.create_file#add_event callback_create_file;
+  Eventmanager.delete_project#add_event callback_delete_project;
+  Eventmanager.delete_file#add_event callback_delete_file;
+  Eventmanager.rename_project#add_event callback_rename_project;
+  Eventmanager.rename_file#add_event callback_rename_file

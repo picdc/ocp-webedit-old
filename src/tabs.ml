@@ -1,6 +1,6 @@
 
 open Dom_html
-open Ace_utils
+open Myutils
 
 module H = Hashtbl
 
@@ -80,7 +80,7 @@ let change_offset_from_id id =
 let rename_tab id new_title =
   let tab = get_element_by_id (Format.sprintf "tabnum%dtitle" id) in
   let listli = get_element_by_id (Format.sprintf "listulnum%d" id) in
-  let tab = Ace_utils.coerceTo_input tab in
+  let tab = Myutils.coerceTo_input tab in
   tab##value <- Js.string new_title;
   listli##innerHTML <- Js.string new_title
 
@@ -209,7 +209,7 @@ let rec add_tab id title content =
   span_title##readOnly <- Js._true;
   span_title##className <- Js.string "tabtitle";
   span_title##onclick <- handler ( fun _ ->
-    Event_manager.switch_file#trigger id;
+    Eventmanager.switch_file#trigger id;
     Js._true);
   span_title##ondblclick <- handler ( fun _ ->
     span_title##readOnly <- Js._false;
@@ -219,20 +219,20 @@ let rec add_tab id title content =
     (Dom_html.Event.make "blur")
     (handler (fun _ ->
       span_title##readOnly <- Js._true;
-      Event_manager.rename_file#trigger
+      Eventmanager.rename_file#trigger
 	(id, (Js.to_string span_title##value));
       Js._true))
     Js._true);
   span_title##onkeypress <- handler (fun kev ->
     if kev##keyCode == 13 then
       (span_title##readOnly <- Js._true;
-       Event_manager.rename_file#trigger 
+       Eventmanager.rename_file#trigger 
 	 (id, (Js.to_string span_title##value)));
     Js._true);
   span_close##innerHTML <- Js.string "x";
   span_close##className <- Js.string "tabclose";
   span_close##onclick <- handler ( fun _ ->
-    Event_manager.close_file#trigger id;
+    Eventmanager.close_file#trigger id;
     Js._true);
 
   Dom.appendChild new_tab span_title;
@@ -248,7 +248,7 @@ let rec add_tab id title content =
   li_tab##innerHTML <- Js.string title;
   li_tab##style##display <- Js.string "none";
   li_tab##onclick <- handler ( fun _ ->
-    Event_manager.switch_file#trigger id;
+    Eventmanager.switch_file#trigger id;
     is_list_shown := false;
     let listtabs = get_element_by_id "listtabs" in
     listtabs##style##display <- Js.string "none";
@@ -260,7 +260,6 @@ let rec add_tab id title content =
 
 
   let nbtabs = H.length htbl in
-  if nbtabs = 1 then Ace_utils.enable_editor ();
   if !offset + !len < nbtabs then
     offset := nbtabs - !len;
   refresh_tabs ()
@@ -376,14 +375,14 @@ let init_listtabs container =
 let event_change_current_tab () =
   match Filemanager.get_current_file () with
   | None -> assert false
-  | Some id -> Event_manager.unsaved_file#trigger id
+  | Some id -> Eventmanager.unsaved_file#trigger id
 
 (* Permet de signaler que le tab courant veut être sauvegardé *)
 (* Peut être appelé en javascript, fait le lien avec le event_manager *)
 let event_save_current_tab () =
   match Filemanager.get_current_file () with
   | None -> assert false
-  | Some id -> Event_manager.save_file#trigger id
+  | Some id -> Eventmanager.save_file#trigger id
 
 let _ =
   (Js.Unsafe.coerce Dom_html.window)##saveCurrentTab <- Js.wrap_callback
@@ -422,8 +421,8 @@ let _ =
     offset := 0;
     len := 4;
     H.reset htbl;
-    let listul = query_selector global_conf.container "#listul" in
-    let tabline = query_selector global_conf.container "#tabline" in
+    let listul = query_selector Global.(global_conf.container) "#listul" in
+    let tabline = query_selector Global.(global_conf.container) "#tabline" in
     let cl_listul = Dom.list_of_nodeList listul##childNodes in
     let cl_tabline = Dom.list_of_nodeList tabline##childNodes in
     List.iter (fun el -> Dom.removeChild listul el) cl_listul;
@@ -465,7 +464,7 @@ let _ =
   in
   let callback_save_and_unsaved_file file =
     let id_c_file = Format.sprintf "tabnum%d" file.Filemanager.id in
-    let c_file = Ace_utils.get_element_by_id id_c_file in
+    let c_file = get_element_by_id id_c_file in
     c_file##className <- get_class_filename file
   in
 
@@ -481,18 +480,18 @@ let _ =
     new_tab##className <- get_class_filename file
   in
 
-  Event_manager.open_workspace#add_event callback_open_workspace;
-  Event_manager.close_workspace#add_event callback_close_workspace;
-  Event_manager.open_file#add_event callback_open_file;
-  Event_manager.close_file#add_event callback_close_file;
-  Event_manager.create_file#add_event callback_create_file;
-  Event_manager.rename_file#add_event callback_rename_file;
-  Event_manager.save_file#add_event callback_save_and_unsaved_file;
-  Event_manager.unsaved_file#add_event callback_save_and_unsaved_file;
-  Event_manager.import_file#add_event callback_create_file;
-  Event_manager.switch_file#add_event callback_switch_file;
-  Event_manager.delete_file#add_event callback_delete_file;
-  Event_manager.delete_project#add_event callback_delete_project
+  Eventmanager.open_workspace#add_event callback_open_workspace;
+  Eventmanager.close_workspace#add_event callback_close_workspace;
+  Eventmanager.open_file#add_event callback_open_file;
+  Eventmanager.close_file#add_event callback_close_file;
+  Eventmanager.create_file#add_event callback_create_file;
+  Eventmanager.rename_file#add_event callback_rename_file;
+  Eventmanager.save_file#add_event callback_save_and_unsaved_file;
+  Eventmanager.unsaved_file#add_event callback_save_and_unsaved_file;
+  Eventmanager.import_file#add_event callback_create_file;
+  Eventmanager.switch_file#add_event callback_switch_file;
+  Eventmanager.delete_file#add_event callback_delete_file;
+  Eventmanager.delete_project#add_event callback_delete_project
 
 
 
