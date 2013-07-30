@@ -4,7 +4,7 @@ include Makefile.rules
 
 SOURCES= webworker.ml ace.ml ace_utils.ml myparser.ml request.ml mycompile.ml \
 	filemanager.ml event_manager.ml dialog.ml tabs.ml sidepanel.ml \
-	centerpanel.ml login.ml
+	centerpanel.ml login.ml errors_lexer.mll
 SOURCESI= webworker.mli ace.mli ace_utils.mli conftypes.mli \
 	myparser.mli request.mli \
 	mycompile.mli filemanager.mli event_manager.mli dialog.mli tabs.mli
@@ -35,7 +35,8 @@ TOPLVLLIB = -I $(TOPLVLDIR)/toplevellib-4.00.1 \
 #	-I $(TOPLVLDIR)/ocp-jslib ocp-jslib.cma \
 #	-I $(TOPLVLDIR)/toplevel toplevel.cma 
 
-OBJS= $(SOURCES:.ml=.cmo)
+SOURCES1= $(SOURCES:.mll=.ml)
+OBJS= $(SOURCES1:.ml=.cmo)
 OBJSI= $(SOURCESI:.mli=.cmi)
 
 LIBS= $(OCPLIB) $(RELIB) $(ACLIB) $(TOPLVLLIB)

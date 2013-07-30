@@ -93,12 +93,14 @@ let compute_ls_result str =
 
 let verify_logged_user user key = 
   Format.printf "Verifying cookie@.";
-  if not (H.mem logged_users user) then
-    () (* /!\ temporary *)
-  else
-    let stored_key = H.find logged_users user in
-    if stored_key <> key then
-      raise Wrong_assertion_key
+  let _, _ = user, key in
+  ()
+  (* if not (H.mem logged_users user) then *)
+  (*   () (\* /!\ temporary *\) *)
+  (* else *)
+  (*   let stored_key = H.find logged_users user in *)
+  (*   if stored_key <> key then *)
+  (*     raise Wrong_assertion_key *)
 
 let get_argument (cgi: Netcgi.cgi_activation) name =
   if cgi#argument_exists name then begin

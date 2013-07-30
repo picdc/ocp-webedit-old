@@ -93,7 +93,9 @@ let make_bottom_widget () =
     let container = query_selector compilation "#compilation_output" in
     let button = Ace_utils.coerceTo_button
         (query_selector compilation "#bytecode") in
-    container##innerHTML <- Js.string result.Mycompile.stdout;
+    let stdout, _errors = 
+      Errors_lexer.parse_compile_output result.Mycompile.stdout in
+    container##innerHTML <- Js.string stdout;
 
     if result.Mycompile.code = 0 then begin
       let blob = Ace_utils.string_to_blob result.Mycompile.bytecode in
