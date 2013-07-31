@@ -260,6 +260,7 @@ let rec add_tab id title content =
 
 
   let nbtabs = H.length htbl in
+  if nbtabs = 1 then Global.(editor ())##setReadOnly(Js._false);
   if !offset + !len < nbtabs then
     offset := nbtabs - !len;
   refresh_tabs ()
