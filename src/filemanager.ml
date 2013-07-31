@@ -44,11 +44,13 @@ let opened_file_order = ref []
 
 let file_content = H.create 19
 
-let welcome_session = Ace.createEditSession "OCamlPro Banzaï !" "ace/mode/text"
+let welcome_session = Ace.createEditSession
+  "OCamlPro Banzaï !\nIci sera le message d'accueil !"
+  "ace/mode/text"
 
 let set_welcome_session () =
-  (Ace_utils.editor())##setSession(welcome_session);
-  (Ace_utils.editor())##setReadOnly(Js.bool true)
+  (Global.editor())##setSession(welcome_session);
+  (Global.editor())##setReadOnly(Js.bool true)
 
 let get_current_file () =
   !current_file
@@ -374,7 +376,7 @@ let switch_file callback new_id =
     current_file := Some new_id;
     let es = try H.find file_content new_id
       with _ -> failwith "Filemanager : file_content Not Found" in
-    (Ace_utils.editor())##setSession(es);
+    (Global.editor())##setSession(es);
     callback (old_file, new_id)
   in 
   match old_file with

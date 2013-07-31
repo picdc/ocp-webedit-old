@@ -21,7 +21,7 @@ let get_list_of_projects ~callback =
   let callback str =
     (* Rappel :
        dans la réponse de la requête, la derniere ligne est vide *)
-    let l = Ace_utils.split str "\n" in
+    let l = Myparser.split str '\n' in
     let l = List.rev (List.tl (List.rev l)) in
     callback l
   in
@@ -32,7 +32,7 @@ let get_list_of_files ~callback project =
   let callback str =
     (* Rappel :
        dans la réponse de la requête, la derniere ligne est vide *)
-    let l = Ace_utils.split str "\n" in
+    let l = Myparser.split str '\n' in
     let l = List.rev (List.tl (List.rev l)) in
     callback l
   in
@@ -60,7 +60,6 @@ let create_file ~callback ~project ~filename =
 let save_file ~callback ~project ~filename ~content =
   let msg = Format.sprintf "project=%s&file=%s&content=%s"
     project filename (Url.urlencode content) in
-  Ace_utils.console_log msg;
   let callback _ = callback () in
   pull_request ~callback ~meth:"POST" ~url:"project/save" ~asyn:true ~msg
 

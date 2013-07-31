@@ -43,7 +43,7 @@ let new_prompt () : Dom_html.element Js.t =
   el
 
 let print_input (str: string) =
-  let output = Ace_utils.get_element_by_id "toplvl_area_output" in
+  let output = Myutils.get_element_by_id "toplvl_area_output" in
   let div = createDiv document in
   let prompt = new_prompt () in
   let text = createDiv document in
@@ -54,7 +54,7 @@ let print_input (str: string) =
   Dom.appendChild output div
 
 let print_output (str: string) =
-  let output = Ace_utils.get_element_by_id "toplvl_area_output" in
+  let output = Myutils.get_element_by_id "toplvl_area_output" in
   let div = createDiv document in
   (* let regexp = jsnew Js.regExp_withFlags(Js.string "\\n", Js.string "g") in *)
   (* let js_str = (Js.string str)##replace(regexp, Js.string "<br />") in *)
@@ -74,14 +74,14 @@ let execute (str: string) =
   let str = match str with
     | "" -> "" 
     | _ -> str ^ ";;" in
-  Ace_utils.console_log str;
+  Myutils.console (Js.string str);
   let lb = Lexing.from_string str in
   try
     let phr = 
       try !Toploop.parse_toplevel_phrase lb
       with End_of_file -> raise End_of_input
     in
-    Ace_utils.console phr;
+    Myutils.console phr;
     ignore(Toploop.execute_phrase true ppf phr)
       (* (!Toploop.parse_use_file lb) *)
   with
@@ -90,8 +90,8 @@ let execute (str: string) =
 
 
 let evaluate_input () =
-  let input = Ace_utils.coerceTo_textarea
-    (Ace_utils.get_element_by_id "toplvl_area_input_textarea") in
+  let input = Myutils.coerceTo_textarea
+    (Myutils.get_element_by_id "toplvl_area_input_textarea") in
   let text = Js.to_string input##value in
   print_input text;
   execute text;
@@ -100,7 +100,7 @@ let evaluate_input () =
     (Format.sprintf "%dpx" textarea_line_size)
 
 let evaluate_selection () =
-  let editor = Ace_utils.editor () in
+  let editor = Global.editor () in
   let doc = editor##getSession()##getDocument() in
   let range = editor##getSelectionRange() in
   let text = Js.to_string doc##getTextRange(range) in
@@ -108,9 +108,9 @@ let evaluate_selection () =
   execute text
 
 let reset_toplevel () =
-  let input = Ace_utils.coerceTo_textarea
-    (Ace_utils.get_element_by_id "toplvl_area_input_textarea") in
-  let output = Ace_utils.get_element_by_id "toplvl_area_output" in
+  let input = Myutils.coerceTo_textarea
+    (Myutils.get_element_by_id "toplvl_area_input_textarea") in
+  let output = Myutils.get_element_by_id "toplvl_area_output" in
   input##value <- Js.string "";
   input##style##height <- Js.string
     (Format.sprintf "%dpx" textarea_line_size);
