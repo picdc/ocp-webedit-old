@@ -284,7 +284,6 @@ let link_bytecode ppf tolink exec_name standalone =
     open_out_gen [Open_wronly; Open_trunc; Open_creat; Open_binary]
                  0o777 exec_name in
   try
-    let standalone = false in
     Bytesections.init_record outchan;
     (* The path to the bytecode interpreter (in use_runtime mode) *)
     if String.length !Clflags.use_runtime > 0 then begin
@@ -296,7 +295,6 @@ let link_bytecode ppf tolink exec_name standalone =
     let start_code = pos_out outchan in
     Symtable.init();
     Consistbl.clear crc_interfaces;
-    let sharedobjs = List.map Dll.extract_dll_name !Clflags.dllibs in
     let output_fun = output_string outchan
     and currpos_fun () = pos_out outchan - start_code in
     List.iter (link_file ppf output_fun currpos_fun) tolink;

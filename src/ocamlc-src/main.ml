@@ -224,12 +224,6 @@ let default_output = function
 (*   Dom_html.window##close () *)
 
 
-let onmessage f =
-  (Js.Unsafe.coerce Dom_html.window)##onmessage <- Js.wrap_callback f
-
-let postMessage msg =
-  (Js.Unsafe.coerce Dom_html.window)##postMessage(msg)
-
 
 (* let my_compile name obj = *)
 (*   Clflags.preprocessor := None; *)
@@ -248,6 +242,12 @@ let postMessage msg =
 
 
 (* MUST BE Mycompile.compile_options ; TO BE DELETED *)
+let onmessage f =
+  (Js.Unsafe.coerce Dom_html.window)##onmessage <- Js.wrap_callback f
+
+let postMessage msg =
+  (Js.Unsafe.coerce Dom_html.window)##postMessage(msg)
+
 type compile_options = {
   project : string;
   src : (string * string) list ;
@@ -337,11 +337,4 @@ let main data =
 
 let _ =
   onmessage (fun ev -> main ev##data) 
-
-(* TO BE DELETED *)
-(* let _ = *)
-(*   (Js.Unsafe.coerce Dom_html.window)##mycompile <- Js.wrap_callback *)
-(*     my_compile; *)
-(*   (Js.Unsafe.coerce Dom_html.window)##dump <- Js.wrap_callback dump *)
-(* END TO BE DELETED *)
 
