@@ -455,7 +455,7 @@ let compile callback project =
         (filename, content)::acc
       with File_not_found2 (_,_) -> acc
     ) [] cconf.Conftypes.files) in
-    let cconf = Mycompile.({ src ; output = cconf.Conftypes.output }) in
+    let cconf = Mycompile.({ project; src ; output = cconf.Conftypes.output }) in
     Mycompile.compile callback cconf 
   in
   

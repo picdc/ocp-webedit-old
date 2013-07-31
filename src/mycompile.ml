@@ -1,10 +1,12 @@
 
 type compile_options = {
+  project : string;
   src : (string * string) list ;
   output : string
 }
 
 type compile_result = {
+  initial_proj : string;
   stdout : string ;
   exec : string ;
   bytecode : string;

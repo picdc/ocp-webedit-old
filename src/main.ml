@@ -97,6 +97,8 @@ let make_bottom_widget () =
       Errors_lexer.parse_compile_output result.Mycompile.stdout in
     container##innerHTML <- Js.string stdout;
 
+    Myutils.console result.Mycompile.initial_proj;
+
     if result.Mycompile.code = 0 then begin
       let blob = Ace_utils.string_to_blob result.Mycompile.bytecode in
       button##onclick <- Dom_html.handler (fun _ ->

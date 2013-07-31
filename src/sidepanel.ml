@@ -175,7 +175,8 @@ let handler_compileopts_project () = handler (fun _ ->
                 | "output" -> acc_files, value
                 | _ -> acc_files, acc_output
             ) ([], "") res_list in
-          let compile_conf = { Conftypes.files ; Conftypes.output } in
+          let compile_conf = 
+            { Conftypes.files ; Conftypes.output } in
           let conf = Myparser.generate_of_compile_conf compile_conf in
           Event_manager.save_conf#trigger (Conftypes.Compile(project), conf) 
         in

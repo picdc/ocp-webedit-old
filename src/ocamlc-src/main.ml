@@ -249,11 +249,13 @@ let postMessage msg =
 
 (* MUST BE Mycompile.compile_options ; TO BE DELETED *)
 type compile_options = {
+  project : string;
   src : (string * string) list ;
   output : string
 }
 
 type compile_result = {
+  initial_proj : string;
   stdout : string ;
   exec : string ;
   bytecode : string;
@@ -326,7 +328,9 @@ let main data =
       2 in
   let stdout = Js.to_string (Js.Unsafe.coerce Dom_html.window)##stdout in
   let bytecode = get_from_filemanager args.output in
-  let result = { stdout ; exec = args.output; bytecode ; code } in
+  let result = 
+    { initial_proj = args.project; stdout; exec = args.output; bytecode; code }
+  in
   let msg = Json.output result in
   postMessage(msg)
 
