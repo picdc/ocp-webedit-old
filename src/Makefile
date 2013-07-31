@@ -4,10 +4,10 @@ include Makefile.rules
 
 SOURCES= webworker.ml ace.ml global.ml myutils.ml myparser.ml request.ml \
 	mycompile.ml filemanager.ml eventmanager.ml dialog.ml tabs.ml \
-	sidepanel.ml centerpanel.ml login.ml errors_lexer.mll
+	sidepanel.ml centerpanel.ml mytoplevel.ml login.ml errors_lexer.mll
 SOURCESI= webworker.mli ace.mli global.mli myutils.mli conftypes.mli \
 	myparser.mli request.mli mycompile.mli filemanager.mli \
-	eventmanager.mli dialog.mli tabs.mli errors_format.mli
+	eventmanager.mli dialog.mli tabs.mli mytoplevel.mli errors_format.mli
 
 OCPDIR= ocp-indent-src
 OCPLIB= -I $(OCPDIR) ocp_indent.cma
@@ -19,25 +19,21 @@ REDIR= ~/.opam/4.00.1/lib/re
 RELIB= -I $(REDIR) re.cma re_emacs.cma re_str.cma
 
 OCAMLCDIR= ocamlc-src
-
 TOPLVLDIR = toplevel-src
-TOPLVLLIB = -I $(TOPLVLDIR)/toplevellib-4.00.1 \
-	 ocamlcommon.cma ocamlbytecomp.cma ocamltoplevel.cma
 
 SOURCES1= $(SOURCES:.mll=.ml)
 OBJS= $(SOURCES1:.ml=.cmo)
 OBJSI= $(SOURCESI:.mli=.cmi)
 
-LIBS= $(OCPLIB) $(RELIB) $(ACLIB) $(TOPLVLLIB)
+LIBS= $(OCPLIB) $(RELIB) $(ACLIB)
 
-INCLUDEJS=-I . -I $(OCPDIR) -I $(ACDIR) -I $(REDIR) $(JSFLAGS) \
-	-I $(TOPLVLDIR)/cmicomp -I $(TOPLVLDIR)  \
-	-I $(OPAMLIB)/ocaml/compiler-libs \
-	-I ~/.opam/4.00.1/lib/lwt \
-	-I ~/.opam/4.00.1/lib/js_of_ocaml_compiler-libs \
-	$(TOPLVLDIR)/toplevel_runtime.js
+INCLUDEJS=
+# -I . -I $(OCPDIR) -I $(ACDIR) -I $(REDIR) $(JSFLAGS) \
+# -I $(OPAMLIB)/ocaml/compiler-libs \
+# -I ~/.opam/4.00.1/lib/lwt \
+# -I ~/.opam/4.00.1/lib/js_of_ocaml_compiler-libs 
 
-JSFLAGS = -pretty -linkall -toplevel $(INCLUDEJS_TOPLVL)
+JSFLAGS = -pretty -linkall
 
 .PHONY: depend ocamlc.js
 
@@ -48,16 +44,16 @@ ocamlc.js:
 	$(MAKE) -C $(OCAMLCDIR)
 	cp $(OCAMLCDIR)/$@ ../www/
 
+toplevelw.js:
+	$(MAKE) -C $(TOPLVLDIR)
+	cp $(TOPLVLDIR)/$@ ../www/
+
 main.js: main.byte
-	js_of_ocaml $(INCLUDEJS) $<
+	js_of_ocaml $(JSFLAGS) $(INCLUDEJS) $<
 
 
 main.byte: ace.cmo global.cmo myutils.cmo completion_js.cmo $(OBJS) indent.cmo mytoplevel.cmo
 	$(CAMLJS) $(LIBS) -o $@ $^ $*.ml
-
-
-mytoplevel.cmo:
-	$(CAMLJS) -c $(TOPLVLLIB) $*.ml
 
 indent.cmo: indent.cmi
 	$(MAKE) -C $(OCPDIR)
@@ -79,6 +75,7 @@ clean:
 
 clean-all: clean
 	$(MAKE) -C $(OCAMLCDIR) clean
+	$(MAKE) -C $(TOPLVLDIR) clean
 	$(MAKE) -C $(OCPDIR) clean
 	$(MAKE) -C ./autocomplete clean
 

@@ -1,36 +1,3 @@
-(* XXX START HACK *)
-let split_primitives p =
-  let len = String.length p in
-  let rec split beg cur =
-    if cur >= len then []
-    else if p.[cur] = '\000' then
-      String.sub p beg (cur - beg) :: split (cur + 1) (cur + 1)
-    else
-      split beg (cur + 1) in
-  Array.of_list(split 0 0)
-
-class type global_data = object
-  method toc : (string * string) list Js.readonly_prop
-  method compile : (string -> string) Js.writeonly_prop
-end
-
-external global_data : unit -> global_data Js.t = "caml_get_global_data"
-
-let g = global_data ()
-
-let _ =
-  let toc = g##toc in
-  let prims = split_primitives (List.assoc "PRIM" toc) in
-
-  let compile s =
-    let output_program = Driver.from_string prims s in
-    let b = Buffer.create 100 in
-    output_program (Pretty_print.to_buffer b);
-    Buffer.contents b
-  in
-  g##compile <- compile (* XXX HACK! *)
-(* XXX END HACK *)
-
 
 open Dom_html
 
@@ -42,7 +9,7 @@ let new_prompt () : Dom_html.element Js.t =
   el##innerHTML <- Js.string "#";
   el
 
-let print_input (str: string) =
+let print_input str =
   let output = Myutils.get_element_by_id "toplvl_area_output" in
   let div = createDiv document in
   let prompt = new_prompt () in
@@ -53,40 +20,34 @@ let print_input (str: string) =
   Dom.appendChild div text;
   Dom.appendChild output div
 
-let print_output (str: string) =
+let print_eval str =
   let output = Myutils.get_element_by_id "toplvl_area_output" in
   let div = createDiv document in
-  (* let regexp = jsnew Js.regExp_withFlags(Js.string "\\n", Js.string "g") in *)
-  (* let js_str = (Js.string str)##replace(regexp, Js.string "<br />") in *)
   div##className <- Js.string "toplvl_output_text";
   div##innerHTML <- Js.string str;
   Dom.appendChild output div
   
-exception End_of_input
+let print_output str =
+  let text = Dom_html.document##createTextNode(Js.string str) in
+  let container = Myutils.get_element_by_id "output" in
+  Dom.appendChild container text
 
-let execute (str: string) =
-  let ppf =
-    let b = Buffer.create 80 in
-    Format.make_formatter
-      (fun s i l -> Buffer.add_substring b s i l)
-      (fun () -> print_output (Buffer.contents b); Buffer.clear b)
-  in
-  let str = match str with
-    | "" -> "" 
-    | _ -> str ^ ";;" in
-  Myutils.console (Js.string str);
-  let lb = Lexing.from_string str in
-  try
-    let phr = 
-      try !Toploop.parse_toplevel_phrase lb
-      with End_of_file -> raise End_of_input
-    in
-    Myutils.console phr;
-    ignore(Toploop.execute_phrase true ppf phr)
-      (* (!Toploop.parse_use_file lb) *)
-  with
-    End_of_input -> ()
-    | exn -> Errors.report_error ppf exn
+
+
+open Webworker
+
+let worker = jsnew webWorker(Js.string "toplevelw.js")
+
+type toplevel_worker_msg = Reset | Eval of string
+type toplevel_worker_res = { eval : string ; output : string }
+
+let execute str callback =
+  worker##onmessage <- (fun ev -> callback (Json.unsafe_input ev##data));
+  worker##postMessage(Json.output (Eval (str)))
+
+let eval_printer (eval, output) =
+    print_eval eval;
+    print_output output
 
 
 let evaluate_input () =
@@ -94,10 +55,14 @@ let evaluate_input () =
     (Myutils.get_element_by_id "toplvl_area_input_textarea") in
   let text = Js.to_string input##value in
   print_input text;
-  execute text;
-  input##value <- Js.string "";
-  input##style##height <- Js.string
-    (Format.sprintf "%dpx" textarea_line_size)
+  let callback =
+    input##value <- Js.string "";
+    input##style##height <- Js.string
+      (Format.sprintf "%dpx" textarea_line_size);
+    eval_printer
+  in
+  execute text callback
+
 
 let evaluate_selection () =
   let editor = Global.editor () in
@@ -105,7 +70,8 @@ let evaluate_selection () =
   let range = editor##getSelectionRange() in
   let text = Js.to_string doc##getTextRange(range) in
   print_input text;
-  execute text
+  execute text eval_printer
+
 
 let reset_toplevel () =
   let input = Myutils.coerceTo_textarea
@@ -115,15 +81,15 @@ let reset_toplevel () =
   input##style##height <- Js.string
     (Format.sprintf "%dpx" textarea_line_size);
   output##innerHTML <- Js.string "";
-  Toploop.initialize_toplevel_env ()
+  worker##postMessage(Json.output (Reset))
   
 
-let make_output () : Dom_html.element Js.t =
+let make_output () =
   let console_output = createPre document in
   console_output##id <- Js.string "output";
   console_output
 
-let make_toplevel () : Dom_html.element Js.t =
+let make_toplevel () =
   let toplevel = createDiv document in
   let toplvl_area = createDiv document in
   let toplvl_buttons = createDiv document in
@@ -162,7 +128,6 @@ let make_toplevel () : Dom_html.element Js.t =
   button_eval##innerHTML <- Js.string "Evaluate";
   button_eval_select##innerHTML <- Js.string "Evaluate Selection";
   button_reset##innerHTML <- Js.string "Reset env.";
-  (* button_eval_select##disabled <- Js._true; *)
   button_eval##onclick <- handler (fun _ ->
     evaluate_input (); Js._true);
   button_eval_select##onclick <- handler (fun _ ->
@@ -180,5 +145,5 @@ let make_toplevel () : Dom_html.element Js.t =
   Dom.appendChild toplevel toplvl_area;
   Dom.appendChild toplevel toplvl_buttons;
 
-  Toploop.initialize_toplevel_env ();
+  worker##postMessage(Json.output (Reset));
   toplevel

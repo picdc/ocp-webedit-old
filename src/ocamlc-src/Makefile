@@ -1,5 +1,5 @@
 
-SRC_I = bytelink.mli main.mli compile.mli errors.mli main_args.mli pparse.mli
+SRC_I= bytelink.mli main.mli compile.mli errors.mli main_args.mli pparse.mli
 SRC= bytelink.ml compile.ml errors.ml main_args.ml pparse.ml main.ml
 
 CMIS=$(SRC_I:.mli=.cmi)
@@ -13,8 +13,8 @@ INCLUDEJS= -I $(COMPLIBS) -I ../toplevel-src/cmicomp \
 	-I ~/.opam/4.00.1/lib/js_of_ocaml_compiler-libs/ code.cmi \
 	stdlib_cma.js ocp-runtime.js
 
-JSFLAGS = -pretty -noinline -toplevel
-JSPKGS = -package js_of_ocaml,js_of_ocaml.syntax,js_of_ocaml_compiler,js_of_ocaml_compiler-libs \
+JSFLAGS= -pretty -noinline -toplevel
+JSPKGS= -package js_of_ocaml,js_of_ocaml.syntax,js_of_ocaml_compiler,js_of_ocaml_compiler-libs \
 	 -syntax camlp4o -linkpkg
 PP = "camlp4o ~/.opam/4.00.1/lib/js_of_ocaml/pa_js.cmo"
 
@@ -22,7 +22,6 @@ CAMLC=ocamlc
 CAMLFIND=ocamlfind
 CAMLDEP=ocamldep -pp $(PP)
 CAMLJS= $(CAMLFIND) $(CAMLC) $(JSPKGS) $(FLAGS) 
-# CAMLJS= $(CAMLC) $(FLAGS)
 
 
 .SUFFIXES:
@@ -48,6 +47,6 @@ depend: $(SRC) $(SRC_I)
 
 
 clean:
-	rm -rf *.o *.byte *.cm[ioax] ocamlc.js
+	rm -rf *.o *.byte *.cm[ioaxt] ocamlc.js
 
 -include .depend
