@@ -69,6 +69,14 @@
     overflow: auto;
 }
 
+.error-link {
+    text-decoration:underline;
+}
+
+.error-link:hover {
+    cursor: pointer;
+}
+
 .dialog_right_clic_dialog {
     border: 2px solid black;
     background-color: #ffffff;

@@ -30,3 +30,5 @@ val delete_project : (string, string) event
 val save_conf : (Conftypes.conftype * Conftypes.conf,
                  Conftypes.conftype * Conftypes.conf) event
 val compile : (Mycompile.compile_result, string) event
+val go_to_next_error : 
+  (Filemanager.file * string, string * Errors_format.err_format) event

@@ -10,7 +10,7 @@
     let file = Format.sprintf "<span \
     style=\"color:red;font-weight:bold\">%s</span>" file in
     let line = Format.sprintf "<span style=\"color:green\">%d</span>" line in
-    let res = Format.sprintf "File \"%s\", line %s, characters %d-%d:  "
+    let res = Format.sprintf "File \"%s\", line %s, characters %d-%d:"
       file line start _end in
     Format.sprintf "<a id=\"error%d\" class=\"error-link\">%s</a>@." nb res
       
@@ -22,7 +22,7 @@
     style=\"color:red;font-weight:bold\">%s</span>" file in
     let line = Format.sprintf "<span style=\"color:green\">%d</span>" line in
     let res =
-      Format.sprintf "<a>File \"%s\", line %s:</a>@."
+      Format.sprintf "File \"%s\", line %s:"
         file line in
     Format.sprintf "<a id=\"error%d\" class=\"error-link\">%s</a>@." nb res
     

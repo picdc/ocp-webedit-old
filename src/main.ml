@@ -91,12 +91,13 @@ let make_bottom_widget () =
     let container = query_selector compilation "#compilation_output" in
     let button = coerceTo_button
         (query_selector compilation "#bytecode") in
-    let stdout, _errors = 
+    let stdout, errors = 
       Errors_lexer.parse_compile_output result.Mycompile.stdout in
     container##innerHTML <- Js.string stdout;
 
-    Myutils.console result.Mycompile.initial_proj;
-
+    let project = result.Mycompile.initial_proj in
+    Errors_report.add_errors_reports project errors;
+    
     if result.Mycompile.code = 0 then begin
       let blob = string_to_blob result.Mycompile.bytecode in
       button##onclick <- Dom_html.handler (fun _ ->

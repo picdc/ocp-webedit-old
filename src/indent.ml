@@ -153,6 +153,7 @@ let _ =
   Eventmanager.open_file#add_event callback_open_file;
   Eventmanager.create_file#add_event callback_create_file;
   Eventmanager.close_file#add_event callback_close_file;
+  Eventmanager.go_to_next_error#add_event callback_open_file;
 
 
   (* Fonctions accessibles depuis le javascript *)

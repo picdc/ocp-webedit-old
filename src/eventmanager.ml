@@ -77,3 +77,20 @@ let delete_file = new event delete_and_switch_action
 
 let save_conf = new event Filemanager.save_conf
 let compile = new event Filemanager.compile
+
+let open_and_go_to_error callback (project, error) =
+  let open Errors_format in
+      let callback args =
+        callback args;
+        let id = Filemanager.get_id ~project ~filename:error.file in
+        switch_file#trigger id;
+        let e = Global.editor () in
+        if fst error.chars >= 0 then
+          (e##moveCursorTo((error.line - 1), fst error.chars);
+           e##getSelection()##selectTo((error.line - 1), snd error.chars))
+        else (e##moveCursorTo((error.line - 1), 0);
+              e##getSelection()##selectLine())
+      in
+      Filemanager.open_file callback (project, error.file)
+
+let go_to_next_error = new event open_and_go_to_error

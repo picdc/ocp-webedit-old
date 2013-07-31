@@ -491,7 +491,8 @@ let _ =
   Eventmanager.import_file#add_event callback_create_file;
   Eventmanager.switch_file#add_event callback_switch_file;
   Eventmanager.delete_file#add_event callback_delete_file;
-  Eventmanager.delete_project#add_event callback_delete_project
+  Eventmanager.delete_project#add_event callback_delete_project;
+  Eventmanager.go_to_next_error#add_event callback_open_file
 
 
 

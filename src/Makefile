@@ -3,11 +3,12 @@ include Makefile.config
 include Makefile.rules
 
 SOURCES= webworker.ml ace.ml global.ml myutils.ml myparser.ml request.ml \
-	mycompile.ml filemanager.ml eventmanager.ml dialog.ml tabs.ml \
-	sidepanel.ml centerpanel.ml login.ml errors_lexer.mll
+	mycompile.ml filemanager.ml errors_lexer.mll \
+	eventmanager.ml errors_report.ml dialog.ml tabs.ml \
+	sidepanel.ml centerpanel.ml login.ml 
 SOURCESI= webworker.mli ace.mli global.mli myutils.mli conftypes.mli \
 	myparser.mli request.mli mycompile.mli filemanager.mli \
-	eventmanager.mli dialog.mli tabs.mli errors_format.mli
+	errors_format.mli eventmanager.mli dialog.mli tabs.mli 
 
 OCPDIR= ocp-indent-src
 OCPLIB= -I $(OCPDIR) ocp_indent.cma

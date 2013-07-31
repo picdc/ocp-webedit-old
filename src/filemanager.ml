@@ -204,8 +204,10 @@ let open_file callback (project, filename) =
       file.is_open <- true;
       incr nb_files_opened;
       opened_file_order := file.id::!opened_file_order;
+
       let es = Ace.createEditSession str "ace/mode/ocaml" in
       H.add file_content file.id es;
+
       callback (file, str)
     in
     Request.get_content_of_file ~callback ~project ~filename
@@ -465,14 +467,23 @@ let compile callback project =
      directement cette fonction, qui vérifie si tous les fichiers ont bien été
      chargé grâce à un compteur et appelle la fonction qui envoie au compilateur *)
   let file_number = ref (List.length cconf.Conftypes.files) in
-  let get_file_content filename =
+  let get_file_content file =
     let callback c =
-      H.add comp_tbl filename c;
+      H.add comp_tbl file.filename c;
+      
+      (* Pour l'instant on considère que le fichier n'est pas chargé *)
+
+      (* file.is_open <- true; *)
+      (* incr nb_files_opened; *)
+      (* opened_file_order := file.id::!opened_file_order; *)
+      (* let es = Ace.createEditSession c "ace/mode/ocaml" in *)
+      (* H.add file_content file.id es; *)
+
       decr file_number;
       if !file_number <= 0 then
         callback_onload ()
     in
-    Request.get_content_of_file ~callback ~project ~filename
+    Request.get_content_of_file ~callback ~project ~filename:file.filename
   in
 
   (* Vérifie si chaque fichier est en mémoire, si non appelle la fonction qui
@@ -485,5 +496,5 @@ let compile callback project =
             decr file_number;
             if !file_number <= 0 then
               callback_onload ()
-        | None -> get_file_content filename
+        | None -> get_file_content file
   ) cconf.Conftypes.files
