@@ -1,5 +1,7 @@
 .depend
+_obuild/*
+ocp-build.root*
 data/*
 www/main.js
 www/ocamlc.js
-www/toplevelw.js
+www/toplevel.js

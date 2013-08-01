@@ -1,0 +1,14 @@
+
+begin program "ocamlc-src"
+  has_asm = false
+  files = [ "bytelink.ml"
+            "compile.ml"
+            "errors.ml"
+            "main_args.ml"
+            "pparse.ml"
+            "main.ml" (syntax="js_of_ocaml.camlp4-syntax") ]
+  requires = [ "compiler-libs.bytecomp"
+               "compiler-libs.common"
+               "js_of_ocaml"
+               "js_of_ocaml.camlp4-syntax" ]
+end

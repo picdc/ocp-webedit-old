@@ -1,0 +1,29 @@
+
+begin program "ocp-webedit-src"
+
+  has_asm = false
+  files = [ "webworker.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "ace.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "global.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "myutils.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "conftypes.mli"
+            "myparser.ml"
+            "request.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "mycompile.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "filemanager.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "errors_lexer.mll"
+            "errors_format.mli"
+            "eventmanager.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "errors_report.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "dialog.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "tabs.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "sidepanel.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "centerpanel.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "mytoplevel.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "login.ml" (syntax = "js_of_ocaml.camlp4-syntax")]
+  requires = [ "js_of_ocaml"
+               "js_of_ocaml.camlp4-syntax"
+               "autocomplete-src"
+               "my-ocp-indent" ]
+
+end

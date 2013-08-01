@@ -1,0 +1,14 @@
+
+begin library "my-ocp-indent"
+  has_asm = false
+  archive = "ocp_indent"
+  files = [ "ocpUtil.ml"
+            "pos.ml"
+            "compat.ml"
+            "approx_tokens.ml"
+            "approx_lexer.mll"
+            "nstream.ml"
+            "indentBlock.ml"
+            "indentConfig.ml"
+            "indentPrinter.ml" ]
+end

@@ -14,7 +14,7 @@
 
 open Config
 open Clflags
-
+ 
 let output_prefix name =
   let oname =
     match !output_name with

@@ -1,0 +1,16 @@
+
+begin program "toplevel-src"
+  (* TO BE DELETED *)
+  generated = true
+  (* END *) 
+  has_asm = false
+  files = [ "toplevelw.ml" (syntax="js_of_ocaml.camlp4-syntax") ]
+  requires = [ "compiler-libs.bytecomp"
+               "compiler-libs.common"
+               "compiler-libs.toplevel"
+               "str"
+               "js_of_ocaml"
+               "js_of_ocaml_compiler"
+               "js_of_ocaml_compiler-libs"
+               "js_of_ocaml.camlp4-syntax" ]
+end
