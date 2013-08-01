@@ -34,6 +34,7 @@ end
 class type selection = object
   method selectLine : unit Js.meth
   method selectTo : int -> int -> unit Js.meth
+  method setSelectionRange : range Js.t -> bool Js.t -> unit Js.meth
 end
 
 (* TO COMPLETE *) class type editor = object
