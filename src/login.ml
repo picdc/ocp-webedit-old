@@ -102,4 +102,3 @@ let _ =
   (Js.Unsafe.coerce Dom_html.window)##onlogoutFunction <- 
     Js.wrap_callback onlogout
   
-  

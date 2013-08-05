@@ -101,6 +101,7 @@ let add_item_project container container_pl project =
   Dom.appendChild container_pl div
 
 let make_centerpanel () =
+  Myutils.console "pouet";
   let div = createDiv document in
   let title = createH1 document in
   let div_project_list = createDiv document in
@@ -109,6 +110,7 @@ let make_centerpanel () =
   div_project_list##id <- Js.string "center_project_list";
   Dom.appendChild div_project_list title;
   Dom.appendChild div div_project_list;
+  Myutils.console "pouet";
   div
 
 let _ =
@@ -191,4 +193,5 @@ let _ =
   Eventmanager.delete_project#add_event callback_delete_project;
   Eventmanager.delete_file#add_event callback_delete_file;
   Eventmanager.rename_project#add_event callback_rename_project;
-  Eventmanager.rename_file#add_event callback_rename_file
+  Eventmanager.rename_file#add_event callback_rename_file;
+  Myutils.console "fin global centerpanel"

@@ -94,3 +94,4 @@ let open_and_go_to_error callback (project, error) =
       Filemanager.open_file callback (project, error.file)
 
 let go_to_next_error = new event open_and_go_to_error
+

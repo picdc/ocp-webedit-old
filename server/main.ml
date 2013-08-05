@@ -8,8 +8,7 @@ module H = Hashtbl
 
 let logged_users = H.create 127
 
-(* let ppath = "/home/dmaison/ace-ocaml/data" *)
-let ppath = Format.sprintf "%s/ocp-webedit/data" (Sys.getenv "HOME")
+let ppath = Format.sprintf "%s/projects/ocp-webedit/data" (Sys.getenv "HOME")
 
 let email_to_dirname str =
   let pos_at = String.index str '@' in

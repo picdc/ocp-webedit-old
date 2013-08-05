@@ -36,7 +36,7 @@ let print_output str =
 
 open Webworker
 
-let worker = jsnew webWorker(Js.string "toplevelw.js")
+let worker = jsnew webWorker(Js.string "toplevel.js")
 
 type toplevel_worker_msg = Reset | Eval of string
 type toplevel_worker_res = { eval : string ; output : string }

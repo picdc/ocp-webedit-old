@@ -8,7 +8,7 @@ PKGS= -package threads,pcre,netplex,netcgi2,nethttpd,shell,netclient,ssl,equeue-
 SRC= main.ml
 OBJ= $(SRC:.ml=.cmx)
 
-EXEC= server
+EXEC= server.byte
 
 .SUFFIXES:
 .SUFFIXES: .ml .mli .cmi .cmo .cmx
@@ -16,7 +16,7 @@ EXEC= server
 all: $(EXEC)
 
 
-server: $(OBJ)
+$(EXEC): $(OBJ)
 	ocamlfind ocamlopt $(CAMLOPTFLAGS) $(PKGS) -linkpkg $< -o $@
 
 .mli.cmi:

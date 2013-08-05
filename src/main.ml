@@ -90,7 +90,7 @@ let make_bottom_widget () =
     switch_to_compilation_tab ();
     let container = query_selector compilation "#compilation_output" in
     let button = coerceTo_button
-        (query_selector compilation "#bytecode") in
+      (query_selector compilation "#bytecode") in
     let stdout, errors = 
       Errors_lexer.parse_compile_output result.Mycompile.stdout in
     container##innerHTML <- Js.string stdout;
@@ -121,39 +121,36 @@ let make_bottom_widget () =
 (* <div> contenant l'éditeur et tous les autres widgets
    Il est gardé en mémoire ici afin de ne pas créer de doublons dans
    le DOM si on ferme et ré-ouvre le workspace *)
-let main_content =
-   let doc = Dom_html.document in
-   let div_global = Dom_html.createDiv doc in
-   let div_main = Dom_html.createDiv doc in
-   let div_editor = Dom_html.createDiv doc in
-   div_main##id <- Js.string "divmain";
-   div_editor##id <- Js.string "editor";
+let main_content () =
+  let doc = Dom_html.document in
+  let div_global = Dom_html.createDiv doc in
+  let div_main = Dom_html.createDiv doc in
+  let div_editor = Dom_html.createDiv doc in
+  div_main##id <- Js.string "divmain";
+  div_editor##id <- Js.string "editor";
    (* div_main##style##display <- Js.string "none"; *)
-   div_global##style##minWidth <- Js.string "750px";
-   let sidepanel = Sidepanel.make_sidepanel () in
-   let centerpanel = Centerpanel.make_centerpanel () in
-   centerpanel##style##display <- Js.string "none";
-   let bottabs = make_bottom_widget () in
-   let div_tabs = Tabs.make_tabs () in
-   Dom.appendChild div_global sidepanel;
-   Dom.appendChild div_main div_tabs;
-   Dom.appendChild div_main div_editor;
-   Dom.appendChild div_main bottabs;
-   Dom.appendChild div_global centerpanel;
-   Dom.appendChild div_global div_main;
-   div_global
+  div_global##style##minWidth <- Js.string "750px";
+  let sidepanel = Sidepanel.make_sidepanel () in
+  (* let centerpanel = Centerpanel.make_centerpanel () in *)
+  (* centerpanel##style##display <- Js.string "none"; *)
+  let bottabs = make_bottom_widget () in
+  let div_tabs = Tabs.make_tabs () in
+  Dom.appendChild div_global sidepanel;
+  Dom.appendChild div_main div_tabs;
+  Dom.appendChild div_main div_editor;
+  Dom.appendChild div_main bottabs;
+  (* Dom.appendChild div_global centerpanel; *)
+  Dom.appendChild div_global div_main;
+  div_global
 
 
 (* Conteneur principal qui accueillera nos wigdets *)
 let main_container = Dom_html.createDiv Dom_html.document
-let _ = 
-  main_container##id <- Js.string "main_content";
-  Global.(global_conf.container <- main_content);
-  Dom.appendChild Dom_html.document##body main_container 
-
-
-
 let _ =
+  main_container##id <- Js.string "main_content";
+  Global.(global_conf.container <- main_content ());
+  Dom.appendChild Dom_html.document##body main_container ;
+
   Ace.require("Range");
 
   let doc = Dom_html.document in
@@ -208,12 +205,12 @@ let _ =
   (* Fonction callback pour afficher le center panel *)
   let editor_shown = ref true in
   let switch_to_centerpanel _ = ()
-    (* if Filemanager.get_nb_files_opened () = 0 then *)
-    (*   (let centerpanel = get_element_by_id "centerpanel" in *)
-    (*    let divmain = get_element_by_id "divmain" in *)
-    (*    centerpanel##style##display <- Js.string ""; *)
-    (*    divmain##style##display <- Js.string "none"; *)
-    (*    editor_shown := false) *)
+  (* if Filemanager.get_nb_files_opened () = 0 then *)
+  (*   (let centerpanel = get_element_by_id "centerpanel" in *)
+  (*    let divmain = get_element_by_id "divmain" in *)
+  (*    centerpanel##style##display <- Js.string ""; *)
+  (*    divmain##style##display <- Js.string "none"; *)
+  (*    editor_shown := false) *)
   in
 
   (* Fonction callback pour afficher l'éditeur *)
@@ -232,4 +229,3 @@ let _ =
   Eventmanager.create_file#add_event switch_to_editor;
   Eventmanager.close_file#add_event switch_to_centerpanel;
   Eventmanager.delete_file#add_event switch_to_centerpanel
-
