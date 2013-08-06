@@ -1,0 +1,31 @@
+
+(*
+
+begin library "netsys"
+  generated = true
+  archive = "netsys"
+  dirname = [ "/home/dmaison/.opam/4.00.1/lib/netsys" ]
+end
+
+begin program "server"
+  has_asm = false
+  comp += [ "-thread" "-w" "@a" "-unsafe" ]
+  ccopt += [ "-I/opt/ocaml/lib/ocaml -arch x86_64 -O3 -Wall -Wextra" ]
+  files = [ "main.ml" ]
+  requires = [ "threads"
+               "netsys"
+               "pcre"
+               "netplex"
+               "netcgi2"
+               "nethttpd"
+               "shell"
+               "netclient"
+               "ssl"
+               "equeue-ssl"
+               "yojson"
+               "netstring"
+               "netsys" ]
+
+end
+
+*)

@@ -348,8 +348,7 @@ let make_sidepanel () =
 
 
 
-let _ =
-
+let main () =
   (* Création de l'input caché qui permet l'importation des fichiers *)
   let button = createInput
     ~name:(Js.string "importFileButton")

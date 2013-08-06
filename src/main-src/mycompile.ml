@@ -33,5 +33,6 @@ let compile callback opts =
     worker := jsnew webWorker(Js.string "ocamlc.js"));
   (!worker)##postMessage(msg)
 
-let _ =
+
+let main () =
   (Js.Unsafe.coerce Dom_html.window)##compile <- Js.wrap_callback compile

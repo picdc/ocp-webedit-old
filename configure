@@ -1,0 +1,11 @@
+#!/bin/sh
+echo Generating Makefile.config
+
+ocp-build init
+ocp-build configure
+
+echo COMPILER-LIBS=`ocp-build query -libdir compiler-libs` > Makefile.config.temp
+echo JS_COMPILER-LIBS=`ocp-build query -libdir js_of_ocaml_compiler-libs` >> Makefile.config.temp
+
+mv Makefile.config.temp Makefile.config
+echo Makefile.config generated

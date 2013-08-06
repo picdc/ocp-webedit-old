@@ -336,5 +336,5 @@ let main data =
 
 
 let _ =
-  onmessage (fun ev -> main ev##data) 
+  onmessage (fun ev -> main ev##data)  
 

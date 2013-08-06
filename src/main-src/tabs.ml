@@ -385,12 +385,6 @@ let event_save_current_tab () =
   | None -> assert false
   | Some id -> Eventmanager.save_file#trigger id
 
-let _ =
-  (Js.Unsafe.coerce Dom_html.window)##saveCurrentTab <- Js.wrap_callback
-    event_save_current_tab;
-  (Js.Unsafe.coerce Dom_html.window)##currentTabChanged <- Js.wrap_callback
-    event_change_current_tab
-
 
 let make_tabs () =  
 
@@ -412,7 +406,7 @@ let make_tabs () =
   div_tabs
 
 
-let _ =
+let main () =
   let callback_open_workspace _ =
     update_len ();
     enable_navigation_buttons false
@@ -493,8 +487,9 @@ let _ =
   Eventmanager.switch_file#add_event callback_switch_file;
   Eventmanager.delete_file#add_event callback_delete_file;
   Eventmanager.delete_project#add_event callback_delete_project;
-  Eventmanager.go_to_next_error#add_event callback_open_file
+  Eventmanager.go_to_next_error#add_event callback_open_file;
 
-
-
-
+  (Js.Unsafe.coerce Dom_html.window)##saveCurrentTab <- Js.wrap_callback
+    event_save_current_tab;
+  (Js.Unsafe.coerce Dom_html.window)##currentTabChanged <- Js.wrap_callback
+    event_change_current_tab

@@ -31,15 +31,10 @@ let onclick_signin =
   handler (fun _ -> 
     ignore 
       (Js.Unsafe.fun_call (Js.Unsafe.variable "navigator.id.request") [||]);
-    Js._true
-  )
+    Js._true)
 
 let onclick_signout =
-  handler (fun _ ->
-    
-    logout ();
-    Js._true
-  )
+  handler (fun _ -> logout (); Js._true)
 
 
 let verify_assertion ~callback assertion =
@@ -79,8 +74,7 @@ let onlogout () =
   signout##onclick <- handler (fun _ -> Js._true);
   console (Js.string "Logged out")
 
-let _ =
-  
+let main () =
   let signin = createSpan document in
   signin##id <- Js.string "signin";
   signin##innerHTML <- Js.string "Sign Up / Sign In";
@@ -96,7 +90,7 @@ let _ =
   let b = document##body in
   Dom.appendChild b signin;
   Dom.appendChild b signout;
-
+ 
   (Js.Unsafe.coerce Dom_html.window)##verifyAssertion <- 
     Js.wrap_callback (verify_assertion ~callback:(fun _ -> ()));
   (Js.Unsafe.coerce Dom_html.window)##onlogoutFunction <- 

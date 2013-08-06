@@ -1,5 +1,5 @@
 
-begin program "ocp-webedit-src"
+begin program "main-src"
 
   has_asm = false
   files = [ "webworker.ml" (syntax = "js_of_ocaml.camlp4-syntax")

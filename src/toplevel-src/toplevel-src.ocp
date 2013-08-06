@@ -16,6 +16,6 @@ begin program "toplevel-src"
   requires = [ "try-toplevellib"
                "js_of_ocaml"
                "js_of_ocaml_compiler"
-               "js_of_ocaml_compiler-libs_myconf"
+               "js_of_ocaml_compiler-libs"
                "js_of_ocaml.camlp4-syntax" ]
 end

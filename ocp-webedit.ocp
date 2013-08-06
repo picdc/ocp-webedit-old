@@ -1,8 +1,7 @@
 
 begin
   generated = true
-
-  dirname = [ "/home/dmaison/.opam/4.00.1/lib/js_of_ocaml" ]
+  dirname = [ "%{js_of_ocaml.syntax_SRC_DIR}%" ]
 
   begin objects "js_of_ocaml.camlp4-syntax.objects"
     files = [ "pa_js.ml" ]
@@ -11,13 +10,12 @@ begin
   begin syntax "js_of_ocaml.camlp4-syntax"
     requires = [ "js_of_ocaml.camlp4-syntax.objects" "camlp4o" ]
   end
+end
 
 
-  (* TEST *)
-  begin library "js_of_ocaml_compiler-libs_myconf"
-    dirname = [ "/home/dmaison/.opam/4.00.1/lib/js_of_ocaml_compiler-libs" ]
-    archive = [ "compiler" ]
-    requires = [ "str" ]
-  end
-
+begin library "js_of_ocaml_compiler-libs"
+  generated= true
+  dirname = [ "%{OCAMLLIB}%/../js_of_ocaml_compiler-libs" ]
+  archive = [ "compiler" ]
+  requires = [ "str" ]
 end

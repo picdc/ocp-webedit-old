@@ -128,7 +128,7 @@ let indent_region row_start row_end  =
 
 
 
-let _ =
+let main () =
   (* Gestions des evenements *)
   let callback_create_file file =
     let id = file.Filemanager.id in
@@ -154,7 +154,6 @@ let _ =
   Eventmanager.create_file#add_event callback_create_file;
   Eventmanager.close_file#add_event callback_close_file;
   Eventmanager.go_to_next_error#add_event callback_open_file;
-
 
   (* Fonctions accessibles depuis le javascript *)
   (Js.Unsafe.coerce Dom_html.window)##getIndentLine <- Js.wrap_callback

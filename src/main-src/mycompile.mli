@@ -14,3 +14,5 @@ type compile_result = {
 }
 
 val compile : (compile_result -> unit) ->  compile_options -> unit
+
+val main : unit -> unit

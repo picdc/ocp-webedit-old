@@ -63,6 +63,5 @@ let new_word_from_js w =
 let _ = 
   (Js.Unsafe.coerce Dom_html.window)##complete <- find_completion_js;
   (Js.Unsafe.coerce Dom_html.window)##newWord <- new_word_from_js;
-  (Js.Unsafe.coerce Dom_html.window)##computeCompletions <-
-  compute_completions;
+  (Js.Unsafe.coerce Dom_html.window)##computeCompletions <- compute_completions;
   (Js.Unsafe.coerce Dom_html.window)##nextCompletion <- next_completion
