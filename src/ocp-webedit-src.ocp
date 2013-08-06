@@ -19,6 +19,7 @@ begin program "ocp-webedit-src"
             "tabs.ml" (syntax = "js_of_ocaml.camlp4-syntax")
             "sidepanel.ml" (syntax = "js_of_ocaml.camlp4-syntax")
             "mytoplevel.ml" (syntax = "js_of_ocaml.camlp4-syntax")
+            "persona.ml" (syntax = "js_of_ocaml.camlp4-syntax")
             "login.ml" (syntax = "js_of_ocaml.camlp4-syntax")
             "indent.ml" (syntax = "js_of_ocaml.camlp4-syntax")
             "main.ml" (syntax = "js_of_ocaml.camlp4-syntax")]
