@@ -22,19 +22,9 @@ let pull_request_with_failure ~callback ~callback_failure ~meth ~url ~asyn ~msg 
 
 
 
-let logout () =
-  let open Js.Unsafe in
-      ignore (fun_call (variable "navigator.id.logout") [||])
+let onclick_signin = handler (fun _ -> Persona.request (); Js._true)
 
-
-let onclick_signin =
-  handler (fun _ -> 
-    ignore 
-      (Js.Unsafe.fun_call (Js.Unsafe.variable "navigator.id.request") [||]);
-    Js._true)
-
-let onclick_signout =
-  handler (fun _ -> logout (); Js._true)
+let onclick_signout = handler (fun _ -> Persona.logout (); Js._true)
 
 
 let verify_assertion ~callback assertion =
@@ -45,7 +35,7 @@ let verify_assertion ~callback assertion =
     callback json
   in
   let callback_failure json =
-    logout ();
+    Persona.logout ();
     console (Js.string "Login failure")
   in
   let msg = 
@@ -94,5 +84,8 @@ let main () =
   (Js.Unsafe.coerce Dom_html.window)##verifyAssertion <- 
     Js.wrap_callback (verify_assertion ~callback:(fun _ -> ()));
   (Js.Unsafe.coerce Dom_html.window)##onlogoutFunction <- 
-    Js.wrap_callback onlogout
-  
+    Js.wrap_callback onlogout;
+
+  Myutils.console "Calling watcher";
+  Persona.watch ~onlogin:(verify_assertion ~callback:(fun _ -> ()))
+    ~onlogout ()
