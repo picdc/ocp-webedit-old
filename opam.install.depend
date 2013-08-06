@@ -1,0 +1,3 @@
+#!/bin/sh
+
+opam install ocp-build js_of_ocaml yojson ocamlnet re ssl pcre-ocaml cryptokit
