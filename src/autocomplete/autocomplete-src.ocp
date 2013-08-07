@@ -2,9 +2,8 @@
 begin library "autocomplete-src"
   
   has_asm = false
-  archive = "autocomplete"
   files = [ "completion_data.ml"
             "completion_lexer.mll" ]
-  requires = [ "re" ] (* re_str ? no needed *)
+  requires = [ "re" ]
 
 end
