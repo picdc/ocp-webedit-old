@@ -3,6 +3,7 @@ exception Bad_request_url of string
 
 let pull_request ~callback ~meth ~url ~asyn ~msg =
   let req = XmlHttpRequest.create () in
+  let url = "api/" ^ url in 
   req##_open(Js.string meth, Js.string url, Js.bool asyn);
   req##setRequestHeader(Js.string "Content-Type",
 			Js.string "application/x-www-form-urlencoded");
@@ -25,7 +26,7 @@ let get_list_of_projects ~callback =
     let l = List.rev (List.tl (List.rev l)) in
     callback l
   in
-  pull_request ~callback ~meth:"POST" ~url:"project" ~asyn:true ~msg:""
+  pull_request ~callback ~meth:"POST" ~url:"/project" ~asyn:true ~msg:""
 
 
 let get_list_of_files ~callback project =
@@ -37,24 +38,24 @@ let get_list_of_files ~callback project =
     callback l
   in
   let msg = Format.sprintf "project=%s" project in
-  pull_request ~callback ~meth:"POST" ~url:"project/list" ~asyn:true ~msg
+  pull_request ~callback ~meth:"POST" ~url:"/project/list" ~asyn:true ~msg
 
 
 let get_content_of_file ~callback ~project ~filename =
   let msg = Format.sprintf "project=%s&file=%s" project filename in
-  pull_request ~callback ~meth:"POST" ~url:"project/load" ~asyn:true ~msg
+  pull_request ~callback ~meth:"POST" ~url:"/project/load" ~asyn:true ~msg
 
 
 let create_project ~callback name =
   let msg = Format.sprintf "name=%s" name in
   let callback _ = callback () in 
-  pull_request ~callback ~meth:"POST" ~url:"create" ~asyn:true ~msg
+  pull_request ~callback ~meth:"POST" ~url:"/create" ~asyn:true ~msg
 
 
 let create_file ~callback ~project ~filename =
   let msg = Format.sprintf "project=%s&name=%s" project filename in
   let callback _ = callback () in 
-  pull_request ~callback ~meth:"POST" ~url:"project/create" ~asyn:true ~msg
+  pull_request ~callback ~meth:"POST" ~url:"/project/create" ~asyn:true ~msg
 
 
 let save_file ~callback ~project ~filename ~content =

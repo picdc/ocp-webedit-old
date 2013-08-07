@@ -1,7 +1,6 @@
 
 begin library "my-ocp-indent"
   has_asm = false
-  archive = "ocp_indent"
   files = [ "ocpUtil.ml"
             "pos.ml"
             "compat.ml"
@@ -11,4 +10,5 @@ begin library "my-ocp-indent"
             "indentBlock.ml"
             "indentConfig.ml"
             "indentPrinter.ml" ]
+  requires = [ "ocp-indent-lexer" ]
 end

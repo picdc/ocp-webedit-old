@@ -6,6 +6,7 @@ open Myutils
 
 let pull_request_with_failure ~callback ~callback_failure ~meth ~url ~asyn ~msg =
   let req = XmlHttpRequest.create () in
+  let url = "api/" ^ url in
   req##_open(Js.string meth, Js.string url, Js.bool asyn);
   req##setRequestHeader(Js.string "Content-Type",
 			Js.string "application/x-www-form-urlencoded");
