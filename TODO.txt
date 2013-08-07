@@ -1,0 +1,25 @@
+
+Interface Web:
+
+* Right Click on Project:
+  * "Create New File" -> "Create New Module"
+    * Check if a suffix .ml is provided, otherwise, add it
+    * When a module is added, it should be put in the command line to
+        compile
+    * Would it be possible to reorder the files from the list, by copy-move
+
+* For all forms:
+   * No default
+   * Give an example, instead, or rules (no spaces, etc...)
+   * Maybe a link to documentation
+
+* Message d'accueil -> Help
+
+* Instead of the toplevel:
+   * Copy selection to clipboard
+   * Button "execute clipboard" in Try-OCaml
+
+* Add a div to ace-edit.html, so that the editor can insert itself in
+   that div instead of at the beginning of the page.
+
+
