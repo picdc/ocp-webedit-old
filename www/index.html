@@ -1,0 +1,28 @@
+<HTML>
+  <HEAD>
+    <TITLE>Editeur d'Ocaml en ligne</TITLE>
+    <LINK href="./css/tabs.css" rel="stylesheet" type="text/css" />
+    <LINK href="./css/mytoplevel.css" rel="stylesheet" type="text/css" />
+    <LINK href="./css/main.css" rel="stylesheet" type="text/css" />
+    <LINK href="./css/sidepanel.css" rel="stylesheet" type="text/css" />
+    <SCRIPT src="https://login.persona.org/include.js"></SCRIPT>
+    <SCRIPT src="FileSaver.js"></SCRIPT>
+    <SCRIPT src="./ace/ace.js"></SCRIPT> 
+  </HEAD>
+  <BODY>
+    <SCRIPT src="./main.js"></SCRIPT>
+    
+    <H1>Ocaml Editor</H1>
+    <DIV id="ocaml-editor" />
+    <H2>Ocaml Ressources</H2>
+    <UL>
+      <LI>
+        <A href="http://try.ocamlpro.com/" target="try-ocaml">Try Ocaml</A>
+      </LI>
+    </UL>
+    <SCRIPT>
+      main("ocaml-editor");
+      navigator.id.watch({onlogin:verifyAssertion,onlogout:onlogoutFunction});
+    </SCRIPT>
+ </BODY>
+</HTML> 
