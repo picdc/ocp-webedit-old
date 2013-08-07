@@ -141,12 +141,20 @@ let main_content =
   div_global
 
 
-let main_main () =
-  (* Conteneur principal qui accueillera nos wigdets *)
-  let main_container = createDiv document in
-  main_container##id <- Js.string "main_content";
-  Global.(global_conf.container <- main_content);
-  Dom.appendChild document##body main_container ;
+let welcome_content =
+  let a = createA document in
+  let img = createImg document in
+  img##alt <- Js.string "Click here to sign in";
+  img##src <- Js.string "./ocamledit.png";
+  Js.Opt.iter (Dom_html.CoerceTo.element a)
+    (fun a -> a##onclick <- Login.onclick_signin);
+  Dom.appendChild a img;
+  a
+  
+
+let main_main id_container =
+  let main_container = get_element_by_id id_container in
+  Dom.appendChild main_container welcome_content;
 
   Ace.require("Range");
 
@@ -161,13 +169,15 @@ let main_main () =
 
   (* Fonction callback pour le lancement du workspace *)
   let launch _ =
+    Dom.removeChild main_container welcome_content;
     Dom.appendChild main_container Global.(global_conf.container)
   in
 
   (* Fonction callback pour la fermeture du workspace *)
   let close () =
     let cl = Dom.list_of_nodeList main_container##childNodes in
-    List.iter (fun c -> Dom.removeChild main_container c) cl
+    List.iter (fun c -> Dom.removeChild main_container c) cl;
+    Dom.appendChild main_container welcome_content
   in
 
   Eventmanager.open_workspace#add_event launch;
@@ -178,9 +188,14 @@ let main_main () =
 
 (* Point d'entrée du programme *)
 
-let _ =
+let main (id_container: Js.js_string Js.t) =
+  Global.(global_conf.container <- main_content);
   Login.main ();
   Indent.main ();
   Tabs.main ();
   Sidepanel.main ();
-  main_main ()
+  main_main (Js.to_string id_container)
+
+
+let _ =
+  (Js.Unsafe.coerce window)##main <- Js.wrap_callback main

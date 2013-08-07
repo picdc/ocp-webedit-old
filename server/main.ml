@@ -1,5 +1,3 @@
-
-
 exception Empty_cgi_argument
 exception Bad_cgi_argument
 exception Fail_shell_call
@@ -8,7 +6,8 @@ module H = Hashtbl
 
 let logged_users = H.create 127
 
-let ppath = Format.sprintf "%s/ocp-webedit/data" (Sys.getenv "HOME")
+let server_name = "localhost:4444"
+let ppath = Format.sprintf "%s/projects/ocp-webedit/data" (Sys.getenv "HOME")
 
 let email_to_dirname str =
   let pos_at = String.index str '@' in
@@ -17,25 +16,34 @@ let email_to_dirname str =
     (String.length str - pos_at - 1) in
   add_pre_at^"_at_"^add_post_at
 
-let create_user_directory user =
-  let default_dirname = "hello_project" in
-  let default_filename = "hello_world.ml" in
-  let default_content = "let _ = \n  print_endline \"Hello world !\"" in
+let default_dirname = "hello_project" 
+let default_filename = "hello_world.ml" 
+let default_source_content = "let _ = \n  print_endline \"Hello world !\"" 
+let webuild_basename = ".webuild" 
+let default_webuild_content = "files=hello_world.ml\noutput=hello_world.byte"
 
+let create_user_directory user =
   let user_dirname = email_to_dirname user in
 
   let dirpath = Format.sprintf "%s/%s" ppath user_dirname in
   let projectpath = Format.sprintf "%s/%s" dirpath default_dirname in
   let filepath = Format.sprintf "%s/%s" projectpath default_filename in
 
-  let stdout = Shell.to_file ~append:false filepath in
+(*  let stdout = Shell.to_file ~append:false filepath in *)
   let cmd1 = Shell.cmd "mkdir" [ dirpath ] in
   let cmd2 = Shell.cmd "mkdir" [ projectpath ] in
-  let cmd3 = Shell.cmd "echo" [ default_content ] in
   try
     Shell.call [ cmd1 ];
     Shell.call [ cmd2 ];
-    Shell.call ~stdout [ cmd3 ];
+    let oc = open_out filepath in
+    output_string oc default_source_content;
+    close_out oc;
+
+    let webuild_filename = Filename.concat projectpath webuild_basename in
+    let oc = open_out webuild_filename in
+    output_string oc default_webuild_content;
+    close_out oc;
+
   with _ -> raise Fail_shell_call
 
 let user_exists user =
@@ -162,7 +170,7 @@ let login_function assertion =
   let open Http_client.Convenience in
   Format.printf "Verifying assertion@.";
   let data = [("assertion", assertion); 
-              ("audience", "http://localhost:4444")]  in
+              ("audience", server_name)]  in
   let req = http_post_message
     "https://verifier.login.persona.org/verify" data in
   while not (req#is_served) do 
@@ -467,7 +475,7 @@ let project_create_service =
 	  let file = get_argument cgi "name" in
 	  let _ = project_create_function user project file in
 	  print_string "File created successfully" cgi
-	
+
 	with e -> raise e
       ); }
 

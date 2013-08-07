@@ -13,22 +13,24 @@ MAIN= _obuild/$(PKG_MAIN)/$(PKG_MAIN)
 OCAMLC= _obuild/$(PKG_OCAMLC)/$(PKG_OCAMLC)
 TOPLEVEL= _obuild/$(PKG_TOPLEVEL)/$(PKG_TOPLEVEL)
 
+SERVER= server/server.asm
+
 JSFLAGS= -pretty -noinline
 JSINCLUDES= -I $(DIR_TOPLEVEL)/cmicomp -I $(COMPILER-LIBS) -I $(JS_COMPILER-LIBS)
 
-all: server src
+all: $(SERVER) src
 
 run:
-	server/server.byte -fg
+	$(SERVER) -fg
 
 dmaison-run:
-	server/server.byte -fg -conf server/notmy_server.conf
+	$(SERVER) -fg -conf server/notmy_server.conf
 
-server:
+$(SERVER): $(wildcard server/*.ml)
 	$(MAKE) -C server
 
 
-src: $(MAIN).byte $(OCAMLC).byte $(TOPLEVEL).byte www/index.html
+src: $(MAIN).byte $(OCAMLC).byte $(TOPLEVEL).byte
 
 
 clean: clean-src
@@ -37,11 +39,6 @@ clean: clean-src
 clean-src:
 	ocp-build clean
 	rm -rf www/main.js www/ocamlc.js www/toplevel.js
-
-
-www/index.html: src/index.html
-	cp $< $@
-
 
 
 $(MAIN).byte: $(wildcard $(DIR_MAIN)/*.ml $(DIR_MAIN)/*.mli)

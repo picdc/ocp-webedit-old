@@ -8,7 +8,7 @@ PKGS= -package threads,pcre,netplex,netcgi2,nethttpd,shell,netclient,ssl,equeue-
 SRC= main.ml
 OBJ= $(SRC:.ml=.cmx)
 
-EXEC= server.byte
+EXEC= server.asm
 
 .SUFFIXES:
 .SUFFIXES: .ml .mli .cmi .cmo .cmx
