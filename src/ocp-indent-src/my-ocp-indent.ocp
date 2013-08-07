@@ -11,4 +11,5 @@ begin library "my-ocp-indent"
             "indentBlock.ml"
             "indentConfig.ml"
             "indentPrinter.ml" ]
+  requires = [ "ocp-indent-lexer" ]
 end
