@@ -6,4 +6,3 @@ data/*
 www/main.js
 www/ocamlc.js
 www/toplevel.js
-www/index.html
