@@ -1,4 +1,6 @@
-server
+server.asm
+server.conf
+main.ml
 *.o
 *.cm[ix]
 depend

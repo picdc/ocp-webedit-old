@@ -21,18 +21,18 @@ netplex {
       access_log="enabled";
       suppress_broken_pipe=true;
       host {
-        pref_name = "localhost";
-        pref_port = 4444;
+        pref_name = "VAR_SERVER_NAME";
+        pref_port = VAR_PREF_PORT;
         names="*:0";
 	uri {
 	  path="/";
 	  service {
 	    type="file";
-	    docroot="/home/dmaison/ocp-webedit/www";
+	    docroot="VAR_DOCROOT";
 	    media_types_file="/etc/mime.types";
 	    default_media_type="text/html";
 	    enable_gzip=true;
-	    index_files="ace-edit.html";
+	    index_files="index.html";
 	    enable_listings=true;
 	  };
 	};

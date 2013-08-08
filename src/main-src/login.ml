@@ -51,7 +51,7 @@ let verify_assertion ~callback assertion =
   pull_request_with_failure ~callback
     ~callback_failure
     ~meth:"POST"
-    ~url:"/login"
+    ~url:"login"
     ~asyn:true 
     ~msg
 

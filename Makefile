@@ -13,18 +13,19 @@ MAIN= _obuild/$(PKG_MAIN)/$(PKG_MAIN)
 OCAMLC= _obuild/$(PKG_OCAMLC)/$(PKG_OCAMLC)
 TOPLEVEL= _obuild/$(PKG_TOPLEVEL)/$(PKG_TOPLEVEL)
 
+SERVER= server/server.asm
+
 JSFLAGS= -pretty -noinline
 JSINCLUDES= -I $(DIR_TOPLEVEL)/cmicomp -I $(COMPILER-LIBS) -I $(JS_COMPILER-LIBS)
 
-all: server src
+all: $(SERVER) src
 
 run:
-	server/server.byte -fg
+	killall $(SERVER)
+	$(SERVER)
 
-dmaison-run:
-	server/server.byte -fg -conf server/notmy_server.conf
 
-server:
+$(SERVER): $(wildcard server/*.ml)
 	$(MAKE) -C server
 
 

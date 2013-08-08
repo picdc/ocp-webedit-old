@@ -8,8 +8,8 @@ module H = Hashtbl
 
 let logged_users = H.create 127
 
-let server_name = "http://edit.ocamlpro.com"
-let ppath = "/home/edit.ocamlpro.com/data" (* Format.sprintf "%s/ocp-webedit/data" (Sys.getenv "HOME") *)
+let server_name = "VAR_SERVERNAME:VAR_PREF_PORT"
+let ppath = "VAR_DATA_PATH"
 
 let email_to_dirname str =
   let pos_at = String.index str '@' in

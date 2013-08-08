@@ -1,11 +1,35 @@
 #!/bin/sh
-echo Generating Makefile.config
 
+echo Generating Makefile.config
 ocp-build init
 ocp-build configure
-
 echo COMPILER-LIBS=`ocp-build query -libdir compiler-libs` > Makefile.config.temp
 echo JS_COMPILER-LIBS=`ocp-build query -libdir js_of_ocaml_compiler-libs` >> Makefile.config.temp
-
 mv Makefile.config.temp Makefile.config
 echo Makefile.config generated
+
+echo Generating server config
+echo "Choose the server name (default = localhost) :"
+read server_name
+if test "$server_name" = ""; then
+    server_name="localhost"
+fi
+echo "Choose the pref port (default = 80) :"
+read pref_port
+if test "$pref_port" = ""; then 
+    pref_port="80"
+fi
+echo "Choose the data path (default = $PWD/data) :"
+read data_path
+if test "$data_path" = ""; then 
+    data_path=$PWD"/data"
+fi
+echo "Choose the docroot path (default = $PWD/www) :"
+read docroot
+if test "$docroot" = ""; then
+    docroot=$PWD"/www"
+fi
+cat server/main.ml.init | awk '{ sub("VAR_SERVERNAME", "'$server_name'"); print}' | awk '{ sub("VAR_PREF_PORT", "'$pref_port'"); print}' | awk '{ sub("VAR_DATA_PATH", "'$data_path'"); print}' > server/main.ml
+cat server/server.conf.init | awk '{ sub("VAR_SERVER_NAME", "'$server_name'"); print}' | awk '{ sub("VAR_DOCROOT", "'$docroot'"); print}' | awk '{ sub("VAR_PREF_PORT", "'$pref_port'"); print}' > server/server.conf
+echo Server config done
+
