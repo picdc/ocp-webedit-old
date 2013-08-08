@@ -28,7 +28,7 @@ $(SERVER): $(wildcard server/*.ml)
 	$(MAKE) -C server
 
 
-src: $(MAIN).byte $(OCAMLC).byte $(TOPLEVEL).byte www/index.html
+src: $(MAIN).byte $(OCAMLC).byte $(TOPLEVEL).byte
 
 
 clean: clean-src
@@ -37,11 +37,6 @@ clean: clean-src
 clean-src:
 	ocp-build clean
 	rm -rf www/main.js www/ocamlc.js www/toplevel.js
-
-
-www/index.html: src/index.html
-	cp $< $@
-
 
 
 $(MAIN).byte: $(wildcard $(DIR_MAIN)/*.ml $(DIR_MAIN)/*.mli)

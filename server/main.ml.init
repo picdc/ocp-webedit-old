@@ -1,5 +1,3 @@
-
-
 exception Empty_cgi_argument
 exception Bad_cgi_argument
 exception Fail_shell_call
@@ -22,8 +20,12 @@ let default_dirname = "hello_project"
 let default_filename = "hello_world.ml" 
 let default_source_content = "let _ = \n  print_endline \"Hello world !\"" 
 let webuild_basename = ".webuild" 
+<<<<<<< HEAD:server/main.ml.init
 let default_webuild_content =
   "files=hello_world.ml\noutput=hello_world.byte"
+=======
+let default_webuild_content = "files=hello_world.ml\noutput=hello_world.byte"
+>>>>>>> 1e8547acbefae28c70aa626da3aa2ddc91775584:server/main.ml
 
 let create_user_directory user =
   let user_dirname = email_to_dirname user in
@@ -478,7 +480,7 @@ let project_create_service =
 	  let file = get_argument cgi "name" in
 	  let _ = project_create_function user project file in
 	  print_string "File created successfully" cgi
-	
+
 	with e -> raise e
       ); }
 
