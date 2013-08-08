@@ -21,8 +21,7 @@ JSINCLUDES= -I $(DIR_TOPLEVEL)/cmicomp -I $(COMPILER-LIBS) -I $(JS_COMPILER-LIBS
 all: $(SERVER) src
 
 run:
-	killall $(SERVER)
-	$(SERVER)
+	$(SERVER) -fg
 
 
 $(SERVER): $(wildcard server/*.ml)
